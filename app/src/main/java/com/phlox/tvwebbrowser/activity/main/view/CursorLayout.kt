@@ -98,6 +98,7 @@ class CursorLayout : FrameLayout {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (willNotDraw()) return super.dispatchKeyEvent(event)
         callback?.onUserInteraction()
         val keyCode = event.keyCode
         val action = event.action
@@ -304,7 +305,7 @@ class CursorLayout : FrameLayout {
 
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
-        if (isInEditMode) {
+        if (isInEditMode || willNotDraw()) {
             return
         }
 
