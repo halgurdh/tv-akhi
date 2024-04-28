@@ -9,10 +9,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
-import com.phlox.tvwebbrowser.activity.main.view.CursorLayout
+import androidx.webkit.WebViewCompat
+import com.phlox.tvwebbrowser.AppContext
+import com.phlox.tvwebbrowser.Config
+import com.phlox.tvwebbrowser.widgets.CursorLayout
 import com.phlox.tvwebbrowser.model.WebTabState
+import com.phlox.tvwebbrowser.utils.AndroidBug5497Workaround
 import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.WebEngineFactory
+import com.phlox.tvwebbrowser.webengine.WebEngineProvider
+import com.phlox.tvwebbrowser.webengine.WebEngineProviderCallback
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 
 class WebViewWebEngine(val tab: WebTabState) : WebEngine {
@@ -23,6 +30,12 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
     private var fullScreenView: View? = null
     private val permissionsRequests = HashMap<Int, Boolean>()//request code, isGeolocationPermissionRequest
     private val jsInterface = AndroidJSInterface(this)
+
+    override fun getWebEngineName(): String = "WebView"
+
+    override fun isSameSession(internalRepresentation: Any): Boolean {
+        return internalRepresentation == webView
+    }
 
     override val url: String?
         get() = webView?.url
@@ -332,6 +345,31 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
     companion object {
         fun clearCache(ctx: Context) {
             WebView(ctx).clearCache(true)
+        }
+
+        init {
+            WebEngineFactory.registerProvider(WebEngineProvider("WebView", object : WebEngineProviderCallback {
+                override suspend fun initialize(context: Context, webViewContainer: CursorLayout) {
+                    AndroidBug5497Workaround.assistActivity(context as Activity)
+                }
+
+                override fun createWebEngine(tab: WebTabState): WebEngine {
+                    return WebViewWebEngine(tab)
+                }
+
+                override suspend fun clearCache(ctx: Context) {
+                    clearCache(ctx)
+                }
+
+                override fun onThemeSettingUpdated(value: Config.Theme) {
+                    //nop
+                }
+
+                override fun getWebEngineVersionString(): String {
+                    val webViewPackage = WebViewCompat.getCurrentWebViewPackage(AppContext.get())
+                    return (webViewPackage?.packageName ?: "unknown") + ":" + (webViewPackage?.versionName ?: "unknown")
+                }
+            }))
         }
     }
 }

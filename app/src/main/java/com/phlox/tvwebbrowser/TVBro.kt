@@ -10,7 +10,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import com.phlox.tvwebbrowser.activity.main.MainActivity
+import com.phlox.tvwebbrowser.model.HostConfig
+import com.phlox.tvwebbrowser.singleton.AppDatabase
+import com.phlox.tvwebbrowser.singleton.FaviconsPool
 import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
+import com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine
 import java.net.CookieHandler
 import java.net.CookieManager
 import java.util.concurrent.ArrayBlockingQueue
@@ -27,14 +31,11 @@ class TVBro : Application(), Application.ActivityLifecycleCallbacks {
         const val CHANNEL_ID_DOWNLOADS: String = "downloads"
         const val MAIN_PREFS_NAME = "main.xml"
         val TAG = TVBro::class.simpleName
-
-        val config: Config get() = instance._config
     }
 
     lateinit var threadPool: ThreadPoolExecutor
         private set
 
-    private lateinit var _config: Config
     var needToExitProcessAfterMainActivityFinish = false
     var needRestartMainActivityAfterExitingProcess = false
     override fun onCreate() {
@@ -49,7 +50,7 @@ class TVBro : Application(), Application.ActivityLifecycleCallbacks {
 
         instance = this
 
-        _config = Config(getSharedPreferences(MAIN_PREFS_NAME, MODE_MULTI_PROCESS))
+        AppContext.init(this, Config(getSharedPreferences(MAIN_PREFS_NAME, MODE_MULTI_PROCESS)))
 
         val maxThreadsInOfflineJobsPool = Runtime.getRuntime().availableProcessors()
         threadPool = ThreadPoolExecutor(0, maxThreadsInOfflineJobsPool, 20,
@@ -61,7 +62,7 @@ class TVBro : Application(), Application.ActivityLifecycleCallbacks {
 
         ActiveModelsRepository.init(this)
 
-        when (_config.theme.value) {
+        when (AppContext.provideConfig().theme.value) {
             Config.Theme.BLACK -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             Config.Theme.WHITE -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -73,8 +74,33 @@ class TVBro : Application(), Application.ActivityLifecycleCallbacks {
     @Suppress("KotlinConstantConditions")
     private fun initWebEngineStuff() {
         Log.i(TAG, "initWebEngineStuff")
+
+        try {
+            Class.forName("com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine")
+        } catch (e: ClassNotFoundException) {
+            throw AssertionError(e) // WebViews are always available
+        }
+        try {
+            Class.forName("com.phlox.tvwebbrowser.webengine.gecko.GeckoWebEngine")
+        } catch (e: ClassNotFoundException) {
+            Log.w(TAG, "GeckoWebEngine not found")//it is ok
+        }
+
         val cookieManager = CookieManager()
         CookieHandler.setDefault(cookieManager)
+        FaviconsPool.databaseDelegate = object : FaviconsPool.DatabaseDelegate {
+            override fun findByHostName(host: String): HostConfig? {
+                return AppDatabase.db.hostsDao().findByHostName(host)
+            }
+
+            override suspend fun update(hostConfig: HostConfig) {
+                AppDatabase.db.hostsDao().update(hostConfig)
+            }
+
+            override suspend fun insert(newHostConfig: HostConfig) {
+                AppDatabase.db.hostsDao().insert(newHostConfig)
+            }
+        }
     }
 
     private fun initNotificationChannels() {

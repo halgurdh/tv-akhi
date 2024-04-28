@@ -13,6 +13,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
@@ -83,7 +84,7 @@ class ActionBar @JvmOverloads constructor(
 
         if (isInEditMode) return
 
-        val incognitoMode = TVBro.config.incognitoMode
+        val incognitoMode = AppContext.provideConfig().incognitoMode
 
         vb.ibMenu.setOnClickListener { callback?.closeWindow() }
         vb.ibDownloads.setOnClickListener { callback?.showDownloads() }

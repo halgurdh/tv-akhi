@@ -1,8 +1,11 @@
 package com.phlox.tvwebbrowser.activity.main
 
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.TVBro
+import com.phlox.tvwebbrowser.model.HostConfig
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.singleton.AppDatabase
 import com.phlox.tvwebbrowser.utils.Utils
@@ -13,6 +16,7 @@ import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URL
 
 class TabsModel : ActiveModel() {
     companion object {
@@ -22,7 +26,7 @@ class TabsModel : ActiveModel() {
     var loaded = false
     val currentTab = ObservableValue<WebTabState?>(null)
     val tabsStates = ObservableList<WebTabState>()
-    private val config = TVBro.config
+    private val config = AppContext.provideConfig()
     private var incognitoMode = config.incognitoMode
 
     init {
@@ -132,5 +136,32 @@ class TabsModel : ActiveModel() {
             newTab.webEngine.loadUrl(newTab.url)
         }
         newTab.webEngine.setNetworkAvailable(Utils.isNetworkConnected(TVBro.instance))
+    }
+
+    suspend fun findHostConfig(tab: WebTabState, createIfNotFound: Boolean): HostConfig? {
+        Log.d(WebTabState.TAG, "findOrCreateHostConfig")
+        val currentHostName = try {
+            URL(tab.url).host
+        } catch (e: Exception) {
+            Log.w(WebTabState.TAG, "Can not parse current url host: $e")
+            return null
+        }
+        var hostConfig = tab.cachedHostConfig
+        if (hostConfig == null || hostConfig.hostName != currentHostName) {
+            val db = com.phlox.tvwebbrowser.singleton.AppDatabase.db.hostsDao()
+            hostConfig = db.findByHostName(currentHostName)
+            if (hostConfig == null && createIfNotFound) {
+                hostConfig = HostConfig(currentHostName)
+                hostConfig.id = db.insert(hostConfig)
+            }
+            tab.cachedHostConfig = hostConfig
+        }
+        return hostConfig
+    }
+
+    suspend fun changePopupBlockingLevel(newLevel: Int, tab: WebTabState) {
+        val hostConfig = findHostConfig(tab,true) ?: return
+        hostConfig.popupBlockLevel = newLevel
+        AppDatabase.db.hostsDao().update(hostConfig)
     }
 }

@@ -1,6 +1,5 @@
 package com.phlox.tvwebbrowser.service.downloads
 
-import android.content.ContentResolver
 import android.content.ContentValues
 import android.net.Uri
 import android.os.Build

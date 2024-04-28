@@ -25,6 +25,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.BuildConfig
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
@@ -471,14 +472,14 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
     override fun loadUrl(url: String) {
         when {
             Config.HOME_URL_ALIAS == url -> {
-                when (TVBro.config.homePageMode) {
+                when (AppContext.provideConfig().homePageMode) {
                     Config.HomePageMode.BLANK -> {
                         loadDataWithBaseURL(null, "", "text/html", "UTF-8", null)
                     }
                     Config.HomePageMode.CUSTOM, Config.HomePageMode.SEARCH_ENGINE -> {
                         try {
-                            currentOriginalUrl = Uri.parse(TVBro.config.homePage)
-                            super.loadUrl(TVBro.config.homePage)
+                            currentOriginalUrl = Uri.parse(AppContext.provideConfig().homePage)
+                            super.loadUrl(AppContext.provideConfig().homePage)
                         } catch (e: Exception) {
                             Log.e(TAG, "LoadUrl error", e)
                             loadDataWithBaseURL(null, "", "text/html", "UTF-8", null)

@@ -3,6 +3,7 @@ package com.phlox.tvwebbrowser.activity.main
 import android.os.Build
 import android.util.Log
 import android.webkit.WebView
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.BuildConfig
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.TVBro
@@ -37,7 +38,7 @@ class MainActivityViewModel: ActiveModel() {
     var lastHistoryItem: HistoryItem? = null
     private var lastHistoryItemSaveJob: Job? = null
     val homePageLinks = ObservableList<HomePageLink>()
-    val config = TVBro.config
+    val config = AppContext.provideConfig()
 
     fun loadState() = modelScope.launch(Dispatchers.Main) {
         Log.d(TAG, "loadState")
@@ -80,7 +81,7 @@ class MainActivityViewModel: ActiveModel() {
 
     private suspend fun loadHomePageLinks() {
         Log.d(TAG, "loadHomePageLinks")
-        val config = TVBro.config
+        val config = AppContext.provideConfig()
         if (config.homePageMode == Config.HomePageMode.HOME_PAGE) {
             when (config.homePageLinksMode) {
                 Config.HomePageLinksMode.MOST_VISITED -> {
@@ -212,7 +213,7 @@ class MainActivityViewModel: ActiveModel() {
 
     fun onTabTitleUpdated(tab: WebTabState) {
         Log.d(TAG, "onTabTitleUpdated: ${tab.url} ${tab.title}")
-        if (TVBro.config.incognitoMode) return
+        if (AppContext.provideConfig().incognitoMode) return
         val lastHistoryItem = lastHistoryItem ?: return
         if (tab.url == lastHistoryItem.url) {
             lastHistoryItem.title = tab.title
@@ -226,7 +227,7 @@ class MainActivityViewModel: ActiveModel() {
 
     fun prepareSwitchToIncognito() {
         Log.d(TAG, "prepareSwitchToIncognito")
-        if (TVBro.config.isWebEngineGecko()) return
+        if (AppContext.provideConfig().isWebEngineGecko()) return
         //to isolate incognito mode data:
         //in api >= 28 we just use another directory for WebView data
         //on earlier apis we backup-ing existing WebView data directory
@@ -336,9 +337,10 @@ class MainActivityViewModel: ActiveModel() {
 
     fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int) {
         val link = homePageLinks.find { it.order == bookmarkOrder } ?: return
-        if (link.favoriteId == null || link.validUntil == null) return
+        val favoriteId = link.favoriteId ?: return
+        if (link.validUntil == null) return
         modelScope.launch {
-            AppDatabase.db.favoritesDao().markAsUseful(link.favoriteId)
+            AppDatabase.db.favoritesDao().markAsUseful(favoriteId)
         }
     }
 }

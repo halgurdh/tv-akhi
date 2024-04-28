@@ -82,7 +82,7 @@ android {
             }
     }
 
-    flavorDimensions += listOf("appstore")
+    flavorDimensions += listOf("appstore", "webengine")
     productFlavors {
         create("generic") {
             dimension = "appstore"
@@ -98,6 +98,13 @@ android {
             applicationIdSuffix = ".foss"
             buildConfigField("Boolean", "BUILT_IN_AUTO_UPDATE", "false")
             includeFirebase = false//do not include firebase in the foss build
+        }
+
+        create("geckoIncluded") {
+            dimension = "webengine"
+        }
+        create("geckoExcluded") {
+            dimension = "webengine"
         }
     }
 
@@ -119,6 +126,9 @@ android {
 }
 
 dependencies {
+    implementation(project(":app:common"))
+    "geckoIncludedImplementation"(project(":app:gecko"))
+
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
     implementation("androidx.appcompat:appcompat:1.6.1")
@@ -126,7 +136,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
@@ -141,19 +151,13 @@ dependencies {
     implementation("com.github.truefedex:ad-block:v0.0.1-ci")
     implementation("de.halfbit:pinned-section-listview:1.0.0")
 
-    //val geckoViewChannel = "beta"
-    //val geckoViewVersion = "112.0.20230330182947"
-    //implementation("org.mozilla.geckoview:geckoview-$geckoViewChannel:$geckoViewVersion")
-    val geckoViewVersion = "121.0.20240108143603"
-    implementation("org.mozilla.geckoview:geckoview:$geckoViewVersion")
-
     //"debugImplementation"("com.squareup.leakcanary:leakcanary-android:2.7")
 
     "googleImplementation"("com.google.firebase:firebase-core:21.1.1")
-    "googleImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.6.2")
+    "googleImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.6.4")
 
     "genericImplementation"("com.google.firebase:firebase-core:21.1.1")
-    "genericImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.6.2")
+    "genericImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.6.4")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.9")

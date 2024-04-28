@@ -5,6 +5,7 @@ import android.widget.Toast
 import com.brave.adblock.AdBlockClient
 import com.brave.adblock.AdBlockClient.FilterOption
 import com.brave.adblock.Utils
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.utils.activemodel.ActiveModel
 import com.phlox.tvwebbrowser.utils.observable.ObservableValue
@@ -25,7 +26,7 @@ class AdblockModel : ActiveModel() {
 
     private var client: AdBlockClient? = null
     val clientLoading = ObservableValue(false)
-    val config = TVBro.config
+    val config = AppContext.provideConfig()
 
     init {
         loadAdBlockList(false)

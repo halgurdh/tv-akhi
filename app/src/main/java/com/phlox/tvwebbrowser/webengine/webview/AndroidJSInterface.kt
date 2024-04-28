@@ -2,6 +2,7 @@ package com.phlox.tvwebbrowser.webengine.webview
 
 import android.net.http.SslError
 import android.webkit.JavascriptInterface
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
@@ -70,7 +71,7 @@ class AndroidJSInterface(val webEngine: WebViewWebEngine
     @JavascriptInterface
     fun setSearchEngine(engine: String, customSearchEngineURL: String) {
         if (webEngine.tab.url != Config.HOME_PAGE_URL) return
-        TVBro.config.searchEngineURL.value = customSearchEngineURL
+        AppContext.provideConfig().searchEngineURL.value = customSearchEngineURL
     }
 
     @JavascriptInterface
@@ -85,7 +86,7 @@ class AndroidJSInterface(val webEngine: WebViewWebEngine
         if (webEngine.tab.url != Config.HOME_PAGE_URL) return
         val callback = webEngine.callback ?: return
         callback.getActivity().runOnUiThread {
-            val cfg = TVBro.config
+            val cfg = AppContext.provideConfig()
             val jsArr = JSONArray()
             for (item in callback.getHomePageLinks()) {
                 jsArr.put(item.toJsonObj())

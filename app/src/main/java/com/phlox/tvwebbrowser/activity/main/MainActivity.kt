@@ -26,9 +26,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import androidx.core.os.postDelayed
 import androidx.lifecycle.lifecycleScope
-import com.phlox.tvwebbrowser.BuildConfig
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
@@ -50,7 +49,6 @@ import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.webengine.WebEngine
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
-import com.phlox.tvwebbrowser.webengine.gecko.GeckoWebEngine
 import com.phlox.tvwebbrowser.widgets.NotificationView
 import kotlinx.coroutines.*
 import java.io.File
@@ -59,8 +57,6 @@ import java.io.UnsupportedEncodingException
 import java.net.URL
 import java.net.URLEncoder
 import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.system.exitProcess
 
 
@@ -88,7 +84,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     private var running: Boolean = false
     private var isFullscreen: Boolean = false
     private lateinit var prefs: SharedPreferences
-    protected val config = TVBro.config
+    protected val config = AppContext.provideConfig()
     private val voiceSearchHelper = VoiceSearchHelper(this, VOICE_SEARCH_REQUEST_CODE,
         MY_PERMISSIONS_REQUEST_VOICE_SEARCH_PERMISSIONS)
     private var lastCommonRequestsCode = COMMON_REQUESTS_START_CODE
@@ -576,8 +572,8 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     }
 
     private fun onDownloadRequested(url: String, referer: String, originalDownloadFileName: String, userAgent: String?, mimeType: String? = null,
-                            operationAfterDownload: Download.OperationAfterDownload = Download.OperationAfterDownload.NOP,
-                            base64BlobData: String? = null, stream: InputStream?, size: Long = 0L) {
+                                    operationAfterDownload: Download.OperationAfterDownload = Download.OperationAfterDownload.NOP,
+                                    base64BlobData: String? = null, stream: InputStream?, size: Long = 0L) {
         downloadIntent = Download(url, originalDownloadFileName, null, operationAfterDownload,
             mimeType, referer, userAgent, base64BlobData, stream, size)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
@@ -708,14 +704,14 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
     private suspend fun showPopupBlockOptions() {
         val tab = tabsModel.currentTab.value ?: return
-        val currentHostConfig = tab.findHostConfig(false)
+        val currentHostConfig = tabsModel.findHostConfig(tab,false)
         val currentBlockPopupsLevelValue = currentHostConfig?.popupBlockLevel ?: HostConfig.DEFAULT_BLOCK_POPUPS_VALUE
         val hostName = currentHostConfig?.hostName ?: try { URL(tab.url).host } catch (e: Exception) { "" }
         AlertDialog.Builder(this)
             .setTitle(getString(R.string.block_popups_s, hostName))
             .setSingleChoiceItems(R.array.popup_blocking_level, currentBlockPopupsLevelValue) {
                     dialog, itemId -> lifecycleScope.launch {
-                        tab.changePopupBlockingLevel(itemId)
+                        tabsModel.changePopupBlockingLevel(itemId, tab)
                         dialog.dismiss()
                     }
             }
@@ -1038,8 +1034,8 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
 
         override fun onDownloadRequested(url: String, referer: String,
-            originalDownloadFileName: String, userAgent: String?, mimeType: String?,
-            operationAfterDownload: Download.OperationAfterDownload, base64BlobData: String?,
+                                         originalDownloadFileName: String, userAgent: String?, mimeType: String?,
+                                         operationAfterDownload: Download.OperationAfterDownload, base64BlobData: String?,
                                          stream: InputStream?, size: Long) {
             this@MainActivity.onDownloadRequested(url, referer, originalDownloadFileName,
                 userAgent, mimeType, operationAfterDownload, base64BlobData, stream, size)
@@ -1212,7 +1208,18 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
         override fun isDialogsBlockingEnabled(): Boolean {
             if (tab.url == Config.HOME_PAGE_URL) return false
-            return runBlocking(Dispatchers.Main.immediate) { tab.shouldBlockNewWindow(true, false) }
+            return shouldBlockNewWindow(dialog = true, userGesture = false)
+        }
+
+        override fun shouldBlockNewWindow(dialog: Boolean, userGesture: Boolean): Boolean {
+            val hostConfig = runBlocking(Dispatchers.Main.immediate){ tabsModel.findHostConfig(tab, false) }
+            val currentBlockPopupsLevelValue = hostConfig?.popupBlockLevel ?: HostConfig.DEFAULT_BLOCK_POPUPS_VALUE
+            return when (currentBlockPopupsLevelValue) {
+                HostConfig.POPUP_BLOCK_NONE -> false
+                HostConfig.POPUP_BLOCK_DIALOGS -> dialog
+                HostConfig.POPUP_BLOCK_NEW_AUTO_OPENED_TABS -> dialog || !userGesture
+                else -> true
+            }
         }
 
         override fun onBlockedAd(uri: String) {
@@ -1234,8 +1241,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
 
         override fun onCreateWindow(dialog: Boolean, userGesture: Boolean): View? {
-            val shouldBlockNewWindow = runBlocking(Dispatchers.Main.immediate) { tab.shouldBlockNewWindow(dialog, userGesture) }
-            if (shouldBlockNewWindow) {
+            if (shouldBlockNewWindow(dialog, userGesture)) {
                 onBlockedDialog(!dialog)
                 return null
             }
@@ -1249,19 +1255,10 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
 
         override fun closeWindow(internalRepresentation: Any) {
-            if (config.isWebEngineGecko()) {
-                for (tab in tabsModel.tabsStates) {
-                    if ((tab.webEngine as GeckoWebEngine).session == internalRepresentation) {
-                        closeTab(tab)
-                        break
-                    }
-                }
-            } else {
-                for (tab in tabsModel.tabsStates) {
-                    if (tab.webEngine.getView() == internalRepresentation) {
-                        closeTab(tab)
-                        break
-                    }
+            for (tab in tabsModel.tabsStates) {
+                if (tab.webEngine.isSameSession(internalRepresentation)) {
+                    closeTab(tab)
+                    break
                 }
             }
         }
@@ -1323,10 +1320,10 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         override fun onEditHomePageBookmarkSelected(index: Int) {
             lifecycleScope.launch {
                 val bookmark = viewModel.homePageLinks.firstOrNull { it.order == index }
-                var favoriteItem: FavoriteItem? = null
-                if (bookmark?.favoriteId != null) {
-                    favoriteItem = AppDatabase.db.favoritesDao().getById(bookmark.favoriteId)
+                var favoriteItem: FavoriteItem? = bookmark?.favoriteId?.let {
+                    AppDatabase.db.favoritesDao().getById(it)
                 }
+
                 if (favoriteItem == null) {
                     favoriteItem = FavoriteItem()
                     favoriteItem.title = bookmark?.title

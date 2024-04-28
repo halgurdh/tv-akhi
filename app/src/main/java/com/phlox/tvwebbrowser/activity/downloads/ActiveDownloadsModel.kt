@@ -1,10 +1,7 @@
 package com.phlox.tvwebbrowser.activity.downloads
 
-import android.content.ContentValues
 import android.net.Uri
 import android.os.Build
-import android.os.ParcelFileDescriptor
-import android.provider.MediaStore
 import android.util.Log
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.model.Download

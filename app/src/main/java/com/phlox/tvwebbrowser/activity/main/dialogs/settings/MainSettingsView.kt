@@ -7,11 +7,11 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.animation.AnimationUtils
-import android.webkit.WebView
 import android.widget.*
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewFeature
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
@@ -25,7 +25,6 @@ import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.system.exitProcess
 
 class MainSettingsView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -33,7 +32,7 @@ class MainSettingsView @JvmOverloads constructor(
     private var vb = ViewSettingsMainBinding.inflate(LayoutInflater.from(getContext()), this, true)
     var settingsModel = ActiveModelsRepository.get(SettingsModel::class, activity!!)
     var adblockModel = ActiveModelsRepository.get(AdblockModel::class, activity!!)
-    var config = TVBro.config
+    var config = AppContext.provideConfig()
 
     init {
         initWebBrowserEngineSettingsUI()
@@ -57,6 +56,11 @@ class MainSettingsView @JvmOverloads constructor(
     }
 
     private fun initWebBrowserEngineSettingsUI() {
+        if (WebEngineFactory.getProviders().size == 1) {
+            vb.llWebEngine.visibility = View.GONE
+            return
+        }
+
         val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, Config.SupportedWebEngines)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 

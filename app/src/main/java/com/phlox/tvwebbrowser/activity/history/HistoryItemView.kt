@@ -9,7 +9,6 @@ import android.widget.TextView
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.model.HistoryItem
 
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 

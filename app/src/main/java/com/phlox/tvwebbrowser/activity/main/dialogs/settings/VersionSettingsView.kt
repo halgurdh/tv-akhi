@@ -12,6 +12,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ScrollView
 import androidx.webkit.WebViewCompat
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.BuildConfig
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
@@ -22,13 +23,14 @@ import com.phlox.tvwebbrowser.activity.main.SettingsModel
 import com.phlox.tvwebbrowser.databinding.ViewSettingsVersionBinding
 import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.utils.activity
+import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 
 @SuppressLint("SetTextI18n")
 class VersionSettingsView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ScrollView(context, attrs, defStyleAttr) {
     private var vb = ViewSettingsVersionBinding.inflate(LayoutInflater.from(getContext()), this, true)
-    var config = TVBro.config
+    var config = AppContext.provideConfig()
     var settingsModel = ActiveModelsRepository.get(SettingsModel::class, activity!!)
     var autoUpdateModel = ActiveModelsRepository.get(AutoUpdateModel::class, activity!!)
     var callback: Callback? = null
@@ -40,15 +42,7 @@ class VersionSettingsView @JvmOverloads constructor(
     init {
         vb.tvVersion.text = context.getString(R.string.version_s, BuildConfig.VERSION_NAME)
 
-        val engineVersion = "Engine: " + if (settingsModel.config.isWebEngineGecko()) {
-            org.mozilla.geckoview.BuildConfig.LIBRARY_PACKAGE_NAME + ":" +
-                    org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION + "." +
-                    org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID + " - " +
-                    org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
-        } else {
-            val webViewPackage = WebViewCompat.getCurrentWebViewPackage(context)
-            (webViewPackage?.packageName ?: "unknown") + ":" + (webViewPackage?.versionName ?: "unknown")
-        }
+        val engineVersion = "Engine: " + WebEngineFactory.getWebEngineVersionString()
         vb.tvWebViewVersion.text = engineVersion
 
         vb.tvLink.text = Html.fromHtml("<p><u>https://github.com/truefedex/tv-bro</u></p>")

@@ -2,7 +2,6 @@ package com.phlox.tvwebbrowser.model.dao
 
 import androidx.room.*
 import com.phlox.tvwebbrowser.model.FavoriteItem
-import com.phlox.tvwebbrowser.model.HistoryItem
 
 @Dao
 interface FavoritesDao {

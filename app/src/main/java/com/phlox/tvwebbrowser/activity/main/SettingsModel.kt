@@ -1,7 +1,7 @@
 package com.phlox.tvwebbrowser.activity.main
 
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
-import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.utils.activemodel.ActiveModel
 import com.phlox.tvwebbrowser.utils.observable.ObservableValue
 
@@ -11,7 +11,7 @@ class SettingsModel : ActiveModel() {
         const val TV_BRO_UA_PREFIX = "TV Bro/1.0 "
     }
 
-    val config = TVBro.config
+    val config = AppContext.provideConfig()
 
     //Home page settings
     var homePage by config::homePage

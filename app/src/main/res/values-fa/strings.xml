@@ -159,32 +159,7 @@
     <item>آخرین تاریخ</item>
     <item>بیشترین بازدید</item>
   </string-array>
-  <string name="repost_confirm_message">برای نمایش این صفحه، TV Bro باید اطلاعاتی را ارسال کند که هر اقدامی (مانند جستجو یا تأیید سفارش) را که قبلاً انجام شده است، تکرار کند.</string>
-  <string name="repost_confirm_title">مطمئنی؟</string>
-  <string name="repost_confirm_resend">ارسال مجدد</string>
-  <string name="before_unload_message">این صفحه از شما می‌خواهد تأیید کنید که می‌خواهید خارج شوید - داده‌هایی که وارد کرده‌اید ممکن است ذخیره نشوند</string>
-  <string name="before_unload_title">مطمئنی؟</string>
-  <string name="before_unload_leave_page">صفحه را ترک کنید</string>
-  <string name="before_unload_stay">در این صفحه بمان</string>
-  <string name="username">نام کاربری</string>
-  <string name="password">کلمه عبور</string>
-  <string name="wait">صبر کن</string>
-  <string name="stop">متوقف کردن</string>
-  <string name="slow_script">یک اسکریپت در این صفحه باعث می شود مرورگر وب شما به کندی اجرا شود</string>
-  <string name="request_storage">اجازه دسترسی به فضای ذخیره‌سازی دستگاه برای «%1$s» داده شود؟</string>
-  <string name="request_storage_access">به اشخاص ثالث اجازه دسترسی به فضای ذخیره شخص اول برای "%1$s" داده می شود؟</string>
-  <string name="request_geolocation">مکان را با "%1$s" به اشتراک بگذارید؟</string>
-  <string name="request_notification">اعلان‌ها برای "%1$s" مجاز هستند؟</string>
-  <string name="request_video">اشتراک‌گذاری ویدیو با "%1$s"</string>
-  <string name="request_audio">اشتراک‌گذاری صدا با "%1$s"</string>
-  <string name="request_media">اشتراک‌گذاری ویدیو و صدا با «%1$s»</string>
-  <string name="request_xr">نمایشگرهای WebXR را با "%1$s" به اشتراک بگذارید؟</string>
-  <string name="request_autoplay">پخش خودکار ویدیو در "%1$s" مجاز است؟</string>
-  <string name="request_media_key_system_access">اجازه دسترسی به کلید رسانه سیستم برای "%1$s" داده شود؟</string>
-  <string name="media_back_camera">دوربین پشت</string>
-  <string name="media_front_camera">دوربین جلو</string>
-  <string name="media_microphone">میکروفون</string>
-  <string name="media_other">منبع نامعلوم</string>
+
   <string name="web_browser_engine_temporary_setting">موتور مرورگر وب (تنظیم موقت)</string>
   <string name="need_restart_message">برای اعمال تغییرات، برنامه را مجددا راه اندازی کنید</string>
   <string name="restart">راه اندازی مجدد</string>
