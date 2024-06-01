@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item
+        android:id="@+id/miRefreshPage"
+        android:title="@string/refresh_page" />
     <item
         android:id="@+id/miOpenInNewTab"
         android:title="@string/open_in_new_tab" />

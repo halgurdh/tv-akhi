@@ -14,9 +14,10 @@
         "*://*/*"
       ],
       "js": [
-        "generic.js"
+        "content.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
     },
     {
       "matches": [
@@ -43,5 +44,8 @@
     "webRequest",
     "webRequestBlocking",
     "<all_urls>"
+  ],
+  "host_permissions": [
+    "*://*/*"
   ]
 }

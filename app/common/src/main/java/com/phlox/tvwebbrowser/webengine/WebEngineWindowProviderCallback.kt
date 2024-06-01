@@ -7,6 +7,7 @@ import android.net.Uri
 import android.view.View
 import com.phlox.tvwebbrowser.model.Download
 import com.phlox.tvwebbrowser.model.HomePageLink
+import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
 import java.io.InputStream
 
 interface WebEngineWindowProviderCallback {
@@ -44,6 +45,15 @@ interface WebEngineWindowProviderCallback {
     fun onPrepareForFullscreen()
     fun onExitFullscreen()
     fun onVisited(url: String)
-    fun suggestActionsForLink(href: String, x: Int, y: Int)
+    fun suggestActionsForLink(baseUri: String?, linkUri: String?, srcUri: String?,
+                              title: String?, altText: String?, textContent: String?,
+                              x: Int, y: Int)
     fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int)
+    fun onContextMenu(
+        cursorDrawer: CursorDrawerDelegate, baseUri: String?, linkUri: String?, srcUri: String?,
+        title: String?, altText: String?,
+        textContent: String?, x: Int, y: Int
+    )
+
+    fun onSelectedTextActionRequested(selectedText: String, editable: Boolean)
 }

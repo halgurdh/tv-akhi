@@ -32,7 +32,6 @@ class DownloadService : Service() {
     private lateinit var model: ActiveDownloadsModel
     private val executor = Executors.newCachedThreadPool()
     private val handler = Handler(Looper.getMainLooper())
-    private val binder = Binder()
     private var notificationBuilder: NotificationCompat.Builder? = null
     private lateinit var notificationManager: NotificationManager
 
@@ -120,8 +119,8 @@ class DownloadService : Service() {
         return notificationBuilder!!.build()
     }
 
-    override fun onBind(intent: Intent): IBinder? {
-        return binder
+    override fun onBind(intent: Intent): IBinder {
+        return Binder(this)
     }
 
     private fun onTaskEnded(task: DownloadTask) {
@@ -215,10 +214,7 @@ class DownloadService : Service() {
         startForeground(DOWNLOAD_NOTIFICATION_ID, updateNotification())
     }
 
-    inner class Binder : android.os.Binder() {
-        val service: DownloadService
-            get() = this@DownloadService
-    }
+    class Binder(val service: DownloadService) : android.os.Binder()
 
     companion object {
         val TAG: String = DownloadService::class.java.simpleName

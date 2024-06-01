@@ -6,7 +6,7 @@ import androidx.annotation.UiThread
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.model.WebTabState
-import com.phlox.tvwebbrowser.widgets.CursorLayout
+import com.phlox.tvwebbrowser.widgets.cursor.CursorLayout
 
 interface WebEngineProviderCallback {
     suspend fun initialize(context: Context, webViewContainer: CursorLayout)

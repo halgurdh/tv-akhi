@@ -29,7 +29,6 @@ import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.BuildConfig
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
-import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.utils.LogUtils
 import java.net.URLEncoder
 import java.util.*
@@ -53,8 +52,6 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
     private var webChromeClient_: WebChromeClient
     private var fullscreenViewCallback: WebChromeClient.CustomViewCallback? = null
     private var pickFileCallback: ValueCallback<Array<Uri>>? = null
-    private var lastTouchX: Int = 0
-    private var lastTouchY: Int = 0
     private var permRequestDialog: AlertDialog? = null
     private var webPermissionsRequest: PermissionRequest? = null
     private var requestedWebResourcesThatDoNotNeedToGrantAndroidPermissions: ArrayList<String>? = null
@@ -62,14 +59,13 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
     private var geoPermissionsCallback: GeolocationPermissions.Callback? = null
     var lastSSLError: SslError? = null
     var trustSsl: Boolean = false
-    private var currentOriginalUrl: Uri? = null
+    var currentOriginalUrl: Uri? = null
     private val uiHandler = Handler(Looper.getMainLooper())
 
     interface Callback {
         fun getActivity(): Activity?
         fun onOpenInNewTabRequested(url: String)
         fun onDownloadRequested(url: String)
-        fun onLongTap()
         fun onThumbnailError()
         fun onShowCustomView(view: View)
         fun onHideCustomView()
@@ -95,7 +91,7 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
         fun onShareUrlRequested(url: String)
         fun onOpenInExternalAppRequested(url: String)
         fun onVisited(url: String)
-        fun suggestActionsForLink(href: String, x: Int, y: Int)
+        fun onContextMenu(baseUrl: String?, href: String?, x: Int, y: Int)
     }
 
     init {
@@ -157,17 +153,7 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
             }
         }
 
-        /*scrollBarStyle = WebView.SCROLLBARS_OUTSIDE_OVERLAY
-        isScrollbarFadingEnabled = false*/
-
-        setOnLongClickListener {
-            evaluateJavascript(Scripts.LONG_PRESS_SCRIPT) { href ->
-                if (href != null && "null" != href) {
-                    callback.suggestActionsForLink(href, lastTouchX, lastTouchY)
-                } else {
-                    callback.onLongTap()
-                }
-            }
+        setOnLongClickListener { v ->
             true
         }
 
@@ -456,17 +442,6 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
                 "?type=" + INTERNAL_SCHEME_WARNING_DOMAIN_TYPE_CERT +
                 "&url=" + URLEncoder.encode(error.url, "UTF-8")
         loadUrl(url)
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        val action = event.action
-        when (action and MotionEvent.ACTION_MASK) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP -> {
-                lastTouchX = event.x.toInt()
-                lastTouchY = event.y.toInt()
-            }
-        }
-        return super.onTouchEvent(event)
     }
 
     override fun loadUrl(url: String) {

@@ -12,7 +12,6 @@ import android.webkit.WebView
 import androidx.webkit.WebViewCompat
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
-import com.phlox.tvwebbrowser.widgets.CursorLayout
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.AndroidBug5497Workaround
 import com.phlox.tvwebbrowser.utils.Utils
@@ -21,8 +20,11 @@ import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineProvider
 import com.phlox.tvwebbrowser.webengine.WebEngineProviderCallback
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
+import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
+import com.phlox.tvwebbrowser.widgets.cursor.CursorLayout
 
-class WebViewWebEngine(val tab: WebTabState) : WebEngine {
+
+class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.Callback {
     private var webView: WebViewEx? = null
     internal var callback: WebEngineWindowProviderCallback? = null
     private var viewParent: CursorLayout? = null
@@ -171,6 +173,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
         parent.removeAllViews()
         fullscreenViewParent.removeAllViews()
         parent.addView(webView)
+        viewParent?.cursorDrawerDelegate?.callback = this
         onResume()
     }
 
@@ -198,6 +201,71 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
         return true
     }
 
+    override fun onTextSelectionStart(x: Int, y: Int) {
+        webView?. let {
+            it.evaluateJavascript("TVBRO_updateSelection($x, $y, ${it.width}, ${it.height});") {
+                //nop
+            }
+        }
+    }
+
+    override fun onTextSelectionMove(x: Int, y: Int) {
+        webView?. let {
+            it.evaluateJavascript("TVBRO_updateSelection($x, $y, ${it.width}, ${it.height});") {
+                //nop
+            }
+        }
+    }
+
+    override fun onTextSelectionEnd(x: Int, y: Int) {
+        //detect is selection in editable field (with js standard way)
+        webView?. let {
+            it.evaluateJavascript("TVBRO_processSelection()") { resultStr ->
+                val unescaped: String = resultStr.trim('"')
+                    .replace("\\\\", "\\") // unescape \\ -> \
+                    .replace("\\\"", "\"")
+                val result = Utils.jsonToMap(unescaped)
+                val selectedText = result["selectedText"] as String
+                val editable = result["editable"] as Boolean
+                callback?.onSelectedTextActionRequested(selectedText, editable)
+            }
+        }
+    }
+
+    override fun onTextSelectionCancel() {
+        webView?.let {
+            it.evaluateJavascript("TVBRO_clearSelection();") {
+                //nop
+            }
+        }
+    }
+
+    override fun replaceSelection(newText: String) {
+        val escapedText = newText.replace("'", "\\'")
+        webView?.let {
+            it.evaluateJavascript("""
+                let selection = window.getSelection();
+                let range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode('$escapedText'));
+            """.trimIndent()) {
+                //nop
+            }
+        }
+    }
+
+    override fun onLongPress(x: Int, y: Int) {
+        webView?.let {
+            it.evaluateJavascript(Scripts.LONG_PRESS_SCRIPT) { href ->
+                val linkUrl = if (href == "null") null else href
+                webViewCallback.onContextMenu(
+                    it.currentOriginalUrl.toString(),
+                    linkUrl, x, y
+                )
+            }
+        }
+    }
+
     private val webViewCallback = object : WebViewEx.Callback {
         override fun getActivity(): Activity? {
             return callback?.getActivity()
@@ -211,10 +279,6 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
             callback?.onDownloadRequested(url)
         }
 
-        override fun onLongTap() {
-            viewParent?.goToFingerMode()
-        }
-
         override fun onThumbnailError() {
             //nop for now
         }
@@ -225,9 +289,9 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
             fullscreenViewParent?.apply {
                 visibility = View.VISIBLE
                 addView(view)
-                val previousCursorPosition = (webView?.parent as? CursorLayout)?.cursorPosition
+                val previousCursorPosition = (webView?.parent as? CursorLayout)?.cursorDrawerDelegate?.cursorPosition
                 if (previousCursorPosition != null) {
-                    (this as? CursorLayout)?.cursorPosition?.set(previousCursorPosition)
+                    (this as? CursorLayout)?.cursorDrawerDelegate?.cursorPosition?.set(previousCursorPosition)
                 }
             }            
             fullScreenView = view
@@ -238,9 +302,9 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
                 fullscreenViewParent?.removeView(fullScreenView)
                 fullScreenView = null
             }
-            val previousCursorPosition = (fullscreenViewParent as? CursorLayout)?.cursorPosition
+            val previousCursorPosition = (fullscreenViewParent as? CursorLayout)?.cursorDrawerDelegate?.cursorPosition
             if (previousCursorPosition != null) {
-                (webView?.parent as? CursorLayout)?.cursorPosition?.set(previousCursorPosition)
+                (webView?.parent as? CursorLayout)?.cursorDrawerDelegate?.cursorPosition?.set(previousCursorPosition)
             }
             fullscreenViewParent?.visibility = View.INVISIBLE
             webView?.visibility = View.VISIBLE
@@ -337,8 +401,18 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine {
             callback?.onVisited(url)
         }
 
-        override fun suggestActionsForLink(href: String, x: Int, y: Int) {
-            callback?.suggestActionsForLink(href, x, y)
+        override fun onContextMenu(baseUrl:String?, href: String?, x: Int, y: Int) {
+            callback?.onContextMenu(
+                viewParent!!.cursorDrawerDelegate,
+                baseUri = baseUrl,
+                linkUri = href,
+                srcUri = null,
+                title = null,
+                altText = null,
+                textContent = null,
+                x = x,
+                y = y
+            )
         }
     }
 

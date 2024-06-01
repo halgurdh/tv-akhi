@@ -70,10 +70,17 @@ class MyContentDelegate(private val webEngine: GeckoWebEngine): GeckoSession.Con
                     + " srcUri="
                     + element.srcUri
         )
-        val linkUri = element.linkUri ?: element.srcUri ?: return
         val webView = webEngine.getView() as? GeckoViewWithVirtualCursor ?: return
-        webEngine.callback?.suggestActionsForLink(linkUri, webView.cursorPosition.x.toInt(),
-            webView.cursorPosition.y.toInt()
+        webEngine.callback?.onContextMenu(
+            webView.cursorDrawerDelegate,
+            element.baseUri,
+            element.linkUri,
+            element.srcUri,
+            element.title,
+            element.altText,
+            element.textContent,
+            webView.cursorDrawerDelegate.cursorPosition.x.toInt(),
+            webView.cursorDrawerDelegate.cursorPosition.y.toInt()
         )
     }
 

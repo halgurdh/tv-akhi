@@ -15,6 +15,7 @@ import com.phlox.tvwebbrowser.utils.observable.ObservableValue
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.net.URL
 
@@ -64,12 +65,14 @@ class TabsModel : ActiveModel() {
         loaded = true
     }
 
-    fun saveTab(tab: WebTabState) = modelScope.launch(Dispatchers.Main) {
+    suspend fun saveTab(tab: WebTabState) {
         val tabsDB = AppDatabase.db.tabsDao()
         if (tab.selected) {
             tabsDB.unselectAll(config.incognitoMode)
         }
-        tab.saveWebViewStateToFile()
+        withContext(Dispatchers.IO) {
+            tab.saveWebViewStateToFile()
+        }
         if (tab.id != 0L) {
             tabsDB.update(tab)
         } else {
@@ -110,18 +113,20 @@ class TabsModel : ActiveModel() {
         fullScreenViewParent: ViewGroup,
         webEngineWindowProviderCallback: WebEngineWindowProviderCallback
     ) {
-        if (currentTab.value == newTab) return
-        tabsStates.forEach {
-            it.selected = false
-        }
-        currentTab.value?.apply {
-            webEngine.onDetachFromWindow(completely = false, destroyTab = false)
-            onPause()
-            saveTab(this)
-        }
+        if (currentTab.value == newTab && newTab.webEngine.getView() != null) return
+        if (currentTab.value != newTab) {
+            tabsStates.forEach {
+                it.selected = false
+            }
+            currentTab.value?.apply {
+                webEngine.onDetachFromWindow(completely = false, destroyTab = false)
+                onPause()
+                modelScope.launch { saveTab(this@apply) }
+            }
 
-        newTab.selected = true
-        currentTab.value = newTab
+            newTab.selected = true
+            currentTab.value = newTab
+        }
         var wv = newTab.webEngine.getView()
         var needReloadUrl = false
         if (wv == null) {

@@ -285,4 +285,44 @@ object Utils {
         actManager.getMemoryInfo(memInfo)
         return memInfo
     }
+
+    fun jsonToMap(json: String): Map<String, Any?> {
+        val map: MutableMap<String, Any?> = HashMap()
+        try {
+            val jsonObject = JSONObject(json)
+            val keysItr = jsonObject.keys()
+            while (keysItr.hasNext()) {
+                val key = keysItr.next()
+                var value = jsonObject[key]
+                if (value is JSONArray) {
+                    value = jsonToList(value.toString())
+                } else if (value is JSONObject) {
+                    value = jsonToMap(value.toString())
+                }
+                map[key] = value
+            }
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        return map
+    }
+
+    private fun jsonToList(string: String): List<Any?> {
+        val list: MutableList<Any?> = ArrayList()
+        try {
+            val jsonArray = JSONArray(string)
+            for (i in 0 until jsonArray.length()) {
+                var value = jsonArray[i]
+                if (value is JSONArray) {
+                    value = jsonToList(value.toString())
+                } else if (value is JSONObject) {
+                    value = jsonToMap(value.toString())
+                }
+                list.add(value)
+            }
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        return list
+    }
 }
