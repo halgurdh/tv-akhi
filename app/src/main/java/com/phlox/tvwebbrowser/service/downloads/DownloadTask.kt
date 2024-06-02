@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import android.webkit.CookieManager
+import androidx.webkit.URLUtilCompat
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.model.Download
 import com.phlox.tvwebbrowser.singleton.AppDatabase
@@ -53,7 +54,9 @@ class FileDownloadTask(override var downloadInfo: Download, private val userAgen
                     readTimeout = 10000
                     connectTimeout = 20000
                     setRequestProperty("User-Agent", userAgent)
-                    downloadInfo.mimeType?.apply { setRequestProperty("Content-Type", this) }
+                    if (downloadInfo.mimeType != null && downloadInfo.mimeType != "application/octet-stream") {
+                        setRequestProperty("Accept", downloadInfo.mimeType)
+                    }
                     downloadInfo.referer?.apply { setRequestProperty("Referer", this) }
                     useCaches = false
                     val cookie = CookieManager.getInstance().getCookie(url.toString())
@@ -91,7 +94,7 @@ class FileDownloadTask(override var downloadInfo: Download, private val userAgen
 
             if (connection.headerFields.containsKey("Content-Disposition")) {
                 val mime = connection.getHeaderField("Content-Type")
-                downloadInfo.filename = DownloadUtils.guessFileName(downloadInfo.url, connection.getHeaderField("Content-Disposition"), mime)
+                downloadInfo.filename = URLUtilCompat.guessFileName(downloadInfo.url, connection.getHeaderField("Content-Disposition"), mime)
                 downloadInfo.filepath = File(File(downloadInfo.filepath).parentFile, downloadInfo.filename).absolutePath
             }
 

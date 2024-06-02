@@ -25,7 +25,12 @@ class ActiveDownloadsModel: ActiveModel() {
     suspend fun deleteItem(download: Download) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val contentResolver = TVBro.instance.contentResolver
-            val rowsDeleted = contentResolver.delete(Uri.parse(download.filepath), null)
+            val rowsDeleted = try {
+                contentResolver.delete(Uri.parse(download.filepath), null)
+            } catch (e: Exception) {
+                Log.w(FileDownloadTask.TAG, "Failed to delete file from MediaStore", e)
+                0
+            }
             if (rowsDeleted < 1) {
                 Log.e(FileDownloadTask.TAG, "Failed to delete file from MediaStore")
             }

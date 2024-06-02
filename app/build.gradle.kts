@@ -131,15 +131,15 @@ dependencies {
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.webkit:webkit:1.10.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.webkit:webkit:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.1")
 
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -154,10 +154,10 @@ dependencies {
     //"debugImplementation"("com.squareup.leakcanary:leakcanary-android:2.14")
 
     "googleImplementation"("com.google.firebase:firebase-core:21.1.1")
-    "googleImplementation"("com.google.firebase:firebase-crashlytics-ktx:19.0.0")
+    "googleImplementation"("com.google.firebase:firebase-crashlytics-ktx:19.0.1")
 
     "genericImplementation"("com.google.firebase:firebase-core:21.1.1")
-    "genericImplementation"("com.google.firebase:firebase-crashlytics-ktx:19.0.0")
+    "genericImplementation"("com.google.firebase:firebase-crashlytics-ktx:19.0.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.9")

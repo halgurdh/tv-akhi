@@ -86,20 +86,26 @@ class MyContentDelegate(private val webEngine: GeckoWebEngine): GeckoSession.Con
 
     override fun onExternalResponse(session: GeckoSession, response: WebResponse) {
         Log.d(TAG, "onExternalResponse: " + response.uri)
-        val contentDisposition = response.headers.get("content-disposition")
-        val mimetype = response.headers.get("content-type")
-        val fileName = DownloadUtils.guessFileName(response.uri, contentDisposition, mimetype)
-        val contentLength = response.headers.get("content-length")?.toLongOrNull() ?: 0
+
+        if (response.requestExternalApp) {
+            webEngine.callback?.onOpenInExternalAppRequested(response.uri)
+            return
+        }
+
+        val contentDisposition = response.headers["content-disposition"]
+        val mimetype = response.headers["content-type"]
+        val contentLength = response.headers["content-length"]?.toLongOrNull() ?: 0
         webEngine.callback?.onDownloadRequested(
             response.uri,
             webEngine.url ?: "",
-            fileName,
+            null,
             webEngine.userAgentString,
             mimetype,
             Download.OperationAfterDownload.NOP,
             null,
             response.body,
-            contentLength
+            contentLength,
+            contentDisposition
         )
     }
 

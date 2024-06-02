@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.webkit.URLUtilCompat
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
@@ -1003,22 +1004,26 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             val fileName = Uri.parse(url).lastPathSegment
             val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(url))
             onDownloadRequested(url, tab.url,
-                fileName ?: "url.html", tab.webEngine.userAgentString, mimeType)
+                fileName, tab.webEngine.userAgentString, mimeType)
         }
 
         override fun onDownloadRequested(url: String, referer: String,
-                                         originalDownloadFileName: String, userAgent: String?, mimeType: String?,
+                                         originalDownloadFileName: String?, userAgent: String?, mimeType: String?,
                                          operationAfterDownload: Download.OperationAfterDownload, base64BlobData: String?,
-                                         stream: InputStream?, size: Long) {
-            this@MainActivity.onDownloadRequested(url, referer, originalDownloadFileName,
+                                         stream: InputStream?, size: Long, contentDisposition: String?) {
+            val fileName = (if (contentDisposition != null)
+                URLUtilCompat.getFilenameFromContentDisposition(contentDisposition) else null) ?:
+                URLUtilCompat.guessFileName(url, null, mimeType)
+
+            this@MainActivity.onDownloadRequested(url, referer, fileName,
                 userAgent, mimeType, operationAfterDownload, base64BlobData, stream, size)
         }
 
         override fun onDownloadRequested(url: String, userAgent: String?, contentDisposition: String,
                                          mimetype: String?, contentLength: Long ) {
             Log.i(TAG, "DownloadListener.onDownloadStart url: $url")
-            onDownloadRequested(url, tab.url,
-                DownloadUtils.guessFileName(url, contentDisposition, mimetype), userAgent, mimetype)
+            onDownloadRequested(url= url, referer = tab.url, originalDownloadFileName = null,
+                userAgent = userAgent, mimeType = mimetype, size = contentLength, contentDisposition = contentDisposition)
         }
 
         override fun onProgressChanged(newProgress: Int) {
