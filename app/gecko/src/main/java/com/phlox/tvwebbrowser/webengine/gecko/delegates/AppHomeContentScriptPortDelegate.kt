@@ -16,7 +16,7 @@ import org.json.JSONObject
 import org.mozilla.geckoview.WebExtension
 import java.io.ByteArrayOutputStream
 
-class AppWebExtensionPortDelegate(val port: WebExtension.Port, val webEngine: GeckoWebEngine): WebExtension.PortDelegate {
+class AppHomeContentScriptPortDelegate(val port: WebExtension.Port, val webEngine: GeckoWebEngine): WebExtension.PortDelegate {
     override fun onPortMessage(message: Any, port: WebExtension.Port) {
         //Log.d(TAG, "onPortMessage: $message")
         try {
@@ -83,10 +83,10 @@ class AppWebExtensionPortDelegate(val port: WebExtension.Port, val webEngine: Ge
 
     override fun onDisconnect(port: WebExtension.Port) {
         Log.d(TAG, "onDisconnect")
-        webEngine.appWebExtensionPortDelegate = null
+        webEngine.appHomeContentScriptPortDelegate = null
     }
 
     companion object {
-        val TAG: String = AppWebExtensionPortDelegate::class.java.simpleName
+        val TAG: String = AppHomeContentScriptPortDelegate::class.java.simpleName
     }
 }

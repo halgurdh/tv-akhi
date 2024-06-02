@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import androidx.annotation.UiThread
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
-import com.phlox.tvwebbrowser.widgets.CursorLayout
+import com.phlox.tvwebbrowser.widgets.cursor.CursorLayout
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.observable.ObservableValue
 import com.phlox.tvwebbrowser.webengine.WebEngine
@@ -21,6 +21,7 @@ import com.phlox.tvwebbrowser.webengine.WebEngineProvider
 import com.phlox.tvwebbrowser.webengine.WebEngineProviderCallback
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import com.phlox.tvwebbrowser.webengine.gecko.delegates.*
+import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
 import org.mozilla.geckoview.*
 import org.mozilla.geckoview.GeckoSession.SessionState
 import org.mozilla.geckoview.WebExtension.MessageDelegate
@@ -29,10 +30,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class GeckoWebEngine(val tab: WebTabState): WebEngine {
+class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.TextSelectionCallback,
+    CursorDrawerDelegate.Callback {
     companion object {
         const val ENGINE_NAME = "GeckoView"
-        private const val APP_WEB_EXTENSION_VERSION = 3
+        private const val APP_WEB_EXTENSION_VERSION = 48
         val TAG: String = GeckoWebEngine::class.java.simpleName
         lateinit var runtime: GeckoRuntime
         var appWebExtension = ObservableValue<WebExtension?>(null)
@@ -142,7 +144,9 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
     val historyDelegate = MyHistoryDelegate(this)
     val contentBlockingDelegate = MyContentBlockingDelegate(this)
     val mediaSessionDelegate = MyMediaSessionDelegate()
-    var appWebExtensionPortDelegate: AppWebExtensionPortDelegate? = null
+    val selectionActionDelegate = MySelectionActionDelegate()
+    var appHomeContentScriptPortDelegate: AppHomeContentScriptPortDelegate? = null
+    var appContentScriptPortDelegate: AppContentScriptPortDelegate? = null
     var appWebExtensionBackgroundPortDelegate: AppWebExtensionBackgroundPortDelegate? = null
     private lateinit var webExtObserver: (WebExtension?) -> Unit
 
@@ -169,6 +173,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
         session.historyDelegate = historyDelegate
         session.contentBlockingDelegate = contentBlockingDelegate
         session.mediaSessionDelegate = mediaSessionDelegate
+        session.selectionActionDelegate = selectionActionDelegate
 
         webExtObserver = { ext: WebExtension? ->
             if (ext != null) {
@@ -193,7 +198,23 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
 
                 override fun onConnect(port: WebExtension.Port) {
                     Log.d(TAG, "onConnect: $port")
-                    appWebExtensionPortDelegate = AppWebExtensionPortDelegate(port, this@GeckoWebEngine).also {
+                    appContentScriptPortDelegate = AppContentScriptPortDelegate(port, this@GeckoWebEngine).also {
+                        port.setDelegate(it)
+                    }
+                }
+            }, "tvbro_content"
+        )
+        session.webExtensionController.setMessageDelegate(extension,
+            object : MessageDelegate {
+                override fun onMessage(nativeApp: String, message: Any,
+                                       sender: WebExtension.MessageSender): GeckoResult<Any>? {
+                    Log.d(TAG, "onMessage: $nativeApp, $message, $sender")
+                    return null
+                }
+
+                override fun onConnect(port: WebExtension.Port) {
+                    Log.d(TAG, "onConnect: $port")
+                    appHomeContentScriptPortDelegate = AppHomeContentScriptPortDelegate(port, this@GeckoWebEngine).also {
                         port.setDelegate(it)
                     }
                 }
@@ -283,7 +304,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
 
     override fun zoomIn() {
         //appWebExtensionPortDelegate?.port?.postMessage(JSONObject("{\"action\":\"zoomIn\"}"))
-        webView?.tryZoomIn()
+        webView?.cursorDrawerDelegate?.tryZoomIn()
     }
 
     override fun canZoomOut(): Boolean {
@@ -292,7 +313,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
 
     override fun zoomOut() {
         //appWebExtensionPortDelegate?.port?.postMessage(JSONObject("{\"action\":\"zoomOut\"}"))
-        webView?.tryZoomOut()
+        webView?.cursorDrawerDelegate?.tryZoomOut()
     }
 
     override fun zoomBy(zoomBy: Float) {
@@ -315,12 +336,16 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
         Log.d(TAG, "getOrCreateView()")
         if (webView == null) {
             val geckoView = weakRefToSingleGeckoView.get()
-            if (geckoView == null) {
+            webView = if (geckoView == null) {
                 Log.i(TAG, "Creating new GeckoView")
-                webView = GeckoViewWithVirtualCursor(activityContext)
-                weakRefToSingleGeckoView = WeakReference(webView)
+                val wv = GeckoViewWithVirtualCursor(activityContext)
+                weakRefToSingleGeckoView = WeakReference(wv)
+                wv
             } else {
-                webView = geckoView
+                geckoView
+            }.also { wv ->
+                wv.cursorDrawerDelegate.textSelectionCallback = this
+                wv.cursorDrawerDelegate.callback = this
             }
         }
         return webView!!
@@ -440,5 +465,32 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
 
     override fun isSameSession(internalRepresentation: Any): Boolean {
         return internalRepresentation is GeckoSession && internalRepresentation == session
+    }
+
+    override fun onTextSelectionStart(x: Int, y: Int) {
+        appContentScriptPortDelegate?.updateSelection(x, y, webView!!.width, webView!!.height)
+    }
+
+    override fun onTextSelectionMove(x: Int, y: Int) {
+        appContentScriptPortDelegate?.updateSelection(x, y, webView!!.width, webView!!.height)
+    }
+
+    override fun onTextSelectionEnd(x: Int, y: Int) {
+        appContentScriptPortDelegate?.processSelection { selectedText: String, editable: Boolean ->
+            callback?.onSelectedTextActionRequested(selectedText, editable)
+        }
+    }
+
+    override fun onTextSelectionCancel() {
+        appContentScriptPortDelegate?.clearSelection()
+    }
+
+    override fun replaceSelection(newText: String) {
+        appContentScriptPortDelegate?.replaceSelection(newText)
+    }
+
+    override fun onLongPress(x: Int, y: Int) {
+        callback?.onContextMenu(webView!!.cursorDrawerDelegate, navigationDelegate.locationURL,
+            null, null, null, null, null, x, y)
     }
 }

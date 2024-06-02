@@ -7,10 +7,9 @@
     android:layout_height="match_parent"
     tools:context=".activity.main.MainActivity"
     tools:deviceIds="tv"
-    tools:ignore="MergeRootFrame"
     android:clipChildren="false">
 
-    <com.phlox.tvwebbrowser.widgets.CursorLayout
+    <com.phlox.tvwebbrowser.widgets.cursor.CursorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/flWebViewContainer" />
@@ -138,39 +137,9 @@
             android:layout_marginTop="3dp"
             android:layout_marginBottom="3dp"
             android:layout_marginEnd="3dp"
-            app:layout_constraintEnd_toStartOf="@+id/ibZoomIn"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toEndOf="@+id/ibForward"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <ImageButton
-            android:id="@+id/ibZoomIn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/button_bg_selector"
-            android:contentDescription="@string/zoom_in"
-            android:src="@drawable/zoomin_icon_selector"
-            android:layout_marginTop="3dp"
-            android:layout_marginBottom="3dp"
-            android:layout_marginEnd="3dp"
-            app:layout_constraintEnd_toStartOf="@+id/ibZoomOut"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toEndOf="@+id/ibRefresh"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <ImageButton
-            android:id="@+id/ibZoomOut"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/button_bg_selector"
-            android:contentDescription="@string/zoom_out"
-            android:src="@drawable/zoomout_icon_selector"
-            android:layout_marginTop="3dp"
-            android:layout_marginBottom="3dp"
-            android:layout_marginEnd="3dp"
             app:layout_constraintEnd_toStartOf="@+id/ibAdBlock"
             app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toEndOf="@+id/ibZoomIn"
+            app:layout_constraintStart_toEndOf="@+id/ibForward"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageButton
@@ -185,7 +154,7 @@
             android:layout_marginEnd="3dp"
             app:layout_constraintEnd_toStartOf="@+id/ibPopupBlock"
             app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toEndOf="@+id/ibZoomOut"
+            app:layout_constraintStart_toEndOf="@+id/ibRefresh"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageButton
@@ -251,12 +220,21 @@
             tools:text="1" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.phlox.tvwebbrowser.widgets.CursorLayout
+    <com.phlox.tvwebbrowser.widgets.cursor.CursorLayout
         android:id="@+id/flFullscreenContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#000"
         android:visibility="invisible"
+        />
+    
+    <com.phlox.tvwebbrowser.activity.main.view.CursorMenuView
+        android:id="@+id/vCursorMenu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="invisible"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         />
 
     <ProgressBar

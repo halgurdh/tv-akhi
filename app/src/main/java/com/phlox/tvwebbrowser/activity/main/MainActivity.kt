@@ -38,6 +38,7 @@ import com.phlox.tvwebbrowser.activity.main.dialogs.favorites.FavoriteEditorDial
 import com.phlox.tvwebbrowser.activity.main.dialogs.favorites.FavoritesDialog
 import com.phlox.tvwebbrowser.activity.main.dialogs.settings.SettingsDialog
 import com.phlox.tvwebbrowser.activity.main.view.ActionBar
+import com.phlox.tvwebbrowser.activity.main.view.CursorMenuView
 import com.phlox.tvwebbrowser.activity.main.view.tabs.TabsAdapter.Listener
 import com.phlox.tvwebbrowser.databinding.ActivityMainBinding
 import com.phlox.tvwebbrowser.model.*
@@ -50,6 +51,7 @@ import com.phlox.tvwebbrowser.webengine.WebEngine
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import com.phlox.tvwebbrowser.widgets.NotificationView
+import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.InputStream
@@ -142,41 +144,6 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         vb.ibCloseTab.setOnClickListener { tabsModel.currentTab.value?.apply { closeTab(this) } }
 
         vb.vActionBar.callback = this
-
-        vb.ibZoomIn.setOnClickListener {
-            val tab = tabsModel.currentTab.value ?: return@setOnClickListener
-            tab.webEngine.apply {
-                if (this.canZoomIn()) {
-                    tab.changingScale = true
-                    this.zoomIn()
-                }
-                onWebViewUpdated(tab)
-                if (config.isWebEngineGecko()) {
-                    uiHandler.postDelayed({
-                        vb.ibZoomIn.requestFocus()
-                    }, 150)
-                } else if (!this.canZoomIn()) {
-                    vb.ibZoomOut.requestFocus()
-                }
-            }
-        }
-        vb.ibZoomOut.setOnClickListener {
-            val tab = tabsModel.currentTab.value ?: return@setOnClickListener
-            tab.webEngine.apply {
-                if (this.canZoomOut()) {
-                    tab.changingScale = true
-                    this.zoomOut()
-                }
-                onWebViewUpdated(tab)
-                if (config.isWebEngineGecko()) {
-                    uiHandler.postDelayed({
-                        vb.ibZoomOut.requestFocus()
-                    }, 150)
-                } else if (!this.canZoomOut()) {
-                    vb.ibZoomIn.requestFocus()
-                }
-            }
-        }
 
         vb.llBottomPanel.childs.forEach {
             it.setOnTouchListener(bottomButtonsOnTouchListener)
@@ -554,13 +521,11 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     }
 
     private fun onWebViewUpdated(tab: WebTabState) {
+        vb.flWebViewContainer.cursorDrawerDelegate.textSelectionCallback = tab.webEngine
+        vb.flFullscreenContainer.cursorDrawerDelegate.textSelectionCallback = tab.webEngine
+
         vb.ibBack.isEnabled = tab.webEngine.canGoBack() == true
         vb.ibForward.isEnabled = tab.webEngine.canGoForward() == true
-        val zoomPossible = tab.webEngine.canZoomIn() || tab.webEngine.canZoomOut()
-        vb.ibZoomIn.visibility = if (zoomPossible) View.VISIBLE else View.GONE
-        vb.ibZoomOut.visibility = if (zoomPossible) View.VISIBLE else View.GONE
-        vb.ibZoomIn.isEnabled = tab.webEngine.canZoomIn() == true
-        vb.ibZoomOut.isEnabled = tab.webEngine.canZoomOut() == true
 
         val adblockEnabled = tab.adblock ?: config.adBlockEnabled
         vb.ibAdBlock.setImageResource(if (adblockEnabled) R.drawable.ic_adblock_on else R.drawable.ic_adblock_off)
@@ -665,6 +630,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     override fun onStop() {
         super.onStop()
         unbindService(downloadServiceConnection)
+        downloadService = null
     }
 
     override fun onResume() {
@@ -680,15 +646,11 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         tabsModel.currentTab.value?.apply {
             webEngine.onPause()
             onPause()
-            tabsModel.saveTab(this)
+            runBlocking { tabsModel.saveTab(this@apply) }
         }
 
         super.onPause()
         running = false
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
     }
 
     private fun toggleAdBlockForTab() {
@@ -824,14 +786,9 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                 uiHandler.post { hideBottomPanel() }
             }
             return true
-        } else if (keyCode == KeyEvent.KEYCODE_BACK && vb.flWebViewContainer.fingerMode) {
+        } else if (keyCode == KeyEvent.KEYCODE_BACK && vb.vCursorMenu.visibility == View.VISIBLE) {
             if (event.action == KeyEvent.ACTION_UP) {
-                uiHandler.post { vb.flWebViewContainer.exitFingerMode() }
-            }
-            return true
-        } else if (shortcutMgr.canProcessKeyCode(keyCode)) {
-            if (event.action == KeyEvent.ACTION_UP) {
-                uiHandler.post { shortcutMgr.process(keyCode, this) }
+                uiHandler.post { vb.vCursorMenu.close(CursorMenuView.CloseAnimation.ROTATE_OUT) }
             }
             return true
         } else if ((keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
@@ -845,6 +802,22 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             return true
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (ShortcutMgr.getInstance().canProcessKeyCode(keyCode)) {
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        val shortcutMgr = ShortcutMgr.getInstance()
+        if (shortcutMgr.canProcessKeyCode(keyCode)) {
+            uiHandler.post { shortcutMgr.process(keyCode, this) }
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
     }
 
     private fun showMenuOverlay() {
@@ -1265,16 +1238,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
         override fun onScaleChanged(oldScale: Float, newScale: Float) {
             Log.d(TAG, "onScaleChanged: oldScale: $oldScale newScale: $newScale")
-            val tabScale = tab.scale
-            if (tab.changingScale) {
-                tab.changingScale = false
-                tab.scale = newScale
-            } else if (tabScale != null && tabScale != newScale) {
-                val zoomBy = tabScale / newScale
-                Log.d(TAG, "Auto zoom by: $zoomBy")
-                tab.changingScale = true
-                tab.webEngine.zoomBy(zoomBy)
-            }
+            tab.scale = newScale
         }
 
         override fun onCopyTextToClipboardRequested(url: String) {
@@ -1380,41 +1344,124 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             }
         }
 
-        override fun suggestActionsForLink(href: String, x: Int, y: Int) {
-            var s = href
-            if (s.startsWith("\"") && s.endsWith("\"")) {
+        override fun onContextMenu(
+            cursorDrawer: CursorDrawerDelegate,
+            baseUri: String?,
+            linkUri: String?,
+            srcUri: String?,
+            title: String?,
+            altText: String?,
+            textContent: String?,
+            x: Int,
+            y: Int
+        ) {
+            vb.vCursorMenu.show(
+                tab,this, cursorDrawer,
+                baseUri, linkUri, srcUri,
+                title, altText, textContent,
+                x, y
+            )
+        }
+
+        override fun suggestActionsForLink(baseUri: String?, linkUri: String?, srcUri: String?,
+                                           title: String?, altText: String?, textContent: String?,
+                                           x: Int, y: Int) {
+            var s = linkUri ?: srcUri
+            if (s != null && s.startsWith("\"") && s.endsWith("\"")) {
                 s = s.substring(1, s.length - 1)
             }
             val url = s
-            if (url.startsWith("http://", true) || url.startsWith("https://", true)) {
-                val anchor = View(this@MainActivity)
-                val lp = FrameLayout.LayoutParams(1, 1)
-                lp.setMargins(x, y, 0, 0)
-                vb.flWebViewContainer.addView(anchor, lp)
-                linkActionsMenu = PopupMenu(this@MainActivity, anchor, Gravity.BOTTOM).also {
-                    it.inflate(R.menu.menu_link)
-                    it.setOnMenuItemClickListener { menuItem ->
-                        when (menuItem.itemId) {
-                            R.id.miOpenInNewTab -> onOpenInNewTabRequested(url, true)
-                            R.id.miOpenInExternalApp -> onOpenInExternalAppRequested(url)
-                            R.id.miDownload -> onDownloadRequested(url)
-                            R.id.miCopyToClipboard -> onCopyTextToClipboardRequested(url)
-                            R.id.miShare -> onShareUrlRequested(url)
-                        }
-                        true
+            val isHTTPUrl = url != null && (url.startsWith("http://") || url.startsWith("https://"))
+            val anchor = View(this@MainActivity)
+            val lp = FrameLayout.LayoutParams(1, 1)
+            lp.setMargins(x, y, 0, 0)
+            vb.flWebViewContainer.addView(anchor, lp)
+            linkActionsMenu = PopupMenu(this@MainActivity, anchor, Gravity.BOTTOM).also {
+                it.inflate(R.menu.menu_link)
+                it.menu.findItem(R.id.miOpenInNewTab).isVisible = isHTTPUrl
+                it.menu.findItem(R.id.miOpenInExternalApp).isVisible = isHTTPUrl
+                it.menu.findItem(R.id.miDownload).isVisible = isHTTPUrl
+                it.menu.findItem(R.id.miCopyToClipboard).isVisible = url != null
+                it.menu.findItem(R.id.miShare).isVisible = url != null
+                it.setOnMenuItemClickListener { menuItem ->
+                    when (menuItem.itemId) {
+                        R.id.miRefreshPage -> tab.webEngine.reload()
+                        R.id.miOpenInNewTab -> onOpenInNewTabRequested(url!!, true)
+                        R.id.miOpenInExternalApp -> onOpenInExternalAppRequested(url!!)
+                        R.id.miDownload -> onDownloadRequested(url!!)
+                        R.id.miCopyToClipboard -> onCopyTextToClipboardRequested(url!!)
+                        R.id.miShare -> onShareUrlRequested(url!!)
                     }
-
-                    it.setOnDismissListener {
-                        vb.flWebViewContainer.removeView(anchor)
-                        linkActionsMenu = null
-                    }
-                    it.show()
+                    true
                 }
+
+                it.setOnDismissListener {
+                    vb.flWebViewContainer.removeView(anchor)
+                    linkActionsMenu = null
+                }
+                it.show()
             }
         }
 
         override fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int) {
             viewModel.markBookmarkRecommendationAsUseful(bookmarkOrder)
+        }
+
+        override fun onSelectedTextActionRequested(selectedText: String, editable: Boolean) {
+            //show alert dialog with actions: copy, [cut, delete, paste - if editable, paste only if clipboard contains text], share, [search - if one line]
+            val clipBoard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val actions = mutableListOf(R.string.copy)
+            var textInClipboard: String? = null
+            if (editable) {
+                actions.add(R.string.cut)
+                actions.add(R.string.delete)
+                val primaryClip = clipBoard.primaryClip
+                if (primaryClip != null && primaryClip.itemCount > 0) {
+                    actions.add(R.string.paste)
+                    textInClipboard = primaryClip.getItemAt(0).text.toString()
+                }
+            }
+            actions.add(R.string.share)
+            if (!selectedText.contains("\n")) {
+                actions.add(R.string.search)
+            }
+            AlertDialog.Builder(this@MainActivity)
+                .setItems(actions.map { getString(it) }.toTypedArray()) { _: DialogInterface, which: Int ->
+                    val action = actions[which]
+                    when (action) {
+                        R.string.copy -> {
+                            val clipData = ClipData.newPlainText("text", selectedText)
+                            clipBoard.setPrimaryClip(clipData)
+                            Toast.makeText(this@MainActivity, getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
+                        }
+                        R.string.cut -> {
+                            val clipData = ClipData.newPlainText("text", selectedText)
+                            clipBoard.setPrimaryClip(clipData)
+                            tab.webEngine.replaceSelection("")
+                        }
+                        R.string.delete -> {
+                            tab.webEngine.replaceSelection("")
+                        }
+                        R.string.paste -> {
+                            tab.webEngine.replaceSelection(textInClipboard!!)
+                        }
+                        R.string.share -> {
+                            val share = Intent(Intent.ACTION_SEND)
+                            share.type = "text/plain"
+                            share.putExtra(Intent.EXTRA_TEXT, selectedText)
+                            try {
+                                startActivity(share)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(this@MainActivity, R.string.external_app_open_error, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        R.string.search -> {
+                            search(selectedText)
+                        }
+                    }
+                }
+                .show()
         }
     }
 

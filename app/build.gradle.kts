@@ -139,7 +139,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
 
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -151,13 +151,13 @@ dependencies {
     implementation("com.github.truefedex:ad-block:v0.0.1-ci")
     implementation("de.halfbit:pinned-section-listview:1.0.0")
 
-    //"debugImplementation"("com.squareup.leakcanary:leakcanary-android:2.7")
+    //"debugImplementation"("com.squareup.leakcanary:leakcanary-android:2.14")
 
     "googleImplementation"("com.google.firebase:firebase-core:21.1.1")
-    "googleImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.6.4")
+    "googleImplementation"("com.google.firebase:firebase-crashlytics-ktx:19.0.0")
 
     "genericImplementation"("com.google.firebase:firebase-core:21.1.1")
-    "genericImplementation"("com.google.firebase:firebase-crashlytics-ktx:18.6.4")
+    "genericImplementation"("com.google.firebase:firebase-crashlytics-ktx:19.0.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.9")

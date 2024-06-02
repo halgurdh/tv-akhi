@@ -55,9 +55,6 @@ data class WebTabState(@PrimaryKey(autoGenerate = true)
     }
 
     @Ignore
-    var changingScale: Boolean = false
-
-    @Ignore
     var thumbnail: Bitmap? = null
     @Ignore
     var savedState: Any? = null
