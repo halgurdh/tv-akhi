@@ -6,8 +6,25 @@ import org.json.JSONObject
 import org.mozilla.geckoview.WebExtension
 
 class AppContentScriptPortDelegate(val port: WebExtension.Port, val webEngine: GeckoWebEngine): WebExtension.PortDelegate {
-    override fun onPortMessage(message: Any, port: WebExtension.Port) {
+    private var processSelectionCallback: ((String, Boolean) -> Unit)? = null
 
+    override fun onPortMessage(message: Any, port: WebExtension.Port) {
+        //Log.d(TAG, "onPortMessage: $message")
+        try {
+            val msgJson = message as JSONObject
+            when (msgJson.getString("action")) {
+                "selectionProcessed" -> {
+                    val data = msgJson.getJSONObject("data")
+                    processSelectionCallback?.invoke(
+                        data.getString("selectedText"),
+                        data.getBoolean("editable")
+                    )
+                    processSelectionCallback = null
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "onPortMessage", e)
+        }
     }
 
     override fun onDisconnect(port: WebExtension.Port) {
@@ -26,6 +43,20 @@ class AppContentScriptPortDelegate(val port: WebExtension.Port, val webEngine: G
     fun clearSelection() {
         val msg = JSONObject()
         msg.put("action", "clearSelection")
+        port.postMessage(msg)
+    }
+
+    fun processSelection(callback: (String, Boolean) -> Unit) {
+        this.processSelectionCallback = callback
+        val msg = JSONObject()
+        msg.put("action", "processSelection")
+        port.postMessage(msg)
+    }
+
+    fun replaceSelection(newText: String) {
+        val msg = JSONObject()
+        msg.put("action", "replaceSelection")
+        msg.put("data", newText)
         port.postMessage(msg)
     }
 

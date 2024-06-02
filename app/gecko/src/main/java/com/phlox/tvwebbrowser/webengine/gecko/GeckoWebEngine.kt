@@ -34,7 +34,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.Text
     CursorDrawerDelegate.Callback {
     companion object {
         const val ENGINE_NAME = "GeckoView"
-        private const val APP_WEB_EXTENSION_VERSION = 46
+        private const val APP_WEB_EXTENSION_VERSION = 48
         val TAG: String = GeckoWebEngine::class.java.simpleName
         lateinit var runtime: GeckoRuntime
         var appWebExtension = ObservableValue<WebExtension?>(null)
@@ -476,7 +476,9 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.Text
     }
 
     override fun onTextSelectionEnd(x: Int, y: Int) {
-
+        appContentScriptPortDelegate?.processSelection { selectedText: String, editable: Boolean ->
+            callback?.onSelectedTextActionRequested(selectedText, editable)
+        }
     }
 
     override fun onTextSelectionCancel() {
@@ -484,7 +486,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.Text
     }
 
     override fun replaceSelection(newText: String) {
-        TODO("Not yet implemented")
+        appContentScriptPortDelegate?.replaceSelection(newText)
     }
 
     override fun onLongPress(x: Int, y: Int) {
