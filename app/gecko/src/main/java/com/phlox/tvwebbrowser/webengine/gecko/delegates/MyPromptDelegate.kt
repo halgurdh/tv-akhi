@@ -200,7 +200,7 @@ class MyPromptDelegate(private val webEngine: GeckoWebEngine): GeckoSession.Prom
         val username: EditText?
         if (flags and AuthPrompt.AuthOptions.Flags.ONLY_PASSWORD == 0) {
             username = EditText(builder.context)
-            username.setHint(R.string.username)
+            username.setHint(com.phlox.tvwebbrowser.common.R.string.username)
             username.setText(prompt.authOptions.username)
             container!!.addView(username)
         } else {
@@ -208,7 +208,7 @@ class MyPromptDelegate(private val webEngine: GeckoWebEngine): GeckoSession.Prom
         }
 
         val password = EditText(builder.context)
-        password.setHint(R.string.password)
+        password.setHint(com.phlox.tvwebbrowser.common.R.string.password)
         password.setText(prompt.authOptions.password)
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         container!!.addView(password)

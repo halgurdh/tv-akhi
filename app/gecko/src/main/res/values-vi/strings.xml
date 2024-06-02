@@ -8,8 +8,6 @@
   <string name="before_unload_title">Bạn có chắc không?</string>
   <string name="before_unload_leave_page">Rời khỏi trang</string>
   <string name="before_unload_stay">Ở lại trang</string>
-  <string name="username">Tên tài khoản</string>
-  <string name="password">Mật khẩu</string>
   <string name="wait">Chờ</string>
   <string name="stop">Dừng lại</string>
   <string name="slow_script">Một tập lệnh trên trang này đang khiến trình duyệt web của bạn chạy chậm</string>

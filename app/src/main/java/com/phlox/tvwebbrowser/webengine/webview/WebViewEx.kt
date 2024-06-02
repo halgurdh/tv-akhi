@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -21,6 +22,8 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.webkit.*
+import android.widget.EditText
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.webkit.WebSettingsCompat
@@ -418,6 +421,39 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
                 if (!isReload) {
                     callback.onVisited(url)
                 }
+            }
+
+            override fun onReceivedHttpAuthRequest(
+                view: WebView?,
+                handler: HttpAuthHandler?,
+                host: String?,
+                realm: String?
+            ) {
+                val userNameEdit = EditText(context).also {
+                    it.hint = context.getString(com.phlox.tvwebbrowser.common.R.string.username)
+                    it.isSingleLine = true
+                }
+                val passwordEdit = EditText(context).also {
+                    it.hint = context.getString(com.phlox.tvwebbrowser.common.R.string.password)
+                    it.isSingleLine = true
+                    it.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+                }
+                val container = LinearLayout(context).also {
+                    it.orientation = LinearLayout.VERTICAL
+                    it.addView(userNameEdit)
+                    it.addView(passwordEdit)
+                }
+                AlertDialog.Builder(context)
+                    .setTitle(R.string.http_auth_title)
+                    .setCancelable(false)
+                    .setView(container)
+                    .setPositiveButton(android.R.string.ok) { _: DialogInterface, _:Int ->
+                        handler?.proceed(userNameEdit.text.toString(), passwordEdit.text.toString())
+                    }
+                    .setNegativeButton(android.R.string.cancel) { _: DialogInterface, _:Int ->
+                        handler?.cancel()
+                    }
+                    .show()
             }
         }
 

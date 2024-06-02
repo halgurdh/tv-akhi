@@ -174,4 +174,5 @@
     <string name="cut">Cut</string>
     <string name="share">Share</string>
     <string name="search">Search</string>
+    <string name="http_auth_title">Authentication required</string>
 </resources>

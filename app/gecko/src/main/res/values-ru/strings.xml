@@ -8,8 +8,6 @@
   <string name="before_unload_title">Вы уверены?</string>
   <string name="before_unload_leave_page">Покинуть страницу</string>
   <string name="before_unload_stay">Оставайтесь на странице</string>
-  <string name="username">Имя пользователя</string>
-  <string name="password">Пароль</string>
   <string name="wait">Ждать</string>
   <string name="stop">Стоп</string>
   <string name="slow_script">Сценарий на этой странице замедляет работу вашего веб-браузера.</string>

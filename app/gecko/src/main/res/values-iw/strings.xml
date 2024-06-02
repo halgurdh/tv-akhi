@@ -8,8 +8,6 @@
   <string name="before_unload_title">האם אתה בטוח?</string>
   <string name="before_unload_leave_page">לעזוב דף</string>
   <string name="before_unload_stay">תישאר בעמוד</string>
-  <string name="username">שם משתמש</string>
-  <string name="password">סיסמה</string>
   <string name="wait">לַחֲכוֹת</string>
   <string name="stop">תפסיק</string>
   <string name="slow_script">סקריפט בדף זה גורם לדפדפן האינטרנט שלך לפעול לאט</string>

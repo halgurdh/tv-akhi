@@ -8,8 +8,6 @@
   <string name="before_unload_title">Ви впевнені?</string>
   <string name="before_unload_leave_page">Покинути сторінку</string>
   <string name="before_unload_stay">Залишатись на сторінці</string>
-  <string name="username">Ім\'я користувача</string>
-  <string name="password">Пароль</string>
   <string name="wait">Зачекайте</string>
   <string name="stop">Стоп</string>
   <string name="slow_script">Сценарій на цій сторінці спричиняє повільну роботу веб-переглядача</string>

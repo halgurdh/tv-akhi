@@ -8,8 +8,6 @@
   <string name="before_unload_title">Sei sicuro?</string>
   <string name="before_unload_leave_page">Lasciare la pagina</string>
   <string name="before_unload_stay">Rimanere sulla pagina</string>
-  <string name="username">Nome utente</string>
-  <string name="password">Parola d&amp;#39;ordine</string>
   <string name="wait">Aspettare</string>
   <string name="stop">Fermare</string>
   <string name="slow_script">Uno script in questa pagina sta rallentando l&amp;#39;esecuzione del tuo browser web</string>
