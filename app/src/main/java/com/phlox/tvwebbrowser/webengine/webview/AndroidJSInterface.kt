@@ -8,41 +8,24 @@ import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.model.Download
-import com.phlox.tvwebbrowser.utils.DownloadUtils
 import org.json.JSONArray
 
 
-class AndroidJSInterface(val webEngine: WebViewWebEngine
-/*private val activity: MainActivity,
-                         private val mainActivityViewModel: MainActivityViewModel,
-                         private val tabsModel: TabsModel,
-                         private val tab: WebTabState
-*/) {
-
-    @JavascriptInterface
-    fun navigate(url: String) {
-        val callback = webEngine.callback ?: return
-        callback.getActivity().runOnUiThread { webEngine.loadUrl(url) }
-    }
-
+class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
     @JavascriptInterface
     fun currentUrl(): String {
-        return webEngine.tab.url ?: ""
-    }
-
-    @JavascriptInterface
-    fun navigateBack() {
-        val callback = webEngine.callback ?: return
-        callback.getActivity().runOnUiThread { webEngine.goBack() }
+        if (!webEngine.tab.url.startsWith(WebViewEx.INTERNAL_SCHEME)) return ""
+        return webEngine.tab.url
     }
 
     @JavascriptInterface
     fun reloadWithSslTrust() {
         val callback = webEngine.callback ?: return
+        if ((webEngine.getView() as WebViewEx).currentOriginalUrl?.scheme != "file") return
         callback.getActivity().runOnUiThread {
             val webview = webEngine.getView() as? WebViewEx ?: return@runOnUiThread
             webview.trustSsl = true
-            webEngine.tab.url?.apply { webEngine.loadUrl(this) }
+            webEngine.tab.url.apply { webEngine.loadUrl(this) }
         }
     }
 
@@ -127,6 +110,7 @@ class AndroidJSInterface(val webEngine: WebViewWebEngine
 
     @JavascriptInterface
     fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int) {
+        if (webEngine.tab.url != Config.HOME_PAGE_URL) return
         val callback = webEngine.callback ?: return
         callback.getActivity().runOnUiThread { callback.markBookmarkRecommendationAsUseful(bookmarkOrder) }
     }

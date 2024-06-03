@@ -69,15 +69,12 @@
         <p><b id="details"></b><br> <span id="error-details"></span></p>
 
         <div id="certErrorAndCaptivePortalButtonContainer">
-            <button id="returnButton" onclick="TVBro.navigateBack();"></button>
+            <button id="returnButton" onclick="history.back();"></button>
             <button id="goForwardButton" onclick="TVBro.reloadWithSslTrust();"></button>
         </div>
     </div>
 </div>
 <script>
-function onSuggestionClicked(index) {
-    TVBro.navigate(suggs[index].url);
-}
 function onLoad() {
     //translate captions first
     document.getElementById("caption").innerHTML = TVBro.getStringByName('connection_isnt_secure');
