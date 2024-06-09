@@ -618,9 +618,4 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
             settings.safeBrowsingEnabled = adblockEnabled
         }
     }
-
-    //trick to make play/pause media buttons work
-    fun togglePlayback() {
-        evaluateJavascript("tvBroTogglePlayback()", null)
-    }
 }

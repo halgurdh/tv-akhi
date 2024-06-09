@@ -47,4 +47,7 @@ interface WebEngine: CursorDrawerDelegate.TextSelectionCallback {
     fun onPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean
     fun isSameSession(internalRepresentation: Any): Boolean
     fun replaceSelection(newText: String)
+    fun stopPlayback()
+    fun rewind()
+    fun fastForward()
 }

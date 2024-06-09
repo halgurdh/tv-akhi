@@ -154,7 +154,19 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
     }
 
     override fun togglePlayback() {
-        webView?.togglePlayback()
+        webView?.evaluateJavascript("tvBroTogglePlayback()", null)
+    }
+
+    override fun stopPlayback() {
+        webView?.evaluateJavascript("tvBroStopPlayback()", null)
+    }
+
+    override fun rewind() {
+        webView?.evaluateJavascript("tvBroRewind()", null)
+    }
+
+    override fun fastForward() {
+        webView?.evaluateJavascript("tvBroFastForward()", null)
     }
 
     override suspend fun renderThumbnail(bitmap: Bitmap?): Bitmap? {
@@ -341,7 +353,6 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
 
         override fun onPageFinished(url: String?) {
             callback?.onPageFinished(url)
-            evaluateJavascript(Scripts.INITIAL_SCRIPT)
         }
 
         override fun onPageCertificateError(url: String?) {

@@ -3,13 +3,17 @@ package com.phlox.tvwebbrowser.activity.main.dialogs.settings
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
+import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import com.fedir.segmentedbutton.SegmentedButton
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.activity.main.SettingsModel
 import com.phlox.tvwebbrowser.widgets.SegmentedButtonTabsAdapter
 
-class SettingsDialog(context: Context, val model: SettingsModel) : Dialog(context), DialogInterface.OnDismissListener, VersionSettingsView.Callback {
+class SettingsDialog(context: Context, val model: SettingsModel) :
+    Dialog(context, R.style.SettingsDialog),
+    DialogInterface.OnDismissListener, VersionSettingsView.Callback {
     private var mainView: MainSettingsView? = null
     private var sbTabs: SegmentedButton
 
@@ -37,6 +41,13 @@ class SettingsDialog(context: Context, val model: SettingsModel) : Dialog(contex
         }
 
         setOnDismissListener(this)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT)
     }
 
     override fun onDismiss(dialog: DialogInterface?) {

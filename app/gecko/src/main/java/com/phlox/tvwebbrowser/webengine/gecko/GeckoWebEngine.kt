@@ -408,6 +408,18 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.Text
         }
     }
 
+    override fun stopPlayback() {
+        mediaSessionDelegate.mediaSession?.stop()
+    }
+
+    override fun rewind() {
+        mediaSessionDelegate.mediaSession?.seekBackward()
+    }
+
+    override fun fastForward() {
+        mediaSessionDelegate.mediaSession?.seekForward()
+    }
+
     override suspend fun renderThumbnail(bitmap: Bitmap?): Bitmap? {
         return webView?.renderThumbnail(bitmap)
     }

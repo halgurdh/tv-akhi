@@ -175,4 +175,9 @@
     <string name="share">Share</string>
     <string name="search">Search</string>
     <string name="http_auth_title">Authentication required</string>
+    <string name="play_pause">Play/Pause</string>
+    <string name="media_stop">Stop Media</string>
+    <string name="media_rewind">Rewind Media</string>
+    <string name="media_fast_forward">Fast Forward Media</string>
+    <string name="long_press">Long press</string>
 </resources>

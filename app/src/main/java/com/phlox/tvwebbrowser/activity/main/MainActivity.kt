@@ -6,7 +6,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.ConnectivityManager
@@ -370,6 +369,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         super.onDestroy()
     }
 
+    @SuppressLint("MissingSuperCall")
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val intentUri = intent.data
@@ -772,8 +772,8 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val shortcutMgr = ShortcutMgr.getInstance()
         val keyCode = if (event.keyCode != 0) event.keyCode else event.scanCode
+        val shortcutMgr = ShortcutMgr.getInstance()
 
         if (keyCode == KeyEvent.KEYCODE_BACK && isFullscreen) {
             if (event.action == KeyEvent.ACTION_UP) {
@@ -792,33 +792,10 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                 uiHandler.post { vb.vCursorMenu.close(CursorMenuView.CloseAnimation.ROTATE_OUT) }
             }
             return true
-        } else if ((keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
-            keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE ||
-            keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)) {
-            if (event.action == KeyEvent.ACTION_UP) {
-                uiHandler.post {
-                    tabsModel.currentTab.value?.webEngine?.togglePlayback()
-                }
-            }
+        } else if (shortcutMgr.handle(event, this, tabsModel.currentTab.value)) {
             return true
         }
         return super.dispatchKeyEvent(event)
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (ShortcutMgr.getInstance().canProcessKeyCode(keyCode)) {
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        val shortcutMgr = ShortcutMgr.getInstance()
-        if (shortcutMgr.canProcessKeyCode(keyCode)) {
-            uiHandler.post { shortcutMgr.process(keyCode, this) }
-            return true
-        }
-        return super.onKeyUp(keyCode, event)
     }
 
     private fun showMenuOverlay() {
