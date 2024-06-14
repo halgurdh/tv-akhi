@@ -5,7 +5,8 @@
     <application>
         <activity
             android:name=".activity.main.MainActivity"
-            android:configChanges="uiMode|keyboard|keyboardHidden|navigation">
+            android:configChanges="uiMode|keyboard|keyboardHidden|navigation"
+            tools:replace="android:configChanges">
         </activity>
     </application>
 </manifest>
