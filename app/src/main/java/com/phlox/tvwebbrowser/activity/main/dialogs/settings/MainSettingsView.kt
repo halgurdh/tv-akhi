@@ -120,17 +120,6 @@ class MainSettingsView @JvmOverloads constructor(
     }
 
     private fun initThemeSettingsUI() {
-        val webViewSupportsDarkening = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)
-        } else {
-            WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)
-        }
-
-        if (!webViewSupportsDarkening) {
-            vb.llThemeSettings.visibility = View.GONE
-            return
-        }
-
         val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, context.resources.getStringArray(R.array.themes))
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 

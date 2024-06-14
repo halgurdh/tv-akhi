@@ -120,7 +120,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.Text
                 }
 
                 override fun onThemeSettingUpdated(value: Config.Theme) {
-                    onThemeSettingUpdated(value)
+                    GeckoWebEngine.onThemeSettingUpdated(value)
                 }
 
                 override fun getWebEngineVersionString(): String {
