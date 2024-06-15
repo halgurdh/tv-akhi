@@ -27,6 +27,15 @@ class CursorMenuView @JvmOverloads constructor(
             menuContext?.cursorDrawerDelegate?.goToGrabMode()
             close(CloseAnimation.EXPLODE_OUT)
         }
+        vb.btnGrabMode.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus && menuContext != null &&
+                !(vb.btnContextMenu.hasFocus() || vb.btnTextSelection.hasFocus() ||
+                        vb.btnZoomIn.hasFocus() || vb.btnZoomOut.hasFocus())){
+                handler.postDelayed({
+                    vb.btnGrabMode.requestFocus()
+                }, 100)
+            }
+        }
         vb.btnContextMenu.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 postDelayed({

@@ -214,7 +214,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
 
     override fun onTextSelectionStart(x: Int, y: Int) {
         webView?. let {
-            it.evaluateJavascript("TVBRO_updateSelection($x, $y, ${it.width}, ${it.height});") {
+            it.evaluateJavascript("TVBRO_clearSelection();TVBRO_updateSelection($x, $y, ${it.width}, ${it.height});") {
                 //nop
             }
         }

@@ -480,6 +480,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine, CursorDrawerDelegate.Text
     }
 
     override fun onTextSelectionStart(x: Int, y: Int) {
+        appContentScriptPortDelegate?.clearSelection()
         appContentScriptPortDelegate?.updateSelection(x, y, webView!!.width, webView!!.height)
     }
 
