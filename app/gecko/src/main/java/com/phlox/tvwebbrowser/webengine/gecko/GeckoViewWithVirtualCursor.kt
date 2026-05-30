@@ -3,23 +3,14 @@ package com.phlox.tvwebbrowser.webengine.gecko
 import android.content.Context
 import android.content.Context.INPUT_METHOD_SERVICE
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Point
-import android.graphics.PointF
-import android.graphics.Rect
-import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.MotionEvent.PointerProperties
-import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
-import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.utils.dip2px
 import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
 import org.mozilla.geckoview.ScreenLength
@@ -30,12 +21,12 @@ class GeckoViewWithVirtualCursor @JvmOverloads constructor(context: Context, att
     var virtualCursorMode: Boolean = true
         set(value) {
             field = value
-            inputEventsAdapter.resetState()
+            dpadNavigationEventsAdapter.resetState()
         }
     lateinit var cursorDrawerDelegate: CursorDrawerDelegate
 
     private var inputMethodManager: InputMethodManager? = null
-    private val inputEventsAdapter = DPADNavigationEventsAdapter(
+    private val dpadNavigationEventsAdapter = DPADNavigationEventsAdapter(
         onEmulatedKeyEvent = { keyEvent ->
             cursorDrawerDelegate.dispatchKeyEvent(keyEvent)
         },
@@ -77,18 +68,16 @@ class GeckoViewWithVirtualCursor @JvmOverloads constructor(context: Context, att
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        if (!DPADNavigationEventsAdapter.isNavigationGenericMotionSource(event.source)) {
-            return super.dispatchGenericMotionEvent(event)
-        }
-        if (virtualCursorMode) {
-            return inputEventsAdapter.dispatchGenericMotionEvent(event)
+        if (virtualCursorMode && DPADNavigationEventsAdapter.isNavigationGenericMotionSource(event.source)) {
+            return dpadNavigationEventsAdapter.dispatchGenericMotionEvent(event)
         }
         return super.dispatchGenericMotionEvent(event)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (virtualCursorMode) {
-            return inputEventsAdapter.dispatchKeyEvent(event)
+            if (dpadNavigationEventsAdapter.dispatchKeyEvent(event))
+                return true
         }
 
         return super.dispatchKeyEvent(event)

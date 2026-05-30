@@ -24,7 +24,8 @@ object NavigationReservedShortcutKeyCodes {
 
     val backNavigationKeys: Set<Int> = intArrayOf(
         KeyEvent.KEYCODE_BACK,
-        KeyEvent.KEYCODE_BUTTON_B
+        KeyEvent.KEYCODE_BUTTON_B,
+        KeyEvent.KEYCODE_ESCAPE
     ).toHashSet()
 
     val reservedForUserShortcuts: Set<Int> = dpadNavigationKeys + backNavigationKeys

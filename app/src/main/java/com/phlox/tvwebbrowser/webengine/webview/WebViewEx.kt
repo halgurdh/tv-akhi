@@ -474,24 +474,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         addJavascriptInterface(jsInterface, "TVBro")
     }
 
-    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        if (virtualCursorMode) return false
-        return super.dispatchKeyEvent(event)
-    }
-
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        if (!DPADNavigationEventsAdapter.isNavigationGenericMotionSource(event.source)) {
-            return super.dispatchGenericMotionEvent(event)
-        }
-        if (virtualCursorMode) return false
+        if (virtualCursorMode && DPADNavigationEventsAdapter.isNavigationGenericMotionSource(event.source))
+            return false
         return super.dispatchGenericMotionEvent(event)
-    }
-
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        /*if (event.action != MotionEvent.ACTION_MOVE) {
-            Log.d(TAG, "onTouchEvent: $event")
-        }*/
-        return super.onTouchEvent(event)
     }
 
     private fun showCertificateErrorPage(error: SslError) {
