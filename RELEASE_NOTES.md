@@ -1,1 +1,1 @@
-* Various bugfixes (anonymous mode crash, clear cache crash, broken mouse etc...)
+* Several bugfixes (handling physical keyboards, page preview rendering)

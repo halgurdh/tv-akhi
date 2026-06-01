@@ -2,29 +2,34 @@
   "channels": [
     {
       "name": "release",
-      "latestVersionName": "v2.1.5",
-      "latestVersionCode": 68,
+      "latestVersionName": "v2.1.6",
+      "latestVersionCode": 69,
       "minAPI": 26,
-      "url": "https://github.com/truefedex/tv-bro/releases/download/v2.1.5/tvbro-2.1.5-generic-geckoIncluded-armeabi-v7a.apk",
+      "url": "https://github.com/truefedex/tv-bro/releases/download/v2.1.6/tvbro-2.1.6-generic-geckoIncluded-armeabi-v7a.apk",
       "urls": [
-        "https://github.com/truefedex/tv-bro/releases/download/v2.1.5/tvbro-2.1.5-generic-geckoIncluded-arm64-v8a.apk",
-        "https://github.com/truefedex/tv-bro/releases/download/v2.1.5/tvbro-2.1.5-generic-geckoIncluded-x86_64.apk"
+        "https://github.com/truefedex/tv-bro/releases/download/v2.1.6/tvbro-2.1.6-generic-geckoIncluded-arm64-v8a.apk",
+        "https://github.com/truefedex/tv-bro/releases/download/v2.1.6/tvbro-2.1.6-generic-geckoIncluded-x86_64.apk"
       ]
     },
     {
       "name": "beta",
-      "latestVersionName": "v2.1.5",
-      "latestVersionCode": 68,
+      "latestVersionName": "v2.1.6",
+      "latestVersionCode": 69,
       "minAPI": 26,
-      "url": "https://github.com/truefedex/tv-bro/releases/download/v2.1.5/tvbro-2.1.5-generic-geckoIncluded-armeabi-v7a.apk",
+      "url": "https://github.com/truefedex/tv-bro/releases/download/v2.1.6/tvbro-2.1.6-generic-geckoIncluded-armeabi-v7a.apk",
       "urls": [
-        "https://github.com/truefedex/tv-bro/releases/download/v2.1.5/tvbro-2.1.5-generic-geckoIncluded-arm64-v8a.apk",
-        "https://github.com/truefedex/tv-bro/releases/download/v2.1.5/tvbro-2.1.5-generic-geckoIncluded-x86_64.apk"
+        "https://github.com/truefedex/tv-bro/releases/download/v2.1.6/tvbro-2.1.6-generic-geckoIncluded-arm64-v8a.apk",
+        "https://github.com/truefedex/tv-bro/releases/download/v2.1.6/tvbro-2.1.6-generic-geckoIncluded-x86_64.apk"
         ]
     }
   ],
 
   "changelog": [
+    {
+      "versionCode": 69,
+      "versionName": "v2.1.6",
+      "changes": "* Several bugfixes (handling physical keyboards, page preview rendering)"
+    },
     {
       "versionCode": 68,
       "versionName": "v2.1.5",
