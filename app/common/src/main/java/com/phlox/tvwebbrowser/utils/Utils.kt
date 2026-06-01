@@ -10,6 +10,7 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Parcel
 import android.view.WindowManager
+import android.webkit.WebResourceResponse
 import android.widget.Toast
 import org.json.JSONArray
 import org.json.JSONException
@@ -18,7 +19,9 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.math.BigInteger
+import java.net.URLConnection
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.*
@@ -324,5 +327,15 @@ object Utils {
             e.printStackTrace()
         }
         return list
+    }
+
+    fun getWebResourceResponseFromAssets(context: Context, path: String): WebResourceResponse? {
+        return try {
+            val inputStream = context.assets.open(path)
+            val mimeType = URLConnection.guessContentTypeFromName(path) ?: "application/octet-stream"
+            WebResourceResponse(mimeType, "UTF-8", inputStream)
+        } catch (e: IOException) {
+            null
+        }
     }
 }

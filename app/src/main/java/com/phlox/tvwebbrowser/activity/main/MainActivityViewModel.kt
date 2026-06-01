@@ -101,31 +101,22 @@ class MainActivityViewModel: ActiveModel() {
                 Config.HomePageLinksMode.BOOKMARKS -> {
                     val favorites = ArrayList<FavoriteItem>()
                     favorites.addAll(AppDatabase.db.favoritesDao().getHomePageBookmarks())
-                    val outdatedUsefulAffiliateLinks = favorites.filter { it.validUntil != null && it.validUntil!!.before(Date()) && it.useful }
-                    outdatedUsefulAffiliateLinks.forEach {
-                        it.validUntil = null
-                        //destUrl if provided is affiliate link that can be outdated.
-                        //With each affiliate link there also must be provided a direct link to the site
-                        //so we can continue to use it after affiliate link is outdated if it was useful for user at least once
-                        it.destUrl = null
-                        AppDatabase.db.favoritesDao().update(it)
-                    }
-                    val hasOutdatedAffiliateLinks = favorites.any { it.validUntil != null && it.validUntil!!.before(Date())}
-                    if ((favorites.isEmpty() && !config.initialBookmarksSuggestionsLoaded) || hasOutdatedAffiliateLinks) {
-                        val suggestions = withContext(Dispatchers.IO) {
-                            val countryCode = /*if (BuildConfig.DEBUG) "debug" else*/ try {
-                                val response = URL("http://ip-api.com/json/").readText()
-                                val jsonObject = JSONObject(response)
-                                jsonObject.getString("countryCode")
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                null
-                            } ?: Locale.getDefault().country ?: "default"
-
+                    if ((favorites.isEmpty() && !config.initialBookmarksSuggestionsLoaded)) {
+                        //There was loading of default bookmarks from app's home page (with affiliate links).
+                        // Now its just hardcoded. I left them as json array just for convenience to copy the same
+                        // data used in corresponding home html page where them useful for debug
+                        val suggestions =
                             try {
-                                val recommendationsUrl = "${Config.HOME_PAGE_URL}recommendations/$countryCode.json"
-                                val response = URL(recommendationsUrl).readText()
-                                val jsonArray = JSONArray(response)
+                                val jsonArray = JSONArray("""[
+        {"title": "Wikipedia - the free encyclopedia", "url":"https://www.wikipedia.org", "favicon": "https://ru.wikipedia.org/static/apple-touch/wikipedia.png"},
+        {"title": "Reddit - Dive into anything", "url":"https://www.reddit.com", "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/apple-icon-120x120.png"},
+        {"title": "My Tuner", "url":"https://mytuner-radio.com/", "favicon": "https://static2.mytuner.mobi/static/icons/apple-touch-icon-120x120-precomposed.png"},
+        {"title": "Instagram", "url":"https://www.instagram.com", "favicon": "https://static.cdninstagram.com/rsrc.php/v3/ys/r/aM-g435MtEX.png"},
+        {"title": "IMDb", "url":"https://www.imdb.com/", "favicon": "https://m.media-amazon.com/images/G/01/imdb/images-ANDW73HA/favicon_iPhone_retina_180x180._CB1582158069_UX60_.png"},
+        {"title": "eBay", "url":"https://www.ebay.com/", "favicon": "https://www.ebay.com/apple-touch-icon.png"},
+        {"title": "Itch.io", "url":"https://itch.io/games/input-gamepad/platform-web", "favicon": "https://itch.io/static/images/itchio-square-144.png"},
+        {"title": "BBC News", "url":"https://www.bbc.com/news", "favicon": "https://www.bbc.com/apple-touch-icon-120x120-precomposed.png"}
+    ]""")
                                 val result = mutableListOf<FavoriteItem>()
                                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
                                 for (i in 0 until jsonArray.length()) {
@@ -154,29 +145,14 @@ class MainActivityViewModel: ActiveModel() {
                                 e.printStackTrace()
                                 null
                             }
-                        }
+
 
                         if (suggestions != null) {
-                            if (hasOutdatedAffiliateLinks) {
-                                for (i in (favorites.size - 1) downTo 0) {
-                                    val f = favorites[i]
-                                    if (f.validUntil != null && f.validUntil!!.before(Date())) {
-                                        AppDatabase.db.favoritesDao().delete(f)
-                                        favorites.removeAt(i)
-                                        val replacement = suggestions.find { it.order == f.order }
-                                        if (replacement != null) {
-                                            replacement.id = AppDatabase.db.favoritesDao().insert(replacement)
-                                            favorites.add(i, replacement)
-                                            continue
-                                        }
-                                    }
-                                }
-                            } else {
-                                for (s in suggestions) {
-                                    s.id = AppDatabase.db.favoritesDao().insert(s)
-                                }
-                                config.initialBookmarksSuggestionsLoaded = true
+                            for (s in suggestions) {
+                                s.id = AppDatabase.db.favoritesDao().insert(s)
                             }
+                            config.initialBookmarksSuggestionsLoaded = true
+
                             homePageLinks.replaceAll(suggestions.map { HomePageLink.fromBookmarkItem(it) })
                         }
                     } else {

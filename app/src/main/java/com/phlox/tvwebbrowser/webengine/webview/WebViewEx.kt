@@ -14,12 +14,12 @@ import android.media.MediaDrm
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.text.TextUtils
 import android.util.Log
-import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.webkit.ConsoleMessage
@@ -30,6 +30,7 @@ import android.webkit.JsResult
 import android.webkit.PermissionRequest
 import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
+import android.webkit.WebBackForwardList
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -40,12 +41,14 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
+import com.phlox.tvwebbrowser.utils.Utils
 import java.net.URLEncoder
 import java.util.UUID
 
@@ -357,12 +360,28 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
             }
 
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
-                //Log.d(TAG, "shouldInterceptRequest url: ${request.url}")
-                val currentOriginalUrl = currentOriginalUrl
+                Log.d(TAG, "shouldInterceptRequest url: ${request.url}")
+                val currentPageUrl = currentOriginalUrl
 
-                if (currentOriginalUrl != null && currentOriginalUrl.toString() == Config.HOME_PAGE_URL) {
+                if (currentPageUrl != null && currentPageUrl.toString().startsWith(Config.HOME_PAGE_URL,
+                        ignoreCase = true)) {
                     HomePageHelper.shouldInterceptRequest(view, request)?.let {
                         return it
+                    }
+                    if (request.url.toString().startsWith(Config.HOME_PAGE_URL)) {
+                        var relativePath = request.url.toString().substring(Config.HOME_PAGE_URL.length)
+                        if (relativePath.isEmpty() || relativePath == "/") {
+                            relativePath = "index.html"
+                        }
+                        val assetsPath = "pages/home/$relativePath"
+                        val response = Utils.getWebResourceResponseFromAssets(view.context, assetsPath)
+                        if (response != null) {
+                            Log.d(TAG, "shouldInterceptRequest url: ${request.url} -> $assetsPath")
+                            return response
+                        } else {
+                            Log.w(TAG, "shouldInterceptRequest url: ${request.url} -> not found in assets")
+                        }
+                        return response ?: super.shouldInterceptRequest(view, request)
                     }
                 }
 
@@ -370,7 +389,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                     return super.shouldInterceptRequest(view, request)
                 }
 
-                val ad = currentOriginalUrl?.let { callback.isAd(request, it)} ?: false
+                val ad = currentPageUrl?.let { callback.isAd(request, it)} ?: false
                 return if (ad) {
                     Log.d(TAG, "Blocked ads request: ${request.url}")
                     uiHandler.post { callback.onBlockedAd(request.url) }
@@ -380,14 +399,14 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                 } else super.shouldInterceptRequest(view, request)
             }
 
-            override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 Log.d(TAG, "onPageStarted url: $url")
-                currentOriginalUrl = Uri.parse(url)
+                currentOriginalUrl = url.toUri()
                 callback.onPageStarted(url)
             }
 
-            override fun onPageFinished(view: WebView?, url: String?) {
+            override fun onPageFinished(view: WebView, url: String?) {
                 super.onPageFinished(view, url)
                 Log.d(TAG, "onPageFinished url: $url")
                 callback.onPageFinished(url)
@@ -474,6 +493,12 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         addJavascriptInterface(jsInterface, "TVBro")
     }
 
+    override fun restoreState(inState: Bundle): WebBackForwardList? {
+        val result = super.restoreState(inState)
+        currentOriginalUrl = url?.toUri()
+        return result
+    }
+
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         if (virtualCursorMode && DPADNavigationEventsAdapter.isNavigationGenericMotionSource(event.source))
             return false
@@ -498,7 +523,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                     }
                     Config.HomePageMode.CUSTOM, Config.HomePageMode.SEARCH_ENGINE -> {
                         try {
-                            currentOriginalUrl = Uri.parse(config.homePage)
+                            currentOriginalUrl = config.homePage.toUri()
                             super.loadUrl(config.homePage)
                         } catch (e: Exception) {
                             Log.e(TAG, "LoadUrl error", e)
@@ -507,10 +532,8 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
 
                     }
                     Config.HomePageMode.HOME_PAGE -> {
-                        currentOriginalUrl = Uri.parse(Config.HOME_PAGE_URL)
+                        currentOriginalUrl = Config.HOME_PAGE_URL.toUri()
                         super.loadUrl(Config.HOME_PAGE_URL)
-                        //val data = context.assets.open("pages/home/index.html").bufferedReader().use { it.readText() }
-                        //loadDataWithBaseURL(Config.HOME_PAGE_URL, data, "text/html", "UTF-8", null)
                     }
                 }
 

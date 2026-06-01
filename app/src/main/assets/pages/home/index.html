@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TV Bro: Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+body {
+    color:#343a3c;
+    background-color:#EDF6FF;
+}
+@media (prefers-color-scheme: dark) {
+    body {
+        color:#f8f9fa;
+        background-color:#343a3c;
+    }    
+}
+
+#suggestions {
+    width: 65vw;
+    margin: auto;
+    table-layout: fixed;
+    outline: none;
+    position: relative;
+    top: 18vh;
+    -webkit-border-horizontal-spacing: 1vw;
+    -webkit-border-vertical-spacing: 2vh !important;
+    border-spacing: 1vw;
+}
+
+td {
+    overflow: hidden;
+    white-space: nowrap;
+    word-wrap: break-word;
+    outline:none;
+}
+
+.sugg {
+    padding: 1vh 1vw;
+    white-space: nowrap;
+    word-wrap: break-word;
+    transition: .5s;
+    color: #4F4F4F;
+    background: #FFFFFF;
+    box-shadow: 0px 1px 12px rgb(134 192 255 / 16%);
+    border: 2px solid #FFFFFF;
+    border-radius: 0.5vw;
+}
+@media (prefers-color-scheme: dark) {
+    .sugg {
+        color: #f8f9fa;
+        background: #1e2122;
+        box-shadow: 0px 1px 12px rgb(0 0 0 / 16%);
+        border: 2px solid #343a3c;
+    }
+}
+.sugg:hover {
+    transition:.5s;
+    background: #F3F6FA;
+    border: 2px solid #A5D0FF;
+    border-radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+    .sugg:hover {
+        background: #343a3c;
+        border: 2px solid #A5D0FF;
+        border-radius: 12px;
+    }
+}
+.sugg:hover > div:nth-child(2) {
+    color: #6666aa;
+}
+.sugg-ico {
+    width: 4vw;
+    float: left;
+    color-scheme: only light;
+}
+.sugg-title {
+    display: block;
+    max-width: 90%;
+    margin-left: 5vw;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 1.3vw;
+    line-height: 2.5vw;
+    background-color: transparent;
+}
+.sugg-title.empty {
+    background-color: #fcfcfc;
+}
+@media (prefers-color-scheme: dark) {
+    .sugg-title.empty {
+        background-color: #1f2425;
+        border-radius: 12px;
+    }
+}
+.ellipsize, .sugg-title, .sugg-desk{
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.sugg-desk {
+    display: block;
+    color: #BDBDBD;
+    margin-left: 5vw;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 1vw;
+    line-height: 1.5vw;
+    background-color: transparent;
+}
+@media (prefers-color-scheme: dark) {
+    .sugg-desk {
+        color: #f8f9fa;
+    }
+}
+.sugg-desk.empty {
+    background-color: #fafafa;
+    border-radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+    .sugg-desk.empty {
+        background-color: #1f2425;
+    }
+}
+.more {
+    width: 1vw;
+    float: right;
+    margin-top: 1vh;
+    cursor: pointer;
+    display: none;
+}
+.logo {
+    width: 10vw;
+    height: 7.5vw;
+    margin-top: 5vh;
+    background-image: url("logo.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    position: absolute;
+    color-scheme: only light;
+}
+
+.wrapper {
+    position: relative;
+    top: 15vh;
+    width: 63vw;
+    margin: auto;
+}
+
+.search_box{
+    background: #fff;
+    border-radius: 0.5vw;
+    height: 3vw;
+    display: flex;
+    padding: 0.5vw;
+    box-shadow: 0 8px 6px -10px #b3c6ff;
+}
+@media (prefers-color-scheme: dark) {
+    .search_box{
+        background: #1e2122;
+        box-shadow: 0 8px 6px -10px #000000;
+    }
+}
+
+.wrapper .search_box .dropdown{
+  width: 7vw;
+  border-right: 2px solid #dde2f1;
+  color: #9fa3b1;
+  position: relative;
+  cursor: pointer;
+}
+@media (prefers-color-scheme: dark) {
+    .wrapper .search_box .dropdown{
+        border-right: 2px solid #343a3c;
+        color: #f8f9fa;
+    }
+}
+
+.wrapper .search_box .dropdown .default_option{
+    display: block;
+    background: url(favicons/google.png) no-repeat;
+    width: 3vw;
+    height: 3vw;
+    margin-left: 1vw;
+    background-size: 3vw;
+    border: none;
+}
+
+.wrapper .search_box .dropdown ul{
+    z-index: 1;
+    position: absolute;
+    font-size: 2vw;
+    list-style-type: none;
+    background: #fff;
+    width: 16vw;
+    border-radius: 0.5vw;
+    padding: 1vw;
+    display: none;
+    box-shadow: 0.5vw 0.5vw 2vw -0.5vw #b3c6ff;
+}
+@media (prefers-color-scheme: dark) {
+    .wrapper .search_box .dropdown ul{
+        background: #1e2122;
+        box-shadow: 0.5vw 0.5vw 2vw -0.5vw #000000;
+    }
+}
+
+.wrapper .search_box .dropdown ul.active{
+  display: block;
+}
+
+.wrapper .search_box .dropdown ul li{
+  padding-bottom: 20px;
+}
+
+.wrapper .search_box .dropdown ul li img {
+    width: 2vw;
+    height: 2vw;
+    display: block;
+    float: left;
+    margin-right: 0.5vw;
+    color-scheme: only light;
+}
+
+.wrapper .search_box .dropdown ul li:last-child{
+  padding-bottom: 0;
+}
+
+.wrapper .search_box .dropdown ul li:hover{
+  color: #6f768d;
+}
+
+.wrapper .search_box .dropdown:before{
+    content: "";
+    position: absolute;
+    top: 1.2vw;
+    right: 1vw;
+    border: 0.45vw solid;
+    border-color: #5078ef transparent transparent transparent;
+}
+
+.wrapper .search_box .search_field{
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+}
+
+.wrapper .search_box .search_field .input{
+    width: 100%;
+    height: 100%;
+    border: 0px;
+    font-size: 1.5vw;
+    padding-left: 1vw;
+    padding-right: 3vw;
+    color: #6f768d;
+    flex-grow: 1;
+}
+@media (prefers-color-scheme: dark) {
+    .wrapper .search_box .search_field .input{
+        color: #f8f9fa;
+        background-color: #1e2122;
+    }
+}
+
+.wrapper .search_box .search_field .fas{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 22px;
+  color: #5078ef;
+  cursor: pointer;
+}
+@media (prefers-color-scheme: dark) {
+    .wrapper .search_box .search_field .fas{
+        color: #f8f9fa;
+    }
+}
+
+.wrapper .search_box .search_action_container{
+    border-left: 2px solid #dde2f1;
+    width: 4vw;
+    cursor: pointer;
+    margin-left: 2px;
+}
+@media (prefers-color-scheme: dark) {
+    .wrapper .search_box .search_action_container{
+        border-left: 2px solid #343a3c;
+    }
+}
+
+.wrapper .search_box .search_action_container .mic{
+    width: 3vw;
+    height: 2.4vw;
+    margin: 0.3vw;
+    background-image: url(mic.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.wrapper .search_box .search_action_container .lenz{
+    width: 3vw;
+    height: 2.4vw;
+    margin: 0.3vw;
+    background-image: url(search.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    display: none;
+}
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+    color: #9fa3b1;
+}
+::-moz-placeholder { /* Firefox 19+ */
+    color: #9fa3b1;
+}
+    </style>
+</head>
+<body>
+<div style="height: 100%; width: 100%; position: fixed; left: 0; top: 0; overflow-x: hidden;">
+    <div class="logo"></div>
+    <div class="wrapper">
+        <div class="search_box">
+            <div class="dropdown">
+                <div class="default_option" onclick="onSearchEngineDropDownClick();"></div>  
+                <ul id="search-engines-list">
+                  <li onclick="applySearchEngine('google', null, true);"><img src="favicons/google.png" /> Google</li>
+                  <li onclick="applySearchEngine('bing', null, true);"><img src="favicons/bing.png" /> Bing</li>
+                  <li onclick="applySearchEngine('yahoo', null, true);"><img src="favicons/yahoo.png" /> Yahoo!</li>
+                  <li onclick="applySearchEngine('ddg', null, true);"><img src="favicons/ddg.png" /> DuckDuckGo</li>
+                  <li onclick="applySearchEngine('yandex', null, true);"><img src="favicons/yandex.png" /> Yandex</li>
+                  <li onclick="applySearchEngine('startpage', null, true);"><img src="favicons/startpage.png" /> Startpage</li>
+                  <li onclick="applySearchEngine('custom', promptCustomSearchEngineUrl(), true);"><img src="favicons/custom.png" /> Custom</li>
+                </ul>
+            </div>
+            <div class="search_field">
+                <input type="text" id="search-input" class="input" placeholder="Search">
+                <div class="search_action_container">
+                    <div class="mic"></div>
+                    <div class="lenz"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <table cellspacing="32" id="suggestions">
+        <tr>
+            <td onclick="onSuggestionClicked(0)">
+                <div class="sugg" style="margin-left: 0;" id="sugg0">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>                    
+                </div>
+            </td>
+            <td onclick="onSuggestionClicked(1)">
+                <div class="sugg" style="margin-left: 0;" id="sugg1">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td onclick="onSuggestionClicked(2)">
+                <div class="sugg" style="margin-left: 0;" id="sugg2">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+            <td onclick="onSuggestionClicked(3)">
+                <div class="sugg" style="margin-left: 0;" id="sugg3">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td onclick="onSuggestionClicked(4)">
+                <div class="sugg" style="margin-left: 0;" id="sugg4">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+            <td onclick="onSuggestionClicked(5)">
+                <div class="sugg" style="margin-left: 0;" id="sugg5">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td onclick="onSuggestionClicked(6)">
+                <div class="sugg" style="margin-left: 0;" id="sugg6">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+            <td onclick="onSuggestionClicked(7)">
+                <div class="sugg" style="margin-left: 0;" id="sugg7">
+                    <img class="sugg-ico" onerror="onIcoLoadError(this)" />
+                    <img src="more.svg" class="more" />
+                    <div class="sugg-title">&nbsp;</div>
+                    <div class="sugg-desk">&nbsp;</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script>
+var searchEngineUrlMap = {
+        "google": "https://www.google.com/search?q=[query]",
+        "bing": "https://www.bing.com/search?q=[query]",
+        "yahoo": "https://search.yahoo.com/search?p=[query]",
+        "ddg": "https://duckduckgo.com/?q=[query]",
+        "yandex": "https://yandex.com/search/?text=[query]",
+        "startpage": "https://www.startpage.com/sp/search?query=[query]",
+        "custom": ""
+    };
+var recommendationsToDisplay = [];
+var homePageLinksMode = "RECOMMENDATIONS";
+
+function onIcoLoadError(element) {
+    element.src='ic_not_available.svg';
+    element.style.filter = "invert(1)";
+}
+
+function onSuggestionClicked(index) {
+    var bookmark = null;
+    if (homePageLinksMode === "BOOKMARKS" && window.hasOwnProperty( "TVBro" )) {
+        bookmark = recommendationsToDisplay.find(function (b) { return b.order === index; });
+        if (bookmark && TVBro.hasOwnProperty("markBookmarkRecommendationAsUseful")) {
+            TVBro.markBookmarkRecommendationAsUseful(index);
+        }
+    } else {
+        if (index >= recommendationsToDisplay.length) return;
+        bookmark = recommendationsToDisplay[index];
+    }
+    if (!bookmark) return;
+    var url = bookmark.dest_url ? bookmark.dest_url : bookmark.url;
+    window.location.href = url;
+}
+
+function loadRecommendations() {
+    return [
+        {"title": "Wikipedia - the free encyclopedia", "url":"https://www.wikipedia.org", "favicon": "https://ru.wikipedia.org/static/apple-touch/wikipedia.png"},
+        {"title": "Reddit - Dive into anything", "url":"https://www.reddit.com", "favicon": "https://www.redditstatic.com/desktop2x/img/favicon/apple-icon-120x120.png"},
+        {"title": "My Tuner", "url":"https://mytuner-radio.com/", "favicon": "https://static2.mytuner.mobi/static/icons/apple-touch-icon-120x120-precomposed.png"},
+        {"title": "Instagram", "url":"https://www.instagram.com", "favicon": "https://static.cdninstagram.com/rsrc.php/v3/ys/r/aM-g435MtEX.png"},
+        {"title": "IMDb", "url":"https://www.imdb.com/", "favicon": "https://m.media-amazon.com/images/G/01/imdb/images-ANDW73HA/favicon_iPhone_retina_180x180._CB1582158069_UX60_.png"},
+        {"title": "eBay", "url":"https://www.ebay.com/", "favicon": "https://www.ebay.com/apple-touch-icon.png"},
+        {"title": "Itch.io", "url":"https://itch.io/games/input-gamepad/platform-web", "favicon": "https://itch.io/static/images/itchio-square-144.png"},
+        {"title": "BBC News", "url":"https://www.bbc.com/news", "favicon": "https://www.bbc.com/apple-touch-icon-120x120-precomposed.png"}
+    ];
+}
+
+function renderLinks(mode, linksArray) {
+    //both parameters are optional
+    console.log("Rendering links: mode=" + mode + ", linksArray=" + JSON.stringify(linksArray));
+    homePageLinksMode = mode ? mode : "RECOMMENDATIONS";
+    recommendationsToDisplay = linksArray ? linksArray : loadRecommendations();
+
+    recommendationsToDisplay.map(function(c, i, arr) {
+        if (!c.favicon) {
+            var urlStr = c.url;
+            try {
+                var url = new URL(urlStr);
+                c.favicon = url.origin + "/favicon.ico";
+
+                if (window.hasOwnProperty( "TVBro" )) {
+                    if (TVBro.requestFavicon) {
+                        //GeckoView
+                        TVBro.requestFavicon(urlStr);
+                    } else {
+                        //WebView
+                        c.favicon = "favicon://" + url.host;
+                    }                    
+                }
+            } catch (e) {
+                console.log("Invalid URL: " + urlStr);
+                console.log("Invalid URL: " + urlStr);
+            }
+        }
+        return c;
+    })
+    
+    console.log("Rendering links: recommendationsToDisplay=" + JSON.stringify(recommendationsToDisplay));
+    
+    for (var i = 0; i < 8; i++) {
+        var suggElement = document.getElementById("sugg" + i);
+        if (suggElement) {
+            var link;
+            if (homePageLinksMode == "BOOKMARKS" && window.hasOwnProperty( "TVBro" )) {
+                link = recommendationsToDisplay.find(function(c) { return c.order == i; });
+            } else {
+                link = recommendationsToDisplay[i];
+            }
+
+            //console.log("Rendering link: " + link);
+
+            var titleElement = suggElement.getElementsByClassName("sugg-title")[0];
+            var descriptionElement = suggElement.getElementsByClassName("sugg-desk")[0];
+            var icon = suggElement.getElementsByClassName("sugg-ico")[0];
+            if (link) {
+                icon.src = link.favicon;
+                //color-scheme: only light;
+                icon.style.filter = "";
+                titleElement.innerHTML = link.title;
+                descriptionElement.innerHTML = link.description ? link.description : escapeHTML(link.url);
+            } else {
+                icon.src = "ic_not_available.svg";
+                //color-scheme: default;
+                icon.style.filter = "invert(1)";
+                titleElement.innerHTML = "&nbsp;";
+                descriptionElement.innerHTML = "&nbsp;";
+            }
+
+            titleElement.classList.toggle("empty", !link);
+            descriptionElement.classList.toggle("empty", !link);
+
+            if (homePageLinksMode == "BOOKMARKS" && window.hasOwnProperty( "TVBro" )) {
+                var moreElement = suggElement.getElementsByClassName("more")[0]; 
+                moreElement.style.display = "block";
+                moreElement.onclick = function(e) {
+                    var index = parseInt(e.target.parentElement.id.substring(4));
+                    TVBro.onEditBookmark(index);
+                    e.stopPropagation();
+                };
+            }
+        }
+    }
+}
+
+function onSearchEngineDropDownClick() {
+    document.getElementById("search-engines-list").classList.toggle("active");
+}
+
+function promptCustomSearchEngineUrl() {
+    var engine = localStorage.getItem("search-engine");
+    var searchEngineUrl = localStorage.getItem("search-engine-url");
+    searchEngineUrl = searchEngineUrl ? searchEngineUrl : searchEngineUrlMap[engine];
+
+    return prompt("Enter search engine URL (with [query] as placeholder)", searchEngineUrl);
+}
+
+function applySearchEngine(engine, searchEngineUrl, notifyTVBro) {
+    document.getElementById("search-engines-list").classList.remove("active");
+
+    searchEngineUrl = searchEngineUrl ? searchEngineUrl : searchEngineUrlMap[engine];
+
+    localStorage.setItem("search-engine", engine);
+    localStorage.setItem("search-engine-url", searchEngineUrl);
+
+    var iconUrl = "";
+    if (engine == "custom") {
+        var urlOrigin = new URL(searchEngineUrl.replace("[query]", "")).origin;
+        iconUrl = "https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&size=120&url=" + urlOrigin;
+    } else {
+        iconUrl = "favicons/" + engine + ".png";
+    }
+    document.getElementsByClassName("default_option")[0].style.backgroundImage = "url('" + iconUrl + "')";    
+
+    if (window.hasOwnProperty( "TVBro" ) && notifyTVBro) {
+        TVBro.setSearchEngine(engine, searchEngineUrl ? searchEngineUrl : searchEngineUrlMap[engine]);
+    }
+}
+
+function performSearch(text) {
+    var searchEngineUrl = localStorage.getItem('search-engine-url') ? localStorage.getItem('search-engine-url') : searchEngineUrlMap['google'];
+    var url = searchEngineUrl.replace("[query]", encodeURIComponent(text));
+    window.open(url, "_self");
+}
+
+//callback called from TVBro/GeckoView
+function onFaviconLoaded(url, data) {
+    let imgElements = document.getElementsByTagName("img");
+    for (let i = 0; i < imgElements.length; i++) {
+        if (imgElements[i].src == "favicon://" + url) {
+            imgElements[i].src = data;
+        }
+    }
+}
+
+function hideVoiceSearchUI() {
+    document.getElementsByClassName("mic")[0].style.display = "none";
+    document.getElementsByClassName("lenz")[0].style.display = "block";
+}
+
+//initialization
+
+var escape = document.createElement('textarea');
+function escapeHTML(html) {
+    escape.textContent = html;
+    return escape.innerHTML;
+}
+
+var searchEngine = localStorage.getItem('search-engine') ? localStorage.getItem('search-engine') : "google";
+var searchEngineUrl = localStorage.getItem('search-engine-url') ? localStorage.getItem('search-engine-url') : searchEngineUrlMap[searchEngine];
+
+document.getElementById("search-input").addEventListener("keydown", function(e) {
+    if (e.keyCode == 13) {
+        performSearch(document.getElementById("search-input").value);
+    }
+});
+
+document.getElementsByClassName("search_action_container")[0].onclick = function() {
+    if (document.getElementsByClassName("mic")[0].style.display == "none") {
+        performSearch(document.getElementById("search-input").value);
+    } else {
+        if (window.hasOwnProperty( "TVBro" )) {
+            TVBro.startVoiceSearch();
+        }
+    }
+};
+
+//there are three modes this page can run in:
+//1. Running inside ordinary web page - TVBro variable is not installed - no bookmarks, no voice search
+//2. Running inside TVBro WebView - TVBro variable is installed
+//3. Running inside TVBro GeckoView - TVBro variable is installed
+
+if (window.hasOwnProperty( "TVBro" )) {
+    console.log("Running inside TVBro");
+    TVBro.onHomePageLoaded();
+} else {
+    hideVoiceSearchUI();
+    applySearchEngine(searchEngine, searchEngineUrl, false);
+    renderLinks();
+}
+
+</script>
+</body>
+</html>

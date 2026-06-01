@@ -47,27 +47,27 @@ class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
 
     @JavascriptInterface
     fun startVoiceSearch() {
-        if (webEngine.tab.url != Config.HOME_PAGE_URL) return
+        if (!isHomePage()) return
         val callback = webEngine.callback ?: return
         callback.getActivity().runOnUiThread { callback.initiateVoiceSearch() }
     }
 
     @JavascriptInterface
     fun setSearchEngine(engine: String, customSearchEngineURL: String) {
-        if (webEngine.tab.url != Config.HOME_PAGE_URL) return
+        if (!isHomePage()) return
         AppContext.provideConfig().searchEngineURL.value = customSearchEngineURL
     }
 
     @JavascriptInterface
     fun onEditBookmark(index: Int) {
-        if (webEngine.tab.url != Config.HOME_PAGE_URL) return
+        if (!isHomePage()) return
         val callback = webEngine.callback ?: return
         callback.getActivity().runOnUiThread { callback.onEditHomePageBookmarkSelected(index) }
     }
 
     @JavascriptInterface
     fun onHomePageLoaded() {
-        if (webEngine.tab.url != Config.HOME_PAGE_URL) return
+        if (!isHomePage()) return
         val callback = webEngine.callback ?: return
         callback.getActivity().runOnUiThread {
             val cfg = AppContext.provideConfig()
@@ -110,8 +110,12 @@ class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
 
     @JavascriptInterface
     fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int) {
-        if (webEngine.tab.url != Config.HOME_PAGE_URL) return
+        if (!isHomePage()) return
         val callback = webEngine.callback ?: return
         callback.getActivity().runOnUiThread { callback.markBookmarkRecommendationAsUseful(bookmarkOrder) }
+    }
+
+    private fun isHomePage(): Boolean {
+        return webEngine.tab.url == Config.HOME_PAGE_URL || webEngine.tab.url == Config.HOME_URL_ALIAS
     }
 }
