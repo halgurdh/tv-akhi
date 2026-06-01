@@ -41,6 +41,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
@@ -573,21 +574,16 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         var thumbnail = bitmap
         if (thumbnail == null) {
             try {
-                thumbnail = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                thumbnail = createBitmap(width, height, Bitmap.Config.RGB_565)
             } catch (e: Throwable) {
                 e.printStackTrace()
-                try {
-                    thumbnail = Bitmap.createBitmap(width / 2, height / 2, Bitmap.Config.ARGB_8888)
-                } catch (e: OutOfMemoryError) {
-                    e.printStackTrace()
-                }
             }
         }
         if (thumbnail == null) {
             return null
         }
         val canvas = Canvas(thumbnail)
-        val scaleFactor = width / width.toFloat()
+        val scaleFactor = thumbnail.width / width.toFloat()
         canvas.scale(scaleFactor, scaleFactor)
         canvas.translate(-scrollX.toFloat() * scaleFactor, -scrollY.toFloat() * scaleFactor)
         super.draw(canvas)
