@@ -169,7 +169,7 @@ class Config(val prefs: SharedPreferences) {
             prefs.edit().putString(HOME_PAGE_KEY, value).apply()
         }
 
-    var searchEngineURL = ObservableStringPreference(SearchEnginesURLs[SearchEnginesNames.indexOf("yandex")], SEARCH_ENGINE_URL_PREF_KEY)
+    var searchEngineURL = ObservableStringPreference(SearchEnginesURLs[SearchEnginesNames.indexOf("ddg")], SEARCH_ENGINE_URL_PREF_KEY)
 
     var webEngine: String
         get() {
