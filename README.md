@@ -14,10 +14,22 @@ with uBlock Origin.
   - You can turn it on or off in Settings or with the toolbar button.
 - **Remote-friendly:** works with the TV remote using a virtual cursor, tabs, bookmarks, history, a download manager
   and shortcuts.
-- **Home page:** shows your most visited sites. The ⌂ button goes to the home page; pressing it again returns to the TV home screen.
-- **Voice search:** pick the language (English, Arabic or the system language) in Settings.
+  - **Scrolling:** a single press of Up or Down scrolls the page (when the cursor is in that half of the screen);
+    holding the button moves the cursor and scrolls continuously.
+  - **Back:** the first press shows the menu, the second press goes back to the previous page, like a normal browser.
+  - **⌂ Home button:** goes to the home page; pressing it again on the home page returns to the TV home screen.
+- **Arabic voice search** (البحث الصوتي بالعربية): press the microphone button and speak in Arabic. TV Akhi searches
+  for what you said.
+  - Choose the language in Settings → **Voice search language**: English (default), العربية (Arabic) or the
+    system language.
+  - On Android 14 and newer, it can also switch between Arabic and English automatically.
+  - Arabic recognition needs a speech service on the TV that supports Arabic, such as Google's.
+- **Search:** DuckDuckGo by default. Google, Bing, Yahoo!, Yandex, Startpage or your own search URL can be chosen
+  in Settings. Typing a site name like `youtube.com` opens the site directly instead of
+  searching.
+- **Home page:** shows your most visited sites.
+- **Videos:** a video you start goes to fullscreen automatically (Settings → **Play videos in fullscreen**).
 - **Links that open new windows** load in the current tab (can be turned off in Settings).
-- **Typing a site name** like `youtube.com` in the address bar opens the site directly.
 
 ## Install
 

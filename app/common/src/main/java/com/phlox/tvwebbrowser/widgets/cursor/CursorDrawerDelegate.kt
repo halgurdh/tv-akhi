@@ -133,6 +133,7 @@ class CursorDrawerDelegate(val context: Context, val surface: View) {
                     handleDirectionKeyEvent(event, UNCHANGED, -1, true)
                 } else if (event.action == KeyEvent.ACTION_UP) {
                     handleDirectionKeyEvent(event, UNCHANGED, 0, false)
+                    if (isShortPress(event)) scrollOnPress(-1)
                 }
                 return true
             }
@@ -141,6 +142,7 @@ class CursorDrawerDelegate(val context: Context, val surface: View) {
                     handleDirectionKeyEvent(event, UNCHANGED, 1, true)
                 } else if (event.action == KeyEvent.ACTION_UP) {
                     handleDirectionKeyEvent(event, UNCHANGED, 0, false)
+                    if (isShortPress(event)) scrollOnPress(1)
                 }
                 return true
             }
@@ -270,6 +272,24 @@ class CursorDrawerDelegate(val context: Context, val surface: View) {
         }
 
         cursorDirection.set(if (x == UNCHANGED) cursorDirection.x else x, if (y == UNCHANGED) cursorDirection.y else y)
+    }
+
+    private fun isShortPress(event: KeyEvent) = event.eventTime - event.downTime < SHORT_PRESS_MS
+
+    /** a short up/down press with cursor in the top/bottom half of the screen scrolls a third of the screen */
+    private fun scrollOnPress(direction: Int) {
+        val h = surface.height
+        if (h == 0) return
+        val inZone = if (direction > 0) cursorPosition.y >= h / 2f - 2 else cursorPosition.y <= h / 2f + 2
+        if (!inZone) return
+        var amount = h / 3
+        //custom scroll callback (GeckoView) takes dp, not px
+        if (customScrollCallback != null) amount = (amount / context.resources.displayMetrics.density).toInt()
+        scrollWebViewBy(0, direction * amount)
+        if (scrollHackStarted) {
+            dispatchMotionEvent(scrollHackCoords.x, scrollHackCoords.y, MotionEvent.ACTION_CANCEL)
+            scrollHackStarted = false
+        }
     }
 
     private fun scrollWebViewBy(scrollX: Int, scrollY: Int) {
@@ -651,6 +671,7 @@ class CursorDrawerDelegate(val context: Context, val surface: View) {
     companion object {
         private val TAG = CursorDrawerDelegate::class.java.simpleName
         private const val UNCHANGED = Integer.MIN_VALUE
+        private const val SHORT_PRESS_MS = 250
         private const val CURSOR_DISAPPEAR_TIMEOUT = 5000
         private const val USE_SCROLL_HACK = true
         private const val SCROLL_HACK_PADDING = 300

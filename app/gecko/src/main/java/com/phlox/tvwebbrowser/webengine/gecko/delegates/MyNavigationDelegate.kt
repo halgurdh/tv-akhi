@@ -60,6 +60,13 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
             return GeckoResult.deny()
         }
 
+        if (request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW &&
+            AppContext.provideConfig().openNewWindowsInCurrentTab) {
+            //target="_blank" links and window.open(): load in this tab instead of a new one
+            session.loadUri(request.uri)
+            return GeckoResult.deny()
+        }
+
         return GeckoResult.allow()
     }
 
