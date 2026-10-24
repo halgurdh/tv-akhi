@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="app_name">"TV Bro: مرورگر وب تلویزیون"</string>
+  <string name="app_name">"TV Akhi: مرورگر وب تلویزیون"</string>
   <string name="error">"خطا"</string>
   <string name="ok">"خوب"</string>
   <string name="loading">"بارگذاری…"</string>
@@ -68,7 +68,7 @@
   <string name="clear">"پاک کردن"</string>
   <string name="install">"نصب"</string>
   <string name="turn_on_unknown_sources">"لطفاً تنظیمات سیستم \"منابع ناشناخته\" را فعال کنید"</string>
-  <string name="turn_on_unknown_sources_for_app">"لطفاً به TV Bro اجازه دهید برنامه ها را از \"منابع ناشناخته\" در تنظیمات سیستم نصب کند"</string>
+  <string name="turn_on_unknown_sources_for_app">"لطفاً به TV Akhi اجازه دهید برنامه ها را از \"منابع ناشناخته\" در تنظیمات سیستم نصب کند"</string>
   <string name="storage_not_mounted">"حافظه متصل نشده است"</string>
   <string name="can_not_create_downloads">"نمی توان بارگیری ها را ایجاد کرد"</string>
   <string name="voice_search_not_found">"جستجوی صوتی یافت نشد"</string>
@@ -129,7 +129,7 @@
   <string name="direct_navigation_mode_title">حالت پیمایش مستقیم</string>
   <string name="direct_navigation_mode_message">پیمایش مستقیم مکان‌نما را پنهان می‌کند و فشردن کلیدهای ریموت یا دسته بازی را مستقیماً به صفحه وب می‌فرستد تا سایت‌هایی که فوکوس تلویزیونی یا صفحه‌کلید را پشتیبانی می‌کنند بتوانند پیوندها و کنترل‌ها را برجسته کنند.\n\nبرای خروج از این حالت: «برگشت» را روی ریموت تلویزیون بزنید یا دکمه B دسته را نگه دارید.\n\nاین حالت با موتور WebView بهتر کار می‌کند: WebView جابه‌جایی فوکوس در صفحه با D-pad را پشتیبانی می‌کند.</string>
   <string name="incognito_mode">حالت ناشناس</string>
-  <string name="incognito_mode_hint">اکنون می توانید به صورت خصوصی مرور کنید و سایر افرادی که از این دستگاه استفاده می کنند فعالیت شما را نخواهند دید. TV Bro تاریخچه مرور، کوکی ها و داده های سایت، اطلاعات وارد شده در فرم ها را ذخیره نمی کند.  با این حال، دانلودها و نشانک ها ذخیره خواهند شد. ممکن است فعالیت شما همچنان برای وب‌سایت‌هایی که بازدید می‌کنید، سازمان یا ارائه‌دهنده خدمات اینترنتی شما قابل مشاهده باشد.</string>
+  <string name="incognito_mode_hint">اکنون می توانید به صورت خصوصی مرور کنید و سایر افرادی که از این دستگاه استفاده می کنند فعالیت شما را نخواهند دید. TV Akhi تاریخچه مرور، کوکی ها و داده های سایت، اطلاعات وارد شده در فرم ها را ذخیره نمی کند.  با این حال، دانلودها و نشانک ها ذخیره خواهند شد. ممکن است فعالیت شما همچنان برای وب‌سایت‌هایی که بازدید می‌کنید، سازمان یا ارائه‌دهنده خدمات اینترنتی شما قابل مشاهده باشد.</string>
   <string name="don_t_show_again">دیگر نشان نده</string>
   <string name="why_icon_changed">چرا نماد تغییر کرد؟</string>
   <string name="clear_web_cache">کش وب را پاک کنید</string>

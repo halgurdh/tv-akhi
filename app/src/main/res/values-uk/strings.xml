@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="app_name">TV Bro: Веб Браузер для ТБ</string>
+  <string name="app_name">TV Akhi: Веб Браузер для ТБ</string>
   <string name="add">Додати</string>
   <string name="allow">Дозволити</string>
   <string name="bookmarks">Закладки</string>
@@ -61,7 +61,7 @@
   <string name="voice_search">Голосовий пошук</string>
   <string name="install">Встановити</string>
   <string name="turn_on_unknown_sources">Будь-ласка, активуйте системну настройку \"Невідомі джерела\"</string>
-  <string name="turn_on_unknown_sources_for_app">Будь-ласка, дозвольте TV Bro встановлювати додатки з невідомих джерел у системних налаштунках</string>
+  <string name="turn_on_unknown_sources_for_app">Будь-ласка, дозвольте TV Akhi встановлювати додатки з невідомих джерел у системних налаштунках</string>
   <string name="storage_not_mounted">Сховище файлів не знайдено</string>
   <string name="can_not_create_downloads">Не можу створити директорію для завантажених файлів</string>
   <string name="voice_search_not_found">Додаток голосового пошуку не знайдено</string>
@@ -125,7 +125,7 @@
   <string name="direct_navigation_mode_title">Режим прямої навігації</string>
   <string name="direct_navigation_mode_message">Пряма навігація приховує курсор на екрані й передає натискання з пульта чи геймпада безпосередньо на веб-сторінку, щоб сайти з підтримкою ТВ або клавіатурного фокусу могли виділяти посилання та елементи керування.\n\nЩоб вийти з цього режиму: натисніть «Назад» на пульті ТВ або утримуйте кнопку B на геймпаді.\n\nЦей режим найкраще працює з рушієм WebView: WebView підтримує переміщення фокусу сторінкою за допомогою D-pad.</string>
   <string name="incognito_mode">Режим анонімного перегляду</string>
-  <string name="incognito_mode_hint">Тепер ви можете переглядати приватно, і інші люди, які використовують цей пристрій, не бачитимуть вашу активність. TV Bro не зберігатиме вашу історію переглядів, файли cookie та дані сайту, інформацію, введену у форми.\n\nОднак завантаження та закладки будуть збережені. Вашу активність можуть бачити веб-сайти, які ви відвідуєте, ваша організація чи постачальник послуг Інтернету.</string>
+  <string name="incognito_mode_hint">Тепер ви можете переглядати приватно, і інші люди, які використовують цей пристрій, не бачитимуть вашу активність. TV Akhi не зберігатиме вашу історію переглядів, файли cookie та дані сайту, інформацію, введену у форми.\n\nОднак завантаження та закладки будуть збережені. Вашу активність можуть бачити веб-сайти, які ви відвідуєте, ваша організація чи постачальник послуг Інтернету.</string>
   <string name="don_t_show_again">Не показувати знову</string>
   <string name="why_icon_changed">Чому іконка змінилася?</string>
   <string name="clear_web_cache">Очистити веб-кеш</string>
@@ -156,7 +156,7 @@
   <string name="home_page">Домашня сторінка</string>
   <string name="custom_home_page_url">Користувацька URL-адреса домашньої сторінки</string>
   <string-array name="home_page_modes">
-    <item>Домашня TV Bro</item>
+    <item>Домашня TV Akhi</item>
     <item>Пошукова система</item>
     <item>Користувацька</item>
     <item>Пуста</item>
