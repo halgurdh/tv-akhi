@@ -43,6 +43,7 @@ import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.WebExtension
 import org.mozilla.geckoview.WebExtension.MessageDelegate
+import org.json.JSONObject
 import java.lang.ref.WeakReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -52,7 +53,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     CursorDrawerDelegate.Callback {
     companion object {
         const val ENGINE_NAME = "GeckoView"
-        private const val APP_WEB_EXTENSION_VERSION = 51
+        private const val APP_WEB_EXTENSION_VERSION = 52
         val TAG: String = GeckoWebEngine::class.java.simpleName
         lateinit var runtime: GeckoRuntime
         var appWebExtension = ObservableValue<WebExtension?>(null)
@@ -213,6 +214,10 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
                 override fun onMessage(nativeApp: String, message: Any,
                                        sender: WebExtension.MessageSender): GeckoResult<Any>? {
                     Log.d(TAG, "onMessage: $nativeApp, $message, $sender")
+                    if ((message as? JSONObject)?.optString("action") == "getSettings") {
+                        return GeckoResult.fromValue(JSONObject()
+                            .put("autoFullscreenVideo", AppContext.provideConfig().autoFullscreenVideo))
+                    }
                     return null
                 }
 

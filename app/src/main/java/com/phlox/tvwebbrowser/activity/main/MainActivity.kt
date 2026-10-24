@@ -388,7 +388,9 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     }
 
     private fun isOnHomePage(): Boolean {
-        val url = tabsModel.currentTab.value?.url ?: return true
+        val tab = tabsModel.currentTab.value ?: return true
+        //live engine url: tab.url is updated only on page loads, not on in-page navigation (e.g. YouTube)
+        val url = tab.webEngine.url ?: tab.url
         return url.isEmpty() || url == Config.HOME_URL_ALIAS || url == settingsModel.homePage ||
                 url.startsWith(Config.HOME_PAGE_URL)
     }
@@ -913,6 +915,10 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             tabsModel.currentTab.value?.webEngine?.hideFullscreenView()
         } else if (vb.llBottomPanel.isVisible && !vb.rlActionBar.isVisible) {
             hideBottomPanel()
+        } else if (vb.rlActionBar.isVisible && tabsModel.currentTab.value?.webEngine?.canGoBack() == true) {
+            //first press shows the menu, second press goes back like in a normal browser
+            hideMenuOverlay()
+            tabsModel.currentTab.value?.webEngine?.goBack()
         } else {
             toggleMenu()
         }

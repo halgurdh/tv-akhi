@@ -13,3 +13,40 @@ const communicatePort = browser.runtime.connectNative("tvbro_content");
 communicatePort.onMessage.addListener(message => {
     console.log("Received message from native app:", message);
 });
+(function () {
+    //auto fullscreen: when a video starts playing after user action, make its player fullscreen
+    function setupAutoFullscreen(isEnabled) {
+        const handled = new WeakSet();
+        //the player container usually has the same size as the video and holds site's own controls
+        function fullscreenTarget(video) {
+            const r = video.getBoundingClientRect();
+            let target = video;
+            for (let p = video.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+                const pr = p.getBoundingClientRect();
+                if (pr.width > r.width * 1.15 + 4 || pr.height > r.height * 1.15 + 4) break;
+                target = p;
+            }
+            return target;
+        }
+        document.addEventListener('play', function (e) {
+            const video = e.target;
+            if (!(video instanceof HTMLVideoElement) || handled.has(video)) return;
+            if (document.fullscreenElement || !isEnabled()) return;
+            const r = video.getBoundingClientRect();
+            if (r.width < 200 || r.height < 100) return; //previews and tiny players
+            handled.add(video);
+            try {
+                const p = fullscreenTarget(video).requestFullscreen();
+                if (p && p.catch) p.catch(function () { handled.delete(video); });
+            } catch (err) {
+                handled.delete(video);
+            }
+        }, true);
+    }
+
+    let autoFullscreen = false;
+    browser.runtime.sendNativeMessage("tvbro_content", { action: "getSettings" })
+        .then(settings => { autoFullscreen = !!(settings && settings.autoFullscreenVideo); })
+        .catch(() => { });
+    setupAutoFullscreen(() => autoFullscreen);
+})();

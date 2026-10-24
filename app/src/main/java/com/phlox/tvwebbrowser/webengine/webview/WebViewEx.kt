@@ -516,6 +516,8 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         addJavascriptInterface(WebViewAdBlock.JSInterface(), "TVBroAdblock")
         if (documentStartScriptSupported) {
             WebViewCompat.addDocumentStartJavaScript(this, WebViewAdBlock.contentScript(context), setOf("*"))
+            WebViewCompat.addDocumentStartJavaScript(this,
+                context.assets.open("autofullscreen.js").bufferedReader().use { it.readText() }, setOf("*"))
         }
     }
 

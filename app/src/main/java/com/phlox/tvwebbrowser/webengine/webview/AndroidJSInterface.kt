@@ -13,6 +13,9 @@ import org.json.JSONArray
 
 class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
     @JavascriptInterface
+    fun isAutoFullscreenVideoEnabled(): Boolean = AppContext.provideConfig().autoFullscreenVideo
+
+    @JavascriptInterface
     fun currentUrl(): String {
         if (!webEngine.tab.url.startsWith(WebViewEx.INTERNAL_SCHEME)) return ""
         return webEngine.tab.url
