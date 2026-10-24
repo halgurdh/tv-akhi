@@ -172,7 +172,10 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
         vb.ibAdBlock.setOnClickListener { toggleAdBlockForTab() }
         vb.ibPopupBlock.setOnClickListener { lifecycleScope.launch(Dispatchers.Main) { showPopupBlockOptions() } }
-        vb.ibHome.setOnClickListener { navigate(settingsModel.homePage) }
+        vb.ibHome.setOnClickListener {
+            //first press goes to the home page, second press (already there) hides the app back to TV home screen
+            if (isOnHomePage()) moveTaskToBack(true) else navigate(settingsModel.homePage)
+        }
         vb.ibBack.setOnClickListener { navigateBack() }
         vb.ibForward.setOnClickListener {
             val tab = tabsModel.currentTab.value ?: return@setOnClickListener
@@ -382,6 +385,12 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
     override fun onUrlInputDone() {
         hideMenuOverlay()
+    }
+
+    private fun isOnHomePage(): Boolean {
+        val url = tabsModel.currentTab.value?.url ?: return true
+        return url.isEmpty() || url == Config.HOME_URL_ALIAS || url == settingsModel.homePage ||
+                url.startsWith(Config.HOME_PAGE_URL)
     }
 
     fun navigateBack(goHomeIfNoHistory: Boolean = false) {
