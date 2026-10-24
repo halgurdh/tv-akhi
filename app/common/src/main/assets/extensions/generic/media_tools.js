@@ -5,12 +5,15 @@
  * nomusic/engine.js must be loaded before this file.
  *
  * Smart skip: skips the intro and the end credits of TV show episodes, keeping a 2 second safety gap.
+ *  - Known episodes: players addressed by the TMDB id (/tv/1396/1/1, ?tmdb=1396&season=1&episode=1) get the recap,
+ *    intro and credits times from TheIntroDB (https://theintrodb.org, a SponsorBlock for TV shows) before they play.
  *  - The site's own "Skip intro" / "Skip credits" / "Next episode" buttons are pressed when they show up.
  *  - Intro: the episodes of a show share it. The frames of the first minutes of every episode are fingerprinted
  *    (difference hash, 1 per second) and the longest common run of two episodes is saved as the intro of the show.
  *    When a later episode plays the same frames, it jumps to 2 s before the end of the intro. So it learns from 2 episodes.
  *  - End credits: a credit roll is many lines of text over a dark or still picture. 10 frames in a row like this
  *    near the end of the video jump to its end, then the site plays the next episode.
+ *  After the credits (or the end of an episode) the next episode of the page is opened.
  *  Each part is skipped once per video: seeking back shows it again.
  *
  * No music: removes the background music and keeps the voices, like NoMusic (https://github.com/mohamedsadiqaguenaou/NoMusic,
@@ -297,7 +300,7 @@ var tvakhiMediaTools = (function () {
     /** The episode number in a title: "الحلقة 89", "Episode 89", "EP89". 0: none */
     function episodeNumber(text) {
         const latin = text.replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660));
-        const m = latin.match(/(?:الحلقة|الحلقه|حلقة|episode|\bep\.?)\s*(\d+)/i);
+        const m = latin.match(/(?:الحلقة|الحلقه|حلقة|episode|\beps?\.?)\s*(\d+)/i);
         return m ? parseInt(m[1], 10) : 0;
     }
 
@@ -315,7 +318,22 @@ var tvakhiMediaTools = (function () {
         return (samePage || next[0] || {}).href || null;
     }
 
+    /** The button of the next episode (a list of "Eps 1", "Eps 2" without links). Null: none. */
+    function nextEpisodeButton() {
+        const labelOf = el => (el.getAttribute('title') || el.textContent || '').replace(/\s+/g, ' ').trim();
+        const items = Array.from(document.querySelectorAll('a, button, [role="button"], li'))
+            .filter(el => el.offsetWidth && el.offsetHeight && labelOf(el).length <= 80 && episodeNumber(labelOf(el)));
+        const key = Array.from(document.querySelectorAll('iframe')).map(f => keyFromUrl(f.src)).find(k => k);
+        const active = items.find(el => /(^|\s)(active|current|selected)(\s|$)/.test(el.className));
+        const n = (key && key.episode) || (active && episodeNumber(labelOf(active))) || episodeNumber(document.title);
+        return n ? items.find(el => episodeNumber(labelOf(el)) === n + 1) || null : null;
+    }
+
+    let lastNextAt = 0;
+
     function openNextEpisode(host) {
+        if (Date.now() - lastNextAt < 60000) return; //once per episode: the end and the credits both ask
+        lastNextAt = Date.now();
         if (window.top !== window) {
             window.top.postMessage(NEXT_EPISODE_MESSAGE, '*'); //the player is in a frame, the links are in the page
             return;
@@ -324,7 +342,103 @@ var tvakhiMediaTools = (function () {
         if (url && url !== location.href) {
             host.notify('next_episode');
             location.href = url;
+            return;
         }
+        const button = nextEpisodeButton();
+        if (button) {
+            host.notify('next_episode');
+            button.click();
+        }
+    }
+
+    //---------- known episodes (TheIntroDB) ----------
+
+    const INTRODB_URL = 'https://api.theintrodb.org/v2/media';
+    const KEY_MESSAGE = 'tvakhi:tmdb:';
+    let parentKey = null; //the episode of this frame, from the page around it
+    const segments = new Map(); //key -> segments, null: unknown, 'loading'
+
+    /** The episode of a player address: /tv/1396/1/1, /tv/1396/1-1, ?tmdb=1396&season=1&episode=1. Null: none. */
+    function keyFromUrl(url) {
+        let u;
+        try { u = new URL(url, location.href); } catch (e) { return null; }
+        const m = u.pathname.match(/\/tv\/(\d+)\/(\d+)[\/-](\d+)(?:\/|$)/);
+        if (m) return { id: m[1], season: +m[2], episode: +m[3] };
+        const q = u.searchParams;
+        const id = q.get('tmdb') || q.get('tmdb_id') || q.get('tmdbId');
+        const season = q.get('season') || q.get('s');
+        const episode = q.get('episode') || q.get('e') || q.get('ep');
+        if (id && /^\d+$/.test(id) && /^\d+$/.test(season || '') && /^\d+$/.test(episode || '')) {
+            return { id: id, season: +season, episode: +episode };
+        }
+        return null;
+    }
+
+    function frameKey() {
+        return keyFromUrl(location.href) || parentKey;
+    }
+
+    /** The players are frames, often in frames: each frame tells its frames which episode they play */
+    function passKeys() {
+        const own = frameKey();
+        for (const frame of Array.from(document.querySelectorAll('iframe'))) {
+            const key = keyFromUrl(frame.src) || own;
+            if (key && frame.contentWindow) {
+                frame.contentWindow.postMessage(KEY_MESSAGE + key.id + ':' + key.season + ':' + key.episode, '*');
+            }
+        }
+    }
+
+    function onKeyMessage(e) {
+        if (typeof e.data !== 'string' || !e.data.startsWith(KEY_MESSAGE)) return;
+        const parts = e.data.substring(KEY_MESSAGE.length).split(':');
+        if (parts.length === 3 && parts.every(v => /^\d+$/.test(v))) {
+            parentKey = { id: parts[0], season: +parts[1], episode: +parts[2] };
+        }
+    }
+
+    /** The recap, intro and credits of the episode. Null: none known (yet). */
+    function knownSegments(key) {
+        const id = key.id + ':' + key.season + ':' + key.episode;
+        if (!segments.has(id)) {
+            segments.set(id, 'loading');
+            fetch(INTRODB_URL + '?tmdb_id=' + key.id + '&season=' + key.season + '&episode=' + key.episode)
+                .then(r => r.ok ? r.json() : null)
+                .then(json => segments.set(id, json && json.tmdb_id ? json : null))
+                .catch(() => segments.set(id, null));
+        }
+        const known = segments.get(id);
+        return known === 'loading' ? null : known;
+    }
+
+    /** Skips by the known times. True: done for this tick. */
+    function skipKnown(video, state, known, time, duration, host) {
+        const ms = time * 1000, durationMs = duration * 1000;
+        const parts = [].concat((known.recap || []).map(r => ['recap', r]), (known.intro || []).map(r => ['intro', r]));
+        for (const [kind, part] of parts) {
+            const start = part.start_ms || 0, end = part.end_ms;
+            //a part longer than the video: another cut of the episode, the times don't fit
+            if (end == null || end > durationMs * 0.5 || state.doneParts.has(kind + start)) continue;
+            if (kind === 'intro') state.introDone = true; //no learning needed
+            if (ms >= start - 500 && ms < end - SAFETY_S * 1000 - 1000) {
+                state.doneParts.add(kind + start);
+                video.currentTime = end / 1000 - SAFETY_S;
+                host.notify(kind === 'recap' ? 'recap_skipped' : 'intro_skipped');
+                return true;
+            }
+        }
+        const credits = (known.credits || []).find(c => c.start_ms != null && c.start_ms > durationMs * 0.5 && c.start_ms < durationMs);
+        if (credits) {
+            state.outroKnown = true; //no credit roll detection needed
+            if (!state.outroDone && ms >= credits.start_ms + SAFETY_S * 1000 && time < duration - 3) {
+                state.outroDone = true;
+                video.currentTime = Math.max(time, duration - 0.5);
+                host.notify('credits_skipped');
+                openNextEpisode(host);
+                return true;
+            }
+        }
+        return false;
     }
 
     //---------- smart skip ----------
@@ -339,7 +453,8 @@ var tvakhiMediaTools = (function () {
             state = {
                 id: id, frames: [], votes: new Map(), templates: null, blind: false,
                 introDone: false, introLearned: false, outroDone: false, isStatusShown: false,
-                creditStart: -1, creditFrames: 0, creditMisses: 0, prevStill: null, lastLearn: 0, learnIndex: -1, saved: false
+                creditStart: -1, creditFrames: 0, creditMisses: 0, prevStill: null, lastLearn: 0, learnIndex: -1, saved: false,
+                doneParts: new Set(), outroKnown: false
             };
             states.set(video, state);
         }
@@ -354,6 +469,11 @@ var tvakhiMediaTools = (function () {
         const time = video.currentTime;
         const sec = Math.floor(time);
         const isOutroZone = time > duration * 0.6 && duration - time < OUTRO_WINDOW_S;
+
+        const key = frameKey();
+        const known = key ? knownSegments(key) : null;
+        if (known && skipKnown(video, state, known, time, duration, host)) return;
+        if (key && !known && segments.get(key.id + ':' + key.season + ':' + key.episode) === 'loading') return;
 
         if (!state.introDone && time < INTRO_WINDOW_S) {
             const button = siteButton(video, INTRO_BUTTON);
@@ -376,7 +496,8 @@ var tvakhiMediaTools = (function () {
             }
         }
 
-        if (state.blind || (time >= INTRO_WINDOW_S && (state.outroDone || !isOutroZone))) {
+        const isOutroLive = !state.outroDone && !state.outroKnown && isOutroZone;
+        if (state.blind || ((time >= INTRO_WINDOW_S || state.introDone) && !isOutroLive)) {
             if (!state.saved && time >= INTRO_WINDOW_S) {
                 state.saved = true;
                 saveRecording(state);
@@ -392,7 +513,7 @@ var tvakhiMediaTools = (function () {
             return;
         }
 
-        if (time < INTRO_WINDOW_S) {
+        if (time < INTRO_WINDOW_S && !state.introDone) {
             if (!state.isStatusShown) {
                 state.isStatusShown = true;
                 //no intro of this site's shows known yet: say it learns, else silence looks broken
@@ -418,7 +539,7 @@ var tvakhiMediaTools = (function () {
             if (sec % 30 === 0) saveRecording(state);
         }
 
-        if (!state.outroDone && isOutroZone) {
+        if (isOutroLive) {
             const still = hash(small(), true);
             const isStill = state.prevStill && distance(still, state.prevStill) <= MAX_STILL_DISTANCE;
             state.prevStill = still;
@@ -621,9 +742,12 @@ var tvakhiMediaTools = (function () {
         const noMusic = new NoMusic(host);
         const videos = document.getElementsByTagName('video');
 
+        window.addEventListener('message', onKeyMessage);
+
         setInterval(function () {
-            if (!videos.length) return;
             const settings = host.settings() || {};
+            if (settings.smartSkip) passKeys();
+            if (!videos.length) return;
             for (const video of Array.from(videos)) {
                 try {
                     if (settings.smartSkip) skipTick(video, host);

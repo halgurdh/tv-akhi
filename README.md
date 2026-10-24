@@ -31,14 +31,19 @@ with uBlock Origin.
 - **Videos:** a video you start goes to fullscreen automatically (Settings → **Play videos in fullscreen**).
 - **⏭ Smart skip** (on by default) skips the intro and the end credits of TV show episodes on any site. It leaves a
   2-second safety gap so you don't miss anything:
+  - **Known episodes, from the first one:** many streaming sites play TV shows in players that are addressed by the
+    show's TMDB number, season and episode (for example `…/tv/1396/1/1`). For those, TV Akhi gets the exact times of
+    the **recap**, **intro** and **credits** from [TheIntroDB](https://theintrodb.org), a SponsorBlock-like database
+    for TV shows, before the episode plays. This works on sites like himovies.
   - If the site shows its own **Skip intro**, **Skip credits** or **Next episode** button, TV Akhi presses it.
-  - **Intro:** episodes of a show share the same intro. TV Akhi remembers the first minutes of each episode you watch.
+  - **Other sites (intro):** episodes of a show share the same intro. TV Akhi remembers the first minutes of each episode you watch.
     Once two episodes share a sequence, every later episode jumps to 2 seconds before the intro ends. It learns
     from two episodes, so the skipping starts with the third.
   - **End credits:** a credit roll (many lines of text over a dark or frozen picture) near the end of the video is
     skipped after about 10 seconds of it.
   - **Next episode:** after the credits, or when an episode ends, TV Akhi follows the page's "next episode" link
-    (الحلقة التالية, or the link to episode N+1). This also works when the player is embedded from another site.
+    (الحلقة التالية, or the link to episode N+1), or presses the next episode's button (like "Eps 2"). This also
+    works when the player is embedded from another site.
   - While it's still learning a show, or if it can't see the video, a short message says so.
   - Each part is skipped only once per episode. Seek back to watch it again.
   - Only videos longer than 5 minutes count. It can't see inside DRM-protected videos (Netflix, Disney+ and so on).
@@ -204,5 +209,6 @@ TV Akhi uses TV Bro's sources: https://github.com/truefedex/tv-bro. See [LICENSE
 How to take changes from TV Bro: [UPSTREAM_SYNC.md](UPSTREAM_SYNC.md).
 Ad blocking uses [uBlock Origin](https://github.com/gorhill/uBlock) and the filter lists from
 [uAssets](https://github.com/uBlockOrigin/uAssets).
+Smart skip uses the recap, intro and credits times of [TheIntroDB](https://theintrodb.org).
 No music is based on [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) (ISC license) and uses its WebAssembly
 build of the [FastEnhancer](https://github.com/aask1357/fastenhancer) Lite model (MIT license).

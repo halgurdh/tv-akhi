@@ -205,6 +205,7 @@
     <string name="intro_skipped">Intro skipped</string>
     <string name="credits_skipped">End credits skipped</string>
     <string name="next_episode">Next episode</string>
+    <string name="recap_skipped">Recap skipped</string>
     <string name="skip_learning">Smart skip is learning this show\'s intro. It skips it from the 3rd episode on</string>
     <string name="skip_blind">Smart skip cannot see this video, only the site\'s own skip buttons are used</string>
     <string name="no_music">No music: remove background music</string>

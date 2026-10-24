@@ -22,8 +22,9 @@ object MediaTools {
     const val EVENT_SKIP_LEARNING = "skip_learning"
     const val EVENT_SKIP_BLIND = "skip_blind"
     const val EVENT_NEXT_EPISODE = "next_episode"
+    const val EVENT_RECAP_SKIPPED = "recap_skipped"
     val EVENTS = setOf(EVENT_INTRO_SKIPPED, EVENT_CREDITS_SKIPPED, EVENT_NO_MUSIC_UNAVAILABLE, EVENT_NO_MUSIC_SLOW,
-        EVENT_SKIP_LEARNING, EVENT_SKIP_BLIND, EVENT_NEXT_EPISODE)
+        EVENT_SKIP_LEARNING, EVENT_SKIP_BLIND, EVENT_NEXT_EPISODE, EVENT_RECAP_SKIPPED)
 
     @Volatile private var modelBase64: String? = null
 
