@@ -20,10 +20,18 @@
         android:text="@string/web_browser_optimized_for_tvs" />
 
     <TextView
+        android:id="@+id/tvCredits"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tvDescription"
+        android:layout_marginTop="6dp"
+        android:text="@string/based_on_tv_bro" />
+
+    <TextView
         android:id="@+id/tvLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvDescription"
+        android:layout_below="@+id/tvCredits"
         tools:text="https://test.com"
         android:lines="1"
         android:background="@drawable/text_link_background_selector"
