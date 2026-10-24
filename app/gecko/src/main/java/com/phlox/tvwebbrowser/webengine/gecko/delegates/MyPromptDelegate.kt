@@ -10,6 +10,7 @@ import android.graphics.PorterDuff
 import android.net.Uri
 import android.os.Build
 import android.text.InputType
+import com.phlox.tvwebbrowser.AppContext
 import android.text.format.DateFormat
 import android.util.Log
 import android.view.InflateException
@@ -543,6 +544,11 @@ class MyPromptDelegate(private val webEngine: GeckoWebEngine): GeckoSession.Prom
         session: GeckoSession,
         prompt: GeckoSession.PromptDelegate.PopupPrompt
     ): GeckoResult<GeckoSession.PromptDelegate.PromptResponse>? {
+        val targetUri = prompt.targetUri
+        if (AppContext.provideConfig().openNewWindowsInCurrentTab && !targetUri.isNullOrEmpty()) {
+            session.loadUri(targetUri)
+            return GeckoResult.fromValue(prompt.dismiss())
+        }
         if (webEngine.callback?.shouldBlockNewWindow(dialog = false, userGesture = false) == true) {
             webEngine.callback?.onBlockedDialog(true)
             return GeckoResult.fromValue(prompt.dismiss())

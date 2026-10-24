@@ -13,6 +13,7 @@ import android.webkit.WebView
 import androidx.webkit.WebViewCompat
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
+import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.webengine.WebEngine
@@ -313,6 +314,10 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
             return callback?.isAdBlockingEnabled() ?: false
         }
 
+        override fun onBlockedAd(url: Uri) {
+            callback?.onBlockedAd(url.toString())
+        }
+
         override fun isDialogsBlockingEnabled(): Boolean {
             return callback?.isDialogsBlockingEnabled() ?: false
         }
@@ -372,7 +377,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
         init {
             WebEngineFactory.registerProvider(WebEngineProvider("WebView", object : WebEngineProviderCallback {
                 override suspend fun initialize(context: Context, webViewContainer: CursorLayout) {
-
+                    WebViewAdBlock.start(context)
                 }
 
                 override fun createWebEngine(tab: WebTabState): WebEngine {
@@ -388,7 +393,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
                 }
 
                 override fun onAdBlockSettingUpdated(enabled: Boolean) {
-                    //nop, WebView has no extensions support
+                    //nop, WebViewAdBlock checks the setting on every request
                 }
 
                 override fun getWebEngineVersionString(): String {
