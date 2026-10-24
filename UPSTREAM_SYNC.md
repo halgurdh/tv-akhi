@@ -58,3 +58,7 @@ After syncing, build, run `./gradlew :app:testFossGeckoIncludedDebugUnitTest`, a
 - **Branding:** the name "TV Akhi" in all `strings.xml` files, and the credit in `view_settings_version.xml`.
   Upstream's string changes conflict with the rename, so re-apply the rename after taking new upstream strings.
 - **Release builds** fall back to debug signing when no keystore is set (`app/build.gradle.kts`).
+- **App ID** is `io.github.halgurdh.tvakhi`. Release signing reads `keystore.properties`, which is local and not committed.
+- **Home page in GeckoView** is served from `app/gecko/src/main/assets/extensions/generic/home/`, a copy of
+  `app/src/main/assets/pages/home/`, by the extension's `background.js`. After upstream changes the home page,
+  copy the folder again, keep the TV Akhi `logo.png`, and bump `APP_WEB_EXTENSION_VERSION`.

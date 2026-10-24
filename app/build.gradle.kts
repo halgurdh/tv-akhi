@@ -1,13 +1,22 @@
+import java.util.Properties
+
 plugins {
     id("tvbro.android.application")
     alias(libs.plugins.ksp)
 }
 
+//release signing: env vars (CI) or keystore.properties in project root (local, not committed)
+val keystoreProperties = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun signingValue(env: String, prop: String): String? = System.getenv(env) ?: keystoreProperties.getProperty(prop)
+
 android {
     namespace = "com.phlox.tvwebbrowser"
 
     defaultConfig {
-        applicationId = "com.phlox.tvwebbrowser"
+        applicationId = "io.github.halgurdh.tvakhi"
         versionCode = 69
         versionName = "2.1.6"
 
@@ -24,12 +33,12 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("KEYSTORE_PATH")
+            val keystorePath = signingValue("KEYSTORE_PATH", "storeFile")
             if (keystorePath != null) {
                 storeFile = file(keystorePath)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
+                storePassword = signingValue("KEYSTORE_PASSWORD", "storePassword")
+                keyAlias = signingValue("KEY_ALIAS", "keyAlias")
+                keyPassword = signingValue("KEY_PASSWORD", "keyPassword")
             }
         }
     }
@@ -43,7 +52,7 @@ android {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             //without release keystore sign with the local debug key, so release builds can be installed for testing
-            signingConfig = if (System.getenv("KEYSTORE_PATH") != null)
+            signingConfig = if (signingValue("KEYSTORE_PATH", "storeFile") != null)
                 signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
@@ -70,7 +79,6 @@ android {
         }
         create("foss") {
             dimension = "appstore"
-            applicationIdSuffix = ".foss"
             buildConfigField("Boolean", "BUILT_IN_AUTO_UPDATE", "false")
         }
 

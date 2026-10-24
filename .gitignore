@@ -8,3 +8,5 @@
 *.keystore
 *.hprof
 /buildSrc/build
+keystore.properties
+*.jks
