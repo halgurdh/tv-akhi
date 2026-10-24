@@ -47,6 +47,8 @@ interface WebEngineWindowProviderCallback {
                               title: String?, altText: String?, textContent: String?,
                               x: Int, y: Int)
     fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int)
+    //see MediaTools.EVENTS
+    fun onMediaToolsEvent(event: String)
     fun onContextMenu(
         cursorDrawer: CursorDrawerDelegate, baseUri: String?, linkUri: String?, srcUri: String?,
         title: String?, altText: String?,

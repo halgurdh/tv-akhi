@@ -168,9 +168,39 @@
             android:layout_marginTop="3dp"
             android:layout_marginBottom="3dp"
             android:layout_marginEnd="3dp"
-            app:layout_constraintEnd_toStartOf="@+id/ibHome"
+            app:layout_constraintEnd_toStartOf="@+id/ibSmartSkip"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toEndOf="@+id/ibAdBlock"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ImageButton
+            android:id="@+id/ibSmartSkip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_bg_selector"
+            android:contentDescription="@string/smart_skip"
+            android:src="@drawable/ic_smart_skip_on"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginEnd="3dp"
+            app:layout_constraintEnd_toStartOf="@+id/ibNoMusic"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@+id/ibPopupBlock"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ImageButton
+            android:id="@+id/ibNoMusic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_bg_selector"
+            android:contentDescription="@string/no_music"
+            android:src="@drawable/ic_no_music_off"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:layout_marginEnd="3dp"
+            app:layout_constraintEnd_toStartOf="@+id/ibHome"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@+id/ibSmartSkip"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageButton
@@ -185,7 +215,7 @@
             android:layout_marginBottom="3dp"
             android:layout_marginEnd="3dp"
             app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toEndOf="@+id/ibPopupBlock"
+            app:layout_constraintStart_toEndOf="@+id/ibNoMusic"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <TextView
