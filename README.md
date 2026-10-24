@@ -31,13 +31,126 @@ with uBlock Origin.
 - **Videos:** a video you start goes to fullscreen automatically (Settings → **Play videos in fullscreen**).
 - **Links that open new windows** load in the current tab (can be turned off in Settings).
 
+## Using TV Akhi with the remote
+
+### On a web page
+
+| Remote button | What it does |
+|---|---|
+| **D-pad** (up/down/left/right) | Moves the on-screen cursor. Hold to move faster. At the screen edge, the page scrolls. |
+| **Up / Down, single press** | Scrolls the page by a third of a screen when the cursor is in that half of the screen. |
+| **OK** | Clicks whatever is under the cursor, like a mouse click. |
+| **OK, hold** | Opens the cursor menu (see below). |
+| **Back** | First press opens the menu bar. Second press goes back to the previous page. |
+| **Play/Pause, Stop, Rewind, Fast forward** | Control the video or music on the page. |
+| **Search / mic button** (if your remote has one) | Starts voice search. |
+
+To type, move the cursor onto a text field and press **OK**. The on-screen keyboard opens; **Back** closes it.
+
+**Remote shortcuts:** you can change them, or add one for "Back" or "Home", in Settings → **Shortcuts**.
+
+### Cursor menu (hold OK)
+
+A small round menu appears around the cursor. Move to an option with the D-pad:
+
+- **Grab:** drag the page with the D-pad, like swiping with a finger. Useful for maps and sliders.
+- **Zoom in / Zoom out.**
+- **Context menu:** for the link under the cursor. Open it in a new tab, open it in another app, download it, copy
+  the address, share it, or refresh the page.
+- **D-pad mode:** switch off the cursor and jump between links and buttons instead, like a TV app. Press **Back** to
+  get the cursor again.
+
+### Menu bar (press Back)
+
+**Top row**, from left to right:
+- **✕** closes TV Akhi.
+- **🎤** starts voice search.
+- **History** shows the sites you visited, where you can delete some or all of them.
+- **☆ Bookmarks** shows your saved sites.
+- **Downloads.**
+- **Incognito mode:** browse without saving history or cookies.
+- **⚙ Settings.**
+- **Address bar:** type a site (`youtube.com`) or something to search for.
+
+**Tabs row:** all open tabs. Select one to switch to it, or select **+** to open a new tab.
+
+**Bottom row**, from left to right:
+- **✕** closes the current tab.
+- **←** goes back a page and **→** goes forward.
+- **⟳** reloads the page.
+- **ads ON / OFF** turns ad blocking on or off. The number next to it shows how many ads were blocked on this page.
+- **Pop-up blocker:** choose how strictly this site may open pop-ups.
+- **⌂ Home:** goes to the TV Akhi home page. Press it again on the home page to return to the TV's home screen.
+  TV Akhi stays open in the background with your tabs.
+
+The **Home button on the remote** always goes straight to the TV's home screen. Android doesn't let apps change that button.
+
+### Home page
+
+The home page shows your **most visited sites**, plus a search box with a microphone and a choice of search
+engines. To bookmark a page instead, use **☆ Bookmarks**. You can switch the home page to bookmarks or recent history in
+Settings.
+
+### Settings worth knowing
+
+- **Web engine:**
+  - **GeckoView** (Firefox) is the default and runs uBlock Origin.
+  - **WebView** is Android's built-in engine and uses TV Akhi's own uBlock-compatible blocker.
+- **Ad blocking:** on/off.
+- **Play videos in fullscreen:** on/off.
+- **Open new windows in current tab:** on/off.
+- **Voice search language:** English, العربية or system.
+- **Search engine, home page and theme.**
+- **Cursor speed and acceleration.**
+- **User agent:** shows sites the desktop or the mobile version.
+
 ## Install
 
-Download the APK for your device from [Releases](../../releases):
-- `armeabi-v7a`: most Android TVs and TV boxes.
+Download the APK for your TV from the [latest release](https://github.com/halgurdh/tv-akhi/releases/latest):
+- `armeabi-v7a`: most Android TVs and TV boxes. If you're not sure, use this one.
 - `arm64-v8a`: newer 64-bit devices.
 
-Then install it, for example with a file manager on the TV or with `adb install`.
+### Option 1: from a laptop over Wi-Fi (adb)
+
+You don't need to copy anything to the TV. The laptop sends the app over your home Wi-Fi.
+
+1. **Install adb on the laptop.** It's part of Google's
+   [Platform Tools](https://developer.android.com/tools/releases/platform-tools).
+   - Windows: `winget install Google.PlatformTools`
+   - macOS: `brew install android-platform-tools`
+   - Linux: `sudo apt install adb`
+2. **Turn on developer options on the TV.** Go to **Settings → System → About** (on some TVs **Device Preferences →
+   About**) and press **OK** seven times on **Android TV OS build** or **Build**. You'll see "You are now a developer".
+3. **Turn on network debugging.** In **Settings → System → Developer options**, turn on **USB debugging** and, if the TV
+   has it, **Network debugging** or **ADB over network**.
+4. **Find the TV's IP address** in **Settings → Network & Internet →** your Wi-Fi network, for example `192.168.1.50`.
+   The TV and the laptop must be on the same Wi-Fi.
+5. **Connect and install** from a terminal on the laptop, in the folder where you downloaded the APK:
+
+   ```sh
+   adb connect 192.168.1.50:5555
+   adb install tv-akhi-armeabi-v7a.apk
+   ```
+
+   The first time, the TV asks **"Allow USB debugging?"**. Tick **Always allow from this computer** and press **OK**.
+   If `adb install` says "unauthorized", accept the prompt on the TV and run it again.
+
+   **Updating:** run the same `adb install` command with `-r` (`adb install -r tv-akhi-armeabi-v7a.apk`). Your tabs,
+   bookmarks and history stay.
+6. **Open it** from the TV's apps list (**TV Akhi**). You can then turn developer options off again if you like.
+
+**Android 11 and newer:** some TVs only offer **Wireless debugging**, which uses a pairing code instead of port 5555.
+In that case:
+1. Choose **Pair device with pairing code** on the TV.
+2. Run `adb pair <ip>:<pairing port>` on the laptop and enter the code.
+3. Run `adb connect <ip>:<port>` with the port shown on the TV.
+
+### Option 2: on the TV itself
+
+1. Download the APK onto a USB stick, or open the release link in a TV app that can download files.
+2. Open the APK with a file manager on the TV and choose **Install**.
+
+Android asks once to allow installing apps from that file manager ("unknown sources").
 
 ## Build
 
