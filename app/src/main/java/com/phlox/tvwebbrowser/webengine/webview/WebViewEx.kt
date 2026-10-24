@@ -44,10 +44,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
+import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
 import com.phlox.tvwebbrowser.utils.Utils
 import java.net.URLEncoder
@@ -81,6 +83,9 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
     var lastSSLError: SslError? = null
     var trustSsl: Boolean = false
     var currentOriginalUrl: Uri? = null
+    @Volatile private var adBlockPageUrl: String? = null
+    @Volatile private var adBlockPageFlagsCache: Pair<String, Int>? = null
+    private val documentStartScriptSupported = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
     private val uiHandler = Handler(Looper.getMainLooper())
     private val config = AppContext.provideConfig()
 
@@ -102,6 +107,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         fun onPageCertificateError(url: String?)
         fun isAdBlockingEnabled(): Boolean
         fun isDialogsBlockingEnabled(): Boolean
+        fun onBlockedAd(url: Uri)
         fun onBlockedDialog(newTab: Boolean)
         fun onCreateWindow(dialog: Boolean, userGesture: Boolean): WebViewEx?
         fun closeWindow(window: WebView)
@@ -341,6 +347,20 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
             }
 
             override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message): Boolean {
+                if (config.openNewWindowsInCurrentTab && !isDialog) {
+                    //catch the new window's first url with a throwaway WebView and load it in this one
+                    val catcher = WebView(view.context)
+                    catcher.webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(v: WebView, request: WebResourceRequest): Boolean {
+                            this@WebViewEx.loadUrl(request.url.toString())
+                            v.post { v.destroy() }
+                            return true
+                        }
+                    }
+                    (resultMsg.obj as WebView.WebViewTransport).webView = catcher
+                    resultMsg.sendToTarget()
+                    return true
+                }
                 val webView = callback.onCreateWindow(isDialog, isUserGesture) ?: return false
                 (resultMsg.obj as WebView.WebViewTransport).webView = webView
                 resultMsg.sendToTarget()
@@ -384,6 +404,16 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                     }
                 }
 
+                if (callback.isAdBlockingEnabled()) {
+                    if (request.isForMainFrame) adBlockPageUrl = request.url.toString()
+                    val pageUrl = adBlockPageUrl ?: currentPageUrl?.toString()
+                    WebViewAdBlock.interceptRequest(request, pageUrl, adBlockPageFlags(pageUrl))?.let {
+                        Log.d(TAG, "Blocked: ${request.url}")
+                        uiHandler.post { callback.onBlockedAd(request.url) }
+                        return it
+                    }
+                }
+
                 return super.shouldInterceptRequest(view, request)
             }
 
@@ -391,6 +421,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                 super.onPageStarted(view, url, favicon)
                 Log.d(TAG, "onPageStarted url: $url")
                 currentOriginalUrl = url.toUri()
+                adBlockPageUrl = url
+                if (!documentStartScriptSupported && callback.isAdBlockingEnabled()) {
+                    evaluateJavascript(WebViewAdBlock.contentScript(context), null)
+                }
                 callback.onPageStarted(url)
             }
 
@@ -479,6 +513,19 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         }
 
         addJavascriptInterface(jsInterface, "TVBro")
+        addJavascriptInterface(WebViewAdBlock.JSInterface(), "TVBroAdblock")
+        if (documentStartScriptSupported) {
+            WebViewCompat.addDocumentStartJavaScript(this, WebViewAdBlock.contentScript(context), setOf("*"))
+        }
+    }
+
+    /** page-level filter exceptions are the same for all requests of a page, cache them */
+    private fun adBlockPageFlags(pageUrl: String?): Int {
+        if (pageUrl == null) return 0
+        adBlockPageFlagsCache?.let { if (it.first == pageUrl) return it.second }
+        val flags = WebViewAdBlock.engine?.network?.pageFlags(pageUrl) ?: return 0
+        adBlockPageFlagsCache = pageUrl to flags
+        return flags
     }
 
     override fun restoreState(inState: Bundle): WebBackForwardList? {

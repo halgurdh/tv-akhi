@@ -744,9 +744,13 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     }
 
     override fun search(aText: String) {
-        var text = aText
-        val trimmedLowercased = text.trim { it <= ' ' }.lowercase(Locale.ROOT)
-        if (Patterns.WEB_URL.matcher(text).matches() || trimmedLowercased.startsWith("http://") || trimmedLowercased.startsWith("https://")) {
+        var text = aText.trim { it <= ' ' }
+        val trimmedLowercased = text.lowercase(Locale.ROOT)
+        //voice input and on-screen keyboards often produce "youtube. com" or "YouTube.com "
+        val asAddress = text.replace(Regex("""\s*\.\s*"""), ".")
+        val looksLikeAddress = !asAddress.contains(' ') && Patterns.WEB_URL.matcher(asAddress).matches()
+        if (looksLikeAddress || trimmedLowercased.startsWith("http://") || trimmedLowercased.startsWith("https://")) {
+            if (looksLikeAddress) text = asAddress
             if (!text.lowercase(Locale.ROOT).contains("://")) {
                 text = "https://$text"
             }

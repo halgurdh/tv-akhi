@@ -42,8 +42,9 @@ android {
             isDebuggable = false
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            //without release keystore sign with the local debug key, so release builds can be installed for testing
             signingConfig = if (System.getenv("KEYSTORE_PATH") != null)
-                signingConfigs.getByName("release") else null
+                signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
 
