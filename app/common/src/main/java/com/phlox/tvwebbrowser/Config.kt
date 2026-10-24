@@ -44,6 +44,9 @@ class Config(val prefs: SharedPreferences) {
         const val AUTO_FULLSCREEN_VIDEO_KEY = "auto_fullscreen_video"
         const val SMART_SKIP_KEY = "smart_skip"
         const val NO_MUSIC_KEY = "no_music"
+        const val ADULT_BLOCK_KEY = "adult_block"
+        const val HARAM_BLOCK_KEY = "haram_block"
+        const val PARENTAL_PIN_KEY = "parental_pin"
         const val APP_WEB_EXTENSION_VERSION_KEY = "app_web_extension_version"
         const val NOTIFICATION_ABOUT_ENGINE_CHANGE_SHOWN_KEY = "notification_about_engine_change_shown"
         const val APP_VERSION_CODE_MARK_KEY = "app_version_code_mark"
@@ -251,6 +254,27 @@ class Config(val prefs: SharedPreferences) {
         get() = prefs.getBoolean(NO_MUSIC_KEY, false)
         set(value) {
             prefs.edit().putBoolean(NO_MUSIC_KEY, value).apply()
+        }
+
+    //block porn and nudity sites, SafeSearch (ContentFilter)
+    var adultBlockEnabled: Boolean
+        get() = prefs.getBoolean(ADULT_BLOCK_KEY, true)
+        set(value) {
+            prefs.edit().putBoolean(ADULT_BLOCK_KEY, value).apply()
+        }
+
+    //block alcohol, drugs and gambling sites (ContentFilter)
+    var haramBlockEnabled: Boolean
+        get() = prefs.getBoolean(HARAM_BLOCK_KEY, true)
+        set(value) {
+            prefs.edit().putBoolean(HARAM_BLOCK_KEY, value).apply()
+        }
+
+    //"salt:sha-256" of the PIN that locks the filters and No music (ParentalLock), null: no PIN
+    var parentalPin: String?
+        get() = prefs.getString(PARENTAL_PIN_KEY, null)
+        set(value) {
+            prefs.edit().putString(PARENTAL_PIN_KEY, value).apply()
         }
 
     var voiceSearchLanguage: String

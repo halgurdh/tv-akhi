@@ -15,6 +15,7 @@ import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.observable.ObservableValue
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineProvider
@@ -54,7 +55,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     CursorDrawerDelegate.Callback {
     companion object {
         const val ENGINE_NAME = "GeckoView"
-        private const val APP_WEB_EXTENSION_VERSION = 56
+        private const val APP_WEB_EXTENSION_VERSION = 57
         val TAG: String = GeckoWebEngine::class.java.simpleName
         lateinit var runtime: GeckoRuntime
         var appWebExtension = ObservableValue<WebExtension?>(null)
@@ -296,6 +297,15 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     }
 
     override fun loadUrl(url: String) {
+        val allowed = ContentFilter.check(url)
+        if (allowed == null) {
+            callback?.onMediaToolsEvent(MediaTools.blockedEvent(url))
+            return
+        }
+        loadAllowedUrl(allowed)
+    }
+
+    private fun loadAllowedUrl(url: String) {
         Log.d(TAG, "loadUrl($url)")
         if (!session.isOpen) {
             session.open(runtime)

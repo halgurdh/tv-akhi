@@ -23,8 +23,16 @@ object MediaTools {
     const val EVENT_SKIP_BLIND = "skip_blind"
     const val EVENT_NEXT_EPISODE = "next_episode"
     const val EVENT_RECAP_SKIPPED = "recap_skipped"
+    const val EVENT_ADULT_PAGE = "adult_page" //the page calls itself adult: leave it
     val EVENTS = setOf(EVENT_INTRO_SKIPPED, EVENT_CREDITS_SKIPPED, EVENT_NO_MUSIC_UNAVAILABLE, EVENT_NO_MUSIC_SLOW,
-        EVENT_SKIP_LEARNING, EVENT_SKIP_BLIND, EVENT_NEXT_EPISODE, EVENT_RECAP_SKIPPED)
+        EVENT_SKIP_LEARNING, EVENT_SKIP_BLIND, EVENT_NEXT_EPISODE, EVENT_RECAP_SKIPPED, EVENT_ADULT_PAGE)
+
+    //events of the app, not of the script
+    const val EVENT_ADULT_BLOCKED = "adult_blocked"
+    const val EVENT_HARAM_BLOCKED = "haram_blocked"
+
+    fun blockedEvent(url: String): String =
+        if (ContentFilter.categoryOfUrl(url) == ContentFilter.Category.HARAM) EVENT_HARAM_BLOCKED else EVENT_ADULT_BLOCKED
 
     @Volatile private var modelBase64: String? = null
 
@@ -33,6 +41,7 @@ object MediaTools {
         return JSONObject()
             .put("smartSkip", config.smartSkipEnabled)
             .put("noMusic", config.noMusicEnabled)
+            .put("adultBlock", config.adultBlockEnabled)
     }
 
     /** The FastEnhancer model for WebView pages (they can't fetch the app assets) */

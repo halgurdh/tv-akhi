@@ -2,6 +2,7 @@ package com.phlox.tvwebbrowser.webengine.gecko.delegates
 
 import android.util.Log
 import com.phlox.tvwebbrowser.AppContext
+import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.gecko.GeckoWebEngine
 import kotlinx.coroutines.runBlocking
 import org.mozilla.geckoview.AllowOrDeny
@@ -84,6 +85,10 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
                     + "isDirectNavigation="
                     + request.isDirectNavigation
         )
+
+        if (ContentFilter.categoryOfUrl(request.uri) != null) {
+            return GeckoResult.deny()
+        }
 
         return GeckoResult.allow()
     }

@@ -734,6 +734,28 @@ var tvakhiMediaTools = (function () {
         };
     }
 
+    //---------- adult pages ----------
+
+    //the RTA label ("Restricted To Adults") that adult sites put in their pages, and other adult ratings
+    const ADULT_RATING = /RTA-5042-1996-1400-1577-RTA|^\s*(adult|mature|porn|pornographic|xxx)\s*$/i;
+    let isAdultChecked = false;
+
+    /** A page that calls itself adult is closed (its site isn't in the list of the app) */
+    function checkAdultPage(host) {
+        if (isAdultChecked || document.readyState === 'loading') return;
+        isAdultChecked = true;
+        const metas = document.querySelectorAll('meta[name="rating" i], meta[name="rating:adult" i], meta[http-equiv="pics-label" i]');
+        const isAdult = Array.from(metas).some(m => ADULT_RATING.test(m.getAttribute('content') || '')
+            || /RTA-5042/i.test(m.getAttribute('content') || ''));
+        if (!isAdult) return;
+        for (const media of Array.from(document.querySelectorAll('video, audio'))) {
+            try { media.pause(); } catch (e) { }
+        }
+        try { window.stop(); } catch (e) { }
+        document.documentElement.innerHTML = '<body style="background:#111"></body>';
+        if (window.top === window) host.notify('adult_page'); //the app goes back
+    }
+
     //---------- start ----------
 
     return function (host) {
@@ -746,6 +768,7 @@ var tvakhiMediaTools = (function () {
 
         setInterval(function () {
             const settings = host.settings() || {};
+            if (settings.adultBlock) checkAdultPage(host);
             if (settings.smartSkip) passKeys();
             if (!videos.length) return;
             for (const video of Array.from(videos)) {

@@ -85,6 +85,7 @@ import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.utils.childs
 import com.phlox.tvwebbrowser.utils.sameDay
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
@@ -605,7 +606,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         updateMediaToolsButtons()
     }
 
-    private fun updateMediaToolsButtons() {
+    fun updateMediaToolsButtons() {
         vb.ibSmartSkip.setImageResource(if (config.smartSkipEnabled) R.drawable.ic_smart_skip_on else R.drawable.ic_smart_skip_off)
         vb.ibNoMusic.setImageResource(if (config.noMusicEnabled) R.drawable.ic_no_music_on else R.drawable.ic_no_music_off)
     }
@@ -619,7 +620,12 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             getString(if (config.smartSkipEnabled) R.string.smart_skip_on else R.string.smart_skip_off))
     }
 
+    //turning the music back on needs the parental PIN
     private fun toggleNoMusic() {
+        if (config.noMusicEnabled) ParentalLock.unlock(this) { switchNoMusic() } else switchNoMusic()
+    }
+
+    private fun switchNoMusic() {
         config.noMusicEnabled = !config.noMusicEnabled
         updateMediaToolsButtons()
         NotificationView.showBottomRight(vb.rlRoot,
@@ -1204,6 +1210,16 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         override fun shouldOverrideUrlLoading(url: String): Boolean {
             tab.lastLoadingUrl = url
 
+            val allowed = ContentFilter.check(url)
+            if (allowed == null) {
+                onMediaToolsEvent(MediaTools.blockedEvent(url))
+                return true
+            }
+            if (allowed != url) { //SafeSearch
+                tab.webEngine.loadUrl(allowed)
+                return true
+            }
+
             val uri = try {
                 Uri.parse(url)
             } catch (e: Exception) {
@@ -1339,6 +1355,12 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                 MediaTools.EVENT_RECAP_SKIPPED -> R.drawable.ic_smart_skip_on to R.string.recap_skipped
                 MediaTools.EVENT_NO_MUSIC_UNAVAILABLE -> R.drawable.ic_no_music_off to R.string.no_music_unavailable
                 MediaTools.EVENT_NO_MUSIC_SLOW -> R.drawable.ic_no_music_off to R.string.no_music_slow
+                MediaTools.EVENT_ADULT_BLOCKED -> R.drawable.ic_family_filter to R.string.adult_blocked
+                MediaTools.EVENT_HARAM_BLOCKED -> R.drawable.ic_family_filter to R.string.haram_blocked
+                MediaTools.EVENT_ADULT_PAGE -> {
+                    if (tab.webEngine.canGoBack()) tab.webEngine.goBack() else navigate(settingsModel.homePage)
+                    R.drawable.ic_family_filter to R.string.adult_blocked
+                }
                 else -> return
             }
             NotificationView.showBottomRight(vb.rlRoot, icon, getString(message))

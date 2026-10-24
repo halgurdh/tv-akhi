@@ -37,6 +37,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.io.ByteArrayInputStream
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
@@ -51,6 +52,7 @@ import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.webengine.MediaTools
+import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
 import com.phlox.tvwebbrowser.utils.Utils
 import java.net.URLEncoder
@@ -66,6 +68,8 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         val TAG = WebViewEx::class.java.simpleName
         const val WEB_VIEW_TAG = "TV Bro WebView"
         const val INTERNAL_SCHEME = "internal://"
+        private const val BLOCKED_PAGE = "<html><body style=\"background:#111;color:#ccc;font:24px sans-serif;" +
+                "text-align:center;padding-top:20%\">&#128737; TV Akhi blocked this site</body></html>"
         const val INTERNAL_SCHEME_WARNING_DOMAIN = "warning"
         const val INTERNAL_SCHEME_WARNING_DOMAIN_TYPE_CERT = "certificate"
         val WIDEVINE_UUID = UUID(-0x121074568629b532L,-0x5c37d8232ae2de13L)
@@ -403,6 +407,12 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                         }
                         return response ?: super.shouldInterceptRequest(view, request)
                     }
+                }
+
+                if (ContentFilter.blockedCategory(request.url.host) != null) {
+                    Log.d(TAG, "Blocked by the content filter: ${request.url}")
+                    val page = if (request.isForMainFrame) BLOCKED_PAGE.toByteArray() else ByteArray(0)
+                    return WebResourceResponse("text/html", "utf-8", 403, "Blocked", emptyMap(), ByteArrayInputStream(page))
                 }
 
                 if (callback.isAdBlockingEnabled()) {
