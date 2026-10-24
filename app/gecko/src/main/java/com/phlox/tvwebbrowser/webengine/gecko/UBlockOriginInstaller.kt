@@ -1,6 +1,7 @@
 package com.phlox.tvwebbrowser.webengine.gecko
 
 import android.util.Log
+import com.phlox.tvwebbrowser.AppContext
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -47,13 +48,32 @@ object UBlockOriginInstaller {
             if (installed == null) {
                 Log.d(TAG, "installing uBlock Origin")
                 controller.install(UBLOCK_ORIGIN_XPI_URL).accept(
-                    { Log.d(TAG, "uBlock Origin installed: ${it?.metaData?.version}") },
+                    {
+                        Log.d(TAG, "uBlock Origin installed: ${it?.metaData?.version}")
+                        setEnabled(runtime, AppContext.provideConfig().adBlockEnabled)
+                    },
                     { e -> Log.e(TAG, "Error installing uBlock Origin", e) })
             } else {
                 controller.update(installed).accept(
                     { Log.d(TAG, "uBlock Origin update check done: ${it?.metaData?.version}") },
                     { e -> Log.e(TAG, "Error updating uBlock Origin", e) })
+                setEnabled(runtime, AppContext.provideConfig().adBlockEnabled)
             }
+        }, { e -> Log.e(TAG, "Error listing extensions", e) })
+    }
+
+    fun setEnabled(runtime: GeckoRuntime, enabled: Boolean) {
+        val controller = runtime.webExtensionController
+        controller.list().accept({ extensions ->
+            val extension = extensions?.firstOrNull { it.id == UBLOCK_ORIGIN_ID } ?: return@accept
+            if (extension.metaData.enabled == enabled) return@accept
+            val result = if (enabled)
+                controller.enable(extension, WebExtensionController.EnableSource.USER)
+            else
+                controller.disable(extension, WebExtensionController.EnableSource.USER)
+            result.accept(
+                { Log.d(TAG, "uBlock Origin enabled: ${it?.metaData?.enabled}") },
+                { e -> Log.e(TAG, "Error changing uBlock Origin state", e) })
         }, { e -> Log.e(TAG, "Error listing extensions", e) })
     }
 }

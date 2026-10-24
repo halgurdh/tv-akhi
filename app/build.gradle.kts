@@ -114,7 +114,6 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     implementation(libs.segmented.button)
-    implementation(libs.ad.block)
     implementation(libs.pinned.section.listview)
 
     testImplementation(libs.junit)

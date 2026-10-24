@@ -116,7 +116,14 @@
     <string name="close_application">Close application</string>
     <string name="close_tab">Close tab</string>
     <string name="navigate_forward">Navigate forward</string>
-    <string name="toggle_ads_blocking">Toggle ads blocking</string>
+    <string name="toggle_ads_blocking">Ad blocking (uBlock Origin)</string>
+    <string name="open_new_windows_in_current_tab">Open new windows in current tab</string>
+    <string name="voice_search_language">Voice search language</string>
+    <string-array name="voice_search_languages">
+        <item>System default</item>
+        <item>العربية (Arabic)</item>
+        <item>English</item>
+    </string-array>
     <string name="never">never</string>
     <string name="last_update">Last update</string>
     <string name="update_ad_blocker_list">Update ad-blocker list</string>

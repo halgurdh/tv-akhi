@@ -21,6 +21,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.databinding.ViewSpeachRecognizerResultsBinding
 
@@ -58,6 +59,7 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
                     languageModel
                 )
                 intent.putExtra(RecognizerIntent.EXTRA_PROMPT, activity.getString(R.string.speak))
+                putLanguageExtras(intent)
                 try {
                     activity.startActivityForResult(intent, requestCode)
                 } catch (e: Exception) {
@@ -139,12 +141,26 @@ class VoiceSearchHelper(private val activity: Activity, private val requestCode:
             RecognizerIntent.EXTRA_CALLING_PACKAGE,
             activity.packageName
         )
+        putLanguageExtras(speechRecognizerIntent)
         speechRecognizer.startListening(speechRecognizerIntent)
 
         recognitionResultsRendererView = RecognitionResultsRendererView(activity)
         val lp = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT)
         activity.addContentView(recognitionResultsRendererView, lp)
+    }
+
+    private fun putLanguageExtras(intent: Intent) {
+        val language = AppContext.provideConfig().voiceSearchLanguage
+        if (language.isEmpty()) return //system default
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            //let recognizers that support it switch between the chosen language and English automatically
+            intent.putExtra(RecognizerIntent.EXTRA_ENABLE_LANGUAGE_DETECTION, true)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_DETECTION_ALLOWED_LANGUAGES,
+                arrayListOf(language, "en").distinct().let { ArrayList(it) })
+        }
     }
 
     private fun disposeResultsView() {

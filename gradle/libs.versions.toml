@@ -18,7 +18,6 @@ room = "2.8.4"
 junit = "4.13.2"
 robolectric = "4.16.1"
 geckoview = "147.0.20260212191108"
-ad-block = "0.0.4"
 segmented-button = "v1.0.0"
 pinned-section-listview = "1.0.0"
 
@@ -45,7 +44,6 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 
 # Third-party
 segmented-button = { group = "com.github.truefedex", name = "segmented-button", version.ref = "segmented-button" }
-ad-block = { group = "com.github.truefedex", name = "ad-block", version.ref = "ad-block" }
 pinned-section-listview = { group = "de.halfbit", name = "pinned-section-listview", version.ref = "pinned-section-listview" }
 
 # Gecko

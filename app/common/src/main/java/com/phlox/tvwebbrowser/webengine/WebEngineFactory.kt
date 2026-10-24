@@ -13,6 +13,7 @@ interface WebEngineProviderCallback {
     fun createWebEngine(tab: WebTabState): WebEngine
     suspend fun clearCache(ctx: Context)
     fun onThemeSettingUpdated(value: Config.Theme)
+    fun onAdBlockSettingUpdated(enabled: Boolean)
     fun getWebEngineVersionString(): String
 }
 
@@ -63,6 +64,10 @@ object WebEngineFactory {
 
     fun onThemeSettingUpdated(value: Config.Theme) {
         initializedProvider.callback.onThemeSettingUpdated(value)
+    }
+
+    fun onAdBlockSettingUpdated(enabled: Boolean) {
+        initializedProvider.callback.onAdBlockSettingUpdated(enabled)
     }
 
     fun getWebEngineVersionString(): String {
