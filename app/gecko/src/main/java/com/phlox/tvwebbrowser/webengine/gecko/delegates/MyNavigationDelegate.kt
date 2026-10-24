@@ -84,6 +84,11 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
     override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
         Log.d(TAG, "onNewSession: $uri")
         val callback = webEngine.callback ?: return null
+        if (AppContext.provideConfig().openNewWindowsInCurrentTab) {
+            //auto-opened popups are already filtered by onPopupPrompt, load the rest in the current tab
+            session.loadUri(uri)
+            return null
+        }
         if (webEngine.callback?.shouldBlockNewWindow(dialog = false, userGesture = false) == true) {
             callback.onBlockedDialog(true)
             return null

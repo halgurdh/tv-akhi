@@ -52,7 +52,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     CursorDrawerDelegate.Callback {
     companion object {
         const val ENGINE_NAME = "GeckoView"
-        private const val APP_WEB_EXTENSION_VERSION = 48
+        private const val APP_WEB_EXTENSION_VERSION = 49
         val TAG: String = GeckoWebEngine::class.java.simpleName
         lateinit var runtime: GeckoRuntime
         var appWebExtension = ObservableValue<WebExtension?>(null)
@@ -139,6 +139,10 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
                     GeckoWebEngine.onThemeSettingUpdated(value)
                 }
 
+                override fun onAdBlockSettingUpdated(enabled: Boolean) {
+                    UBlockOriginInstaller.setEnabled(runtime, enabled)
+                }
+
                 override fun getWebEngineVersionString(): String {
                     return org.mozilla.geckoview.BuildConfig.LIBRARY_PACKAGE_NAME + ":" +
                             org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION + "." +
@@ -178,7 +182,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
             .usePrivateMode(AppContext.provideConfig().incognitoMode)
             .viewportMode(GeckoSessionSettings.VIEWPORT_MODE_MOBILE)
             .userAgentMode(GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
-            .useTrackingProtection(tab.adblock ?: AppContext.provideConfig().adBlockEnabled)
+            .useTrackingProtection(AppContext.provideConfig().adBlockEnabled)
             .build()
         )
         session.navigationDelegate = navigationDelegate
@@ -375,7 +379,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     }
 
     override fun reload() {
-        val adblockEnabled = tab.adblock ?: AppContext.provideConfig().adBlockEnabled
+        val adblockEnabled = AppContext.provideConfig().adBlockEnabled
         if (session.settings.useTrackingProtection != adblockEnabled) {
             session.settings.useTrackingProtection = adblockEnabled
         }
@@ -406,7 +410,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     }
 
     override fun onUpdateAdblockSetting(newState: Boolean) {
-        
+        session.settings.useTrackingProtection = newState
     }
 
     override fun hideFullscreenView() {

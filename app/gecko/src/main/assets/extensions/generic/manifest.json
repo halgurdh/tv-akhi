@@ -41,8 +41,6 @@
     "nativeMessagingFromContent",
     "geckoViewAddons",
     "tabs",
-    "webRequest",
-    "webRequestBlocking",
     "<all_urls>"
   ],
   "host_permissions": [

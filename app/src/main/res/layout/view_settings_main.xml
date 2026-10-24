@@ -209,56 +209,55 @@
             android:duplicateParentState="true" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/llOpenNewWindowsInCurrentTab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="horizontal"
+        android:paddingTop="5dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:lines="1"
+            android:text="@string/open_new_windows_in_current_tab"
+            android:textSize="16sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/scOpenNewWindowsInCurrentTab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:duplicateParentState="true" />
+    </LinearLayout>
+
   <LinearLayout
-      android:id="@+id/llAdBlockerDetails"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_marginTop="20dp"
       android:orientation="vertical"
       android:paddingTop="5dp"
       >
-    <EditText
-        android:id="@+id/etAdBlockerListUrl"
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/url"
-        android:importantForAutofill="no"
-        android:inputType="textUri"
+        android:text="@string/voice_search_language"
+        android:textSize="16sp"
         />
-    <LinearLayout
+
+    <Spinner
+        android:id="@+id/spVoiceSearchLanguage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
-      <TextView
-          android:id="@+id/tvAdBlockerListInfo"
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:layout_marginStart="5dp"
-          android:layout_weight="1"
-          android:gravity="center_vertical"
-          android:lines="1"
-          tools:text="Last update: never"
-          />
-      <ImageButton
-          android:id="@+id/btnAdBlockerUpdate"
-          android:layout_width="48dp"
-          android:layout_height="48dp"
-          android:layout_weight="0"
-          android:contentDescription="@string/update_ad_blocker_list"
-          android:nextFocusDown="@+id/spTheme"
-          android:src="@drawable/ic_refresh_grey_900_24dp"
-          />
-      <ProgressBar
-          android:id="@+id/pbAdBlockerListLoading"
-          style="?android:attr/progressBarStyle"
-          android:layout_width="48dp"
-          android:layout_height="48dp"
-          android:layout_weight="0"
-          android:visibility="gone"
-          />
-    </LinearLayout>
+        android:dropDownWidth="300dp"
+        />
   </LinearLayout>
 
   <LinearLayout

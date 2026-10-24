@@ -123,7 +123,6 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     private lateinit var viewModel: MainActivityViewModel
     private lateinit var tabsModel: TabsModel
     private lateinit var settingsModel: SettingsModel
-    private lateinit var adblockModel: AdblockModel
     private lateinit var autoUpdateModel: AutoUpdateModel
     private lateinit var uiHandler: Handler
     private var isFullscreen: Boolean = false
@@ -157,7 +156,6 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             viewModel.prepareSwitchToIncognito()
         }
         settingsModel = ActiveModelsRepository.get(SettingsModel::class, this)
-        adblockModel = ActiveModelsRepository.get(AdblockModel::class, this)
         tabsModel = ActiveModelsRepository.get(TabsModel::class, this)
         autoUpdateModel = ActiveModelsRepository.get(AutoUpdateModel::class, this)
         uiHandler = Handler()
@@ -582,7 +580,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         vb.ibBack.isEnabled = tab.webEngine.canGoBack() == true
         vb.ibForward.isEnabled = tab.webEngine.canGoForward() == true
 
-        val adblockEnabled = tab.adblock ?: config.adBlockEnabled
+        val adblockEnabled = config.adBlockEnabled
         vb.ibAdBlock.setImageResource(if (adblockEnabled) R.drawable.ic_adblock_on else R.drawable.ic_adblock_off)
         vb.tvBlockedAdCounter.visibility = if (adblockEnabled && tab.blockedAds != 0) View.VISIBLE else View.GONE
         vb.tvBlockedAdCounter.text = tab.blockedAds.toString()
@@ -705,11 +703,12 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         super.onPause()
     }
 
+    //uBlock Origin is a browser-wide extension, so the toggle is global, not per tab
     private fun toggleAdBlockForTab() {
+        val newState = !config.adBlockEnabled
+        config.adBlockEnabled = newState
+        WebEngineFactory.onAdBlockSettingUpdated(newState)
         tabsModel.currentTab.value?.apply {
-            val currentState = adblock ?: config.adBlockEnabled
-            val newState = !currentState
-            adblock = newState
             webEngine.onUpdateAdblockSetting(newState)
             onWebViewUpdated(this)
             refresh()
@@ -1256,15 +1255,8 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             vb.vActionBar.setAddressBoxTextColor(Color.RED)
         }
 
-        override fun isAd(url: Uri, acceptHeader: String?, baseUri: Uri): Boolean? {
-            return adblockModel.isAd(url, acceptHeader, baseUri)
-        }
-
         override fun isAdBlockingEnabled(): Boolean {
-            tabsModel.currentTab.value?.adblock?.apply {
-                return this
-            }
-            return  config.adBlockEnabled
+            return config.adBlockEnabled
         }
 
         override fun isDialogsBlockingEnabled(): Boolean {

@@ -39,8 +39,8 @@ class Config(val prefs: SharedPreferences) {
         //const val HOME_PAGE_VERSION_EXTRACTED = "home_page_version_extracted"
         const val INITIAL_BOOKMARKS_SUGGESTIONS_LOADED = "initial_bookmarks_suggestions_loaded"
         const val ADBLOCK_ENABLED_PREF_KEY = "adblock_enabled"
-        const val ADBLOCK_LAST_UPDATE_LIST_KEY = "adblock_last_update"
-        const val ADBLOCK_LIST_URL_KEY = "adblock_list_url"
+        const val OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY = "open_new_windows_in_current_tab"
+        const val VOICE_SEARCH_LANGUAGE_KEY = "voice_search_language"
         const val APP_WEB_EXTENSION_VERSION_KEY = "app_web_extension_version"
         const val NOTIFICATION_ABOUT_ENGINE_CHANGE_SHOWN_KEY = "notification_about_engine_change_shown"
         const val APP_VERSION_CODE_MARK_KEY = "app_version_code_mark"
@@ -48,21 +48,20 @@ class Config(val prefs: SharedPreferences) {
         const val ENGINE_GECKO_VIEW = "GeckoView"
         const val ENGINE_WEB_VIEW = "WebView"
 
-        const val DEFAULT_ADBLOCK_LIST_URL = "https://easylist.to/easylist/easylist.txt"
         val SearchEnginesTitles = arrayOf("Google", "Bing", "Yahoo!", "DuckDuckGo", "Yandex", "Startpage", "Custom")
         val SearchEnginesNames = arrayOf("google", "bing", "yahoo", "ddg", "yandex", "startpage", "custom")
         val SearchEnginesURLs = listOf("https://www.google.com/search?q=[query]", "https://www.bing.com/search?q=[query]",
             "https://search.yahoo.com/search?p=[query]", "https://duckduckgo.com/?q=[query]",
             "https://yandex.com/search/?text=[query]", "https://www.startpage.com/sp/search?query=[query]", "")
+        //"" - system default language
+        val VoiceSearchLanguages = arrayOf("", "ar", "en")
         val SupportedWebEngines = arrayOf(ENGINE_GECKO_VIEW, ENGINE_WEB_VIEW)
         const val HOME_PAGE_URL = "https://tvbro.phlox.dev/appcontent/home/"
         //const val HOME_PAGE_URL = "http://10.0.2.2:5000/appcontent/home/"
 
         fun canRecommendGeckoView(): Boolean {
-            //disable recommendation for now
-            //There are plans to keep its support, but user reports and internal testing show
-            // that, at least for now, in terms of performance and stability, it is inferior to WebView.
-            return false
+            //GeckoView is the default engine: it runs uBlock Origin
+            return true
         }
     }
 
@@ -156,8 +155,8 @@ class Config(val prefs: SharedPreferences) {
         }
 
     var homePageLinksMode: HomePageLinksMode
-        get() = prefs.getInt(HOME_PAGE_SUGGESTIONS_MODE, 0)
-            .let { if (it < 0 || it >= HomePageLinksMode.values().size) 0 else it }
+        get() = prefs.getInt(HOME_PAGE_SUGGESTIONS_MODE, HomePageLinksMode.MOST_VISITED.ordinal)
+            .let { if (it < 0 || it >= HomePageLinksMode.values().size) HomePageLinksMode.MOST_VISITED.ordinal else it }
             .let { HomePageLinksMode.values()[it] }
         set(value) {
             prefs.edit().putInt(HOME_PAGE_SUGGESTIONS_MODE, value.ordinal).apply()
@@ -169,7 +168,7 @@ class Config(val prefs: SharedPreferences) {
             prefs.edit().putString(HOME_PAGE_KEY, value).apply()
         }
 
-    var searchEngineURL = ObservableStringPreference(SearchEnginesURLs[0], SEARCH_ENGINE_URL_PREF_KEY)
+    var searchEngineURL = ObservableStringPreference(SearchEnginesURLs[SearchEnginesNames.indexOf("yandex")], SEARCH_ENGINE_URL_PREF_KEY)
 
     var webEngine: String
         get() {
@@ -223,12 +222,17 @@ class Config(val prefs: SharedPreferences) {
             prefs.edit().putBoolean(ADBLOCK_ENABLED_PREF_KEY, field).apply()
         }
 
-    var adBlockListURL = ObservableStringPreference(DEFAULT_ADBLOCK_LIST_URL, ADBLOCK_LIST_URL_KEY)
-
-    var adBlockListLastUpdate: Long
-        get() = prefs.getLong(ADBLOCK_LAST_UPDATE_LIST_KEY, 0)
+    //when true, links and scripts that try to open a new window are loaded in the current tab instead
+    var openNewWindowsInCurrentTab: Boolean
+        get() = prefs.getBoolean(OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY, true)
         set(value) {
-            prefs.edit().putLong(ADBLOCK_LAST_UPDATE_LIST_KEY, value).apply()
+            prefs.edit().putBoolean(OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY, value).apply()
+        }
+
+    var voiceSearchLanguage: String
+        get() = prefs.getString(VOICE_SEARCH_LANGUAGE_KEY, "en")!!
+        set(value) {
+            prefs.edit().putString(VOICE_SEARCH_LANGUAGE_KEY, value).apply()
         }
 
     var appWebExtensionVersion: Int
