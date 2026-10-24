@@ -98,6 +98,8 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
                     AppContext.provideConfig().appWebExtensionVersion = APP_WEB_EXTENSION_VERSION
                 }
                 ) { e -> Log.e(TAG, "Error registering WebExtension", e) }
+
+                UBlockOriginInstaller.init(runtime)
             }
 
             val webView = GeckoViewWithVirtualCursor(context)
