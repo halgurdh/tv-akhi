@@ -58,6 +58,22 @@ with uBlock Origin.
     of intros once it has learned them.
   - If the TV can't keep up, it switches itself off for that video and says so.
 - **Links that open new windows** load in the current tab (can be turned off in Settings).
+- **🛡 Family filters** (both on by default, in Settings):
+  - **Block porn and nudity:** adult sites are blocked, using
+    [StevenBlack's porn list](https://github.com/StevenBlack/hosts) (about 64,000 sites). Pages that label themselves
+    adult (the RTA label most adult sites use) are closed too, and Google, Bing, DuckDuckGo and Yahoo searches always
+    use SafeSearch. With the WebView engine, pictures and videos from adult sites inside other pages are blocked
+    as well.
+  - **Haram filter:** alcohol, drugs and gambling sites are blocked, using
+    [The Block List Project](https://github.com/blocklistproject/Lists) drugs, gambling and vaping lists (about
+    300,000 sites). Site names containing words like vodka, whisky, liquor, brewery, casino or poker are blocked too.
+    There's no public list of alcohol sites, so some wine shops and similar sites can still get through.
+  - No filter catches everything: a new site, or one that isn't in the lists, can still open.
+- **🔒 Parental PIN** (Settings → **Parental PIN**): once a PIN is set, turning off the porn block, the haram filter
+  or No music, and changing or removing the PIN, all ask for the PIN. Turning things *on* never does. Only a salted
+  hash of the PIN is stored.
+  - It protects the settings inside TV Akhi. Someone with access to the TV's Android settings can still clear the
+    app's data.
 
 ## Using TV Akhi with the remote
 
@@ -110,7 +126,8 @@ A small round menu appears around the cursor. Move to an option with the D-pad:
 - **Pop-up blocker:** choose how strictly this site may open pop-ups.
 - **⏭ Smart skip:** turns skipping intros and end credits on or off. When it's off, the icon is crossed out.
 - **♪ No music:** turns music removal on or off. A crossed-out note means it's on and the music is removed. A plain
-  note means it's off. The change applies to the playing video within a second or two.
+  note means it's off. The change applies to the playing video within a second or two. With a parental PIN set,
+  turning it off asks for the PIN.
 - **⌂ Home:** goes to the TV Akhi home page. Press it again on the home page to return to the TV's home screen.
   TV Akhi stays open in the background with your tabs.
 
@@ -128,6 +145,9 @@ Settings.
   - **GeckoView** (Firefox) is the default and runs uBlock Origin.
   - **WebView** is Android's built-in engine and uses TV Akhi's own uBlock-compatible blocker.
 - **Ad blocking:** on/off.
+- **Smart skip** and **No music:** on/off (the same as the ⏭ and ♪ buttons).
+- **Block porn and nudity** and **Haram filter:** on/off.
+- **Parental PIN:** set, change or remove the PIN that locks the filters and No music.
 - **Play videos in fullscreen:** on/off.
 - **Open new windows in current tab:** on/off.
 - **Voice search language:** English, العربية or system.
@@ -210,5 +230,8 @@ How to take changes from TV Bro: [UPSTREAM_SYNC.md](UPSTREAM_SYNC.md).
 Ad blocking uses [uBlock Origin](https://github.com/gorhill/uBlock) and the filter lists from
 [uAssets](https://github.com/uBlockOrigin/uAssets).
 Smart skip uses the recap, intro and credits times of [TheIntroDB](https://theintrodb.org).
+The family filters use [StevenBlack/hosts](https://github.com/StevenBlack/hosts) (MIT) and
+[The Block List Project](https://github.com/blocklistproject/Lists) (Unlicense); `tools/make_filter_lists.py`
+rebuilds them.
 No music is based on [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) (ISC license) and uses its WebAssembly
 build of the [FastEnhancer](https://github.com/aask1357/fastenhancer) Lite model (MIT license).

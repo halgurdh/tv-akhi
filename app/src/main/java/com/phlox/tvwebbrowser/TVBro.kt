@@ -14,6 +14,7 @@ import com.phlox.tvwebbrowser.model.HostConfig
 import com.phlox.tvwebbrowser.singleton.AppDatabase
 import com.phlox.tvwebbrowser.singleton.FaviconsPool
 import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
+import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine
 import java.net.CookieHandler
 import java.net.CookieManager
@@ -51,6 +52,7 @@ class TVBro : Application(), Application.ActivityLifecycleCallbacks {
         instance = this
 
         AppContext.init(this, Config(getSharedPreferences(MAIN_PREFS_NAME, MODE_MULTI_PROCESS)))
+        ContentFilter.preload()
 
         val maxThreadsInOfflineJobsPool = Runtime.getRuntime().availableProcessors()
         threadPool = ThreadPoolExecutor(0, maxThreadsInOfflineJobsPool, 20,

@@ -17,6 +17,8 @@ import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.ContentFilter
+import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineProvider
 import com.phlox.tvwebbrowser.webengine.WebEngineProviderCallback
@@ -68,6 +70,15 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
         Utils.bytesToBundle(bytes)
 
     override fun loadUrl(url: String) {
+        val allowed = ContentFilter.check(url)
+        if (allowed == null) {
+            callback?.onMediaToolsEvent(MediaTools.blockedEvent(url))
+            return
+        }
+        loadAllowedUrl(allowed)
+    }
+
+    private fun loadAllowedUrl(url: String) {
         webView?.loadUrl(url)
     }
 

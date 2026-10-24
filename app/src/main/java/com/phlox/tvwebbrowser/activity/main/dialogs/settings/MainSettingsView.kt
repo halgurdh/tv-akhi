@@ -22,10 +22,12 @@ import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.activity.main.MainActivity
+import com.phlox.tvwebbrowser.activity.main.ParentalLock
 import com.phlox.tvwebbrowser.activity.main.SettingsModel
 import com.phlox.tvwebbrowser.databinding.ViewSettingsMainBinding
 import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.utils.activity
+import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine
 import kotlinx.coroutines.launch
@@ -271,11 +273,80 @@ class MainSettingsView @JvmOverloads constructor(
             config.autoFullscreenVideo = vb.scAutoFullscreenVideo.isChecked
         }
 
+        initMediaToolsAndFiltersUI()
+
         vb.scOpenNewWindowsInCurrentTab.isChecked = config.openNewWindowsInCurrentTab
         vb.llOpenNewWindowsInCurrentTab.setOnClickListener {
             vb.scOpenNewWindowsInCurrentTab.isChecked = !vb.scOpenNewWindowsInCurrentTab.isChecked
             config.openNewWindowsInCurrentTab = vb.scOpenNewWindowsInCurrentTab.isChecked
         }
+    }
+
+    private fun initMediaToolsAndFiltersUI() {
+        vb.scSmartSkip.isChecked = config.smartSkipEnabled
+        vb.llSmartSkip.setOnClickListener {
+            config.smartSkipEnabled = !config.smartSkipEnabled
+            vb.scSmartSkip.isChecked = config.smartSkipEnabled
+            (activity as? MainActivity)?.updateMediaToolsButtons()
+        }
+
+        //turning off a filter or No music needs the parental PIN
+        vb.scNoMusic.isChecked = config.noMusicEnabled
+        vb.llNoMusic.setOnClickListener {
+            lockedSwitch(config.noMusicEnabled) {
+                config.noMusicEnabled = !config.noMusicEnabled
+                vb.scNoMusic.isChecked = config.noMusicEnabled
+                (activity as? MainActivity)?.updateMediaToolsButtons()
+            }
+        }
+
+        vb.scAdultBlock.isChecked = config.adultBlockEnabled
+        vb.llAdultBlock.setOnClickListener {
+            lockedSwitch(config.adultBlockEnabled) {
+                config.adultBlockEnabled = !config.adultBlockEnabled
+                vb.scAdultBlock.isChecked = config.adultBlockEnabled
+                ContentFilter.preload()
+            }
+        }
+
+        vb.scHaramBlock.isChecked = config.haramBlockEnabled
+        vb.llHaramBlock.setOnClickListener {
+            lockedSwitch(config.haramBlockEnabled) {
+                config.haramBlockEnabled = !config.haramBlockEnabled
+                vb.scHaramBlock.isChecked = config.haramBlockEnabled
+                ContentFilter.preload()
+            }
+        }
+
+        updateParentalPinUI()
+        vb.llParentalPin.setOnClickListener {
+            if (!ParentalLock.isSet) {
+                ParentalLock.setUp(context) { updateParentalPinUI() }
+                return@setOnClickListener
+            }
+            ParentalLock.unlock(context) {
+                AlertDialog.Builder(context)
+                    .setTitle(R.string.parental_pin)
+                    .setItems(arrayOf(context.getString(R.string.parental_pin_change), context.getString(R.string.parental_pin_remove))) { _, which ->
+                        if (which == 0) {
+                            ParentalLock.setUp(context) { updateParentalPinUI() }
+                        } else {
+                            ParentalLock.remove()
+                            Toast.makeText(context, R.string.parental_pin_removed, Toast.LENGTH_SHORT).show()
+                            updateParentalPinUI()
+                        }
+                    }
+                    .show()
+            }
+        }
+    }
+
+    private fun lockedSwitch(isOn: Boolean, toggle: () -> Unit) {
+        if (isOn) ParentalLock.unlock(context, toggle) else toggle()
+    }
+
+    private fun updateParentalPinUI() {
+        vb.tvParentalPin.setText(if (ParentalLock.isSet) R.string.parental_pin_on else R.string.parental_pin_off)
     }
 
     private fun initUAStringConfigUI(context: Context) {

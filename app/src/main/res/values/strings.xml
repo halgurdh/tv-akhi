@@ -213,4 +213,21 @@
     <string name="no_music_off">No music off</string>
     <string name="no_music_unavailable">No music cannot run on this site</string>
     <string name="no_music_slow">No music paused: the TV is too slow for this video</string>
+    <string name="adult_block">Block porn and nudity (SafeSearch on)</string>
+    <string name="haram_block">Haram filter: block alcohol, drugs and gambling</string>
+    <string name="adult_blocked">Blocked: this site has adult content</string>
+    <string name="haram_blocked">Blocked by the haram filter (alcohol, drugs or gambling)</string>
+    <string name="parental_pin">Parental PIN</string>
+    <string name="parental_pin_off">Off</string>
+    <string name="parental_pin_on">On</string>
+    <string name="parental_pin_enter">Enter the parental PIN</string>
+    <string name="parental_pin_new">New parental PIN (4 to 8 digits)</string>
+    <string name="parental_pin_repeat">Enter the PIN again</string>
+    <string name="parental_pin_wrong">Wrong PIN</string>
+    <string name="parental_pin_too_short">The PIN needs at least 4 digits</string>
+    <string name="parental_pin_mismatch">The PINs are not the same</string>
+    <string name="parental_pin_set">Parental PIN set: the filters and No music are locked</string>
+    <string name="parental_pin_change">Change the PIN</string>
+    <string name="parental_pin_remove">Remove the PIN</string>
+    <string name="parental_pin_removed">Parental PIN removed</string>
 </resources>
