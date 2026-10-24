@@ -29,6 +29,23 @@ with uBlock Origin.
   searching.
 - **Home page:** shows your most visited sites.
 - **Videos:** a video you start goes to fullscreen automatically (Settings → **Play videos in fullscreen**).
+- **⏭ Smart skip** (on by default) skips the intro and the end credits of TV show episodes on any site. It leaves a
+  2-second safety gap so you don't miss anything:
+  - If the site shows its own **Skip intro**, **Skip credits** or **Next episode** button, TV Akhi presses it.
+  - **Intro:** episodes of a show share the same intro. TV Akhi remembers the first minutes of each episode you watch.
+    Once two episodes share a sequence, every later episode jumps to 2 seconds before the intro ends. It learns
+    from two episodes, so the skipping starts with the third.
+  - **End credits:** a credit roll (many lines of text over a dark or frozen picture) near the end of the video is
+    skipped after about 10 seconds of it, so the site can play the next episode.
+  - Each part is skipped only once per episode. Seek back to watch it again.
+  - Only videos longer than 5 minutes count. It can't see inside DRM-protected videos (Netflix, Disney+ and so on).
+    On those sites, only the site's own skip buttons are used.
+- **🔇 No music** (off by default) removes the background music from videos and keeps the voices. It's based on
+  [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) and runs its FastEnhancer Lite speech-enhancement model
+  on the TV itself; nothing is uploaded.
+  - It works with most streaming players (YouTube and other sites that stream video in chunks). Videos the page
+    isn't allowed to process keep their normal sound.
+  - It needs a fair amount of CPU. If the TV can't keep up, it switches itself off for that video and says so.
 - **Links that open new windows** load in the current tab (can be turned off in Settings).
 
 ## Using TV Akhi with the remote
@@ -80,6 +97,9 @@ A small round menu appears around the cursor. Move to an option with the D-pad:
 - **⟳** reloads the page.
 - **ads ON / OFF** turns ad blocking on or off. The number next to it shows how many ads were blocked on this page.
 - **Pop-up blocker:** choose how strictly this site may open pop-ups.
+- **⏭ Smart skip:** turns skipping intros and end credits on or off. When it's off, the icon is crossed out.
+- **♪ No music:** turns music removal on or off. A crossed-out note means it's on and the music is removed. A plain
+  note means it's off. The change applies to the playing video within a second or two.
 - **⌂ Home:** goes to the TV Akhi home page. Press it again on the home page to return to the TV's home screen.
   TV Akhi stays open in the background with your tabs.
 
@@ -178,3 +198,5 @@ TV Akhi uses TV Bro's sources: https://github.com/truefedex/tv-bro. See [LICENSE
 How to take changes from TV Bro: [UPSTREAM_SYNC.md](UPSTREAM_SYNC.md).
 Ad blocking uses [uBlock Origin](https://github.com/gorhill/uBlock) and the filter lists from
 [uAssets](https://github.com/uBlockOrigin/uAssets).
+No music is based on [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) (ISC license) and uses its WebAssembly
+build of the [FastEnhancer](https://github.com/aask1357/fastenhancer) Lite model (MIT license).

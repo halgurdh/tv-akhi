@@ -50,6 +50,7 @@ import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
+import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
 import com.phlox.tvwebbrowser.utils.Utils
 import java.net.URLEncoder
@@ -518,6 +519,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
             WebViewCompat.addDocumentStartJavaScript(this, WebViewAdBlock.contentScript(context), setOf("*"))
             WebViewCompat.addDocumentStartJavaScript(this,
                 context.assets.open("autofullscreen.js").bufferedReader().use { it.readText() }, setOf("*"))
+            WebViewCompat.addDocumentStartJavaScript(this, MediaTools.webViewScript(context), setOf("*"))
         }
     }
 

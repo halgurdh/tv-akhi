@@ -8,12 +8,26 @@ import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.model.Download
 import com.phlox.tvwebbrowser.utils.DownloadUtils
+import com.phlox.tvwebbrowser.webengine.MediaTools
 import org.json.JSONArray
 
 
 class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
     @JavascriptInterface
     fun isAutoFullscreenVideoEnabled(): Boolean = AppContext.provideConfig().autoFullscreenVideo
+
+    @JavascriptInterface
+    fun getMediaToolsSettings(): String = MediaTools.settings().toString()
+
+    @JavascriptInterface
+    fun getNoMusicModel(): String = MediaTools.modelBase64(TVBro.instance)
+
+    @JavascriptInterface
+    fun onMediaToolsEvent(event: String) {
+        if (event !in MediaTools.EVENTS) return
+        val callback = webEngine.callback ?: return
+        callback.getActivity().runOnUiThread { callback.onMediaToolsEvent(event) }
+    }
 
     @JavascriptInterface
     fun currentUrl(): String {

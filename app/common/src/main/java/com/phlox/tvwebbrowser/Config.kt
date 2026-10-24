@@ -42,6 +42,8 @@ class Config(val prefs: SharedPreferences) {
         const val OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY = "open_new_windows_in_current_tab"
         const val VOICE_SEARCH_LANGUAGE_KEY = "voice_search_language"
         const val AUTO_FULLSCREEN_VIDEO_KEY = "auto_fullscreen_video"
+        const val SMART_SKIP_KEY = "smart_skip"
+        const val NO_MUSIC_KEY = "no_music"
         const val APP_WEB_EXTENSION_VERSION_KEY = "app_web_extension_version"
         const val NOTIFICATION_ABOUT_ENGINE_CHANGE_SHOWN_KEY = "notification_about_engine_change_shown"
         const val APP_VERSION_CODE_MARK_KEY = "app_version_code_mark"
@@ -235,6 +237,20 @@ class Config(val prefs: SharedPreferences) {
         get() = prefs.getBoolean(AUTO_FULLSCREEN_VIDEO_KEY, true)
         set(value) {
             prefs.edit().putBoolean(AUTO_FULLSCREEN_VIDEO_KEY, value).apply()
+        }
+
+    //skip the intro and the end credits of TV show episodes (media_tools.js)
+    var smartSkipEnabled: Boolean
+        get() = prefs.getBoolean(SMART_SKIP_KEY, true)
+        set(value) {
+            prefs.edit().putBoolean(SMART_SKIP_KEY, value).apply()
+        }
+
+    //remove the background music of videos, keep the voices (media_tools.js)
+    var noMusicEnabled: Boolean
+        get() = prefs.getBoolean(NO_MUSIC_KEY, false)
+        set(value) {
+            prefs.edit().putBoolean(NO_MUSIC_KEY, value).apply()
         }
 
     var voiceSearchLanguage: String

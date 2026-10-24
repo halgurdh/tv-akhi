@@ -44,9 +44,24 @@ communicatePort.onMessage.addListener(message => {
         }, true);
     }
 
-    let autoFullscreen = false;
-    browser.runtime.sendNativeMessage("tvbro_content", { action: "getSettings" })
-        .then(settings => { autoFullscreen = !!(settings && settings.autoFullscreenVideo); })
-        .catch(() => { });
-    setupAutoFullscreen(() => autoFullscreen);
+    let settings = {};
+    function refreshSettings() {
+        browser.runtime.sendNativeMessage("tvbro_content", { action: "getSettings" })
+            .then(result => { settings = result || {}; })
+            .catch(() => { });
+    }
+    refreshSettings();
+    //the toolbar toggles change while the video plays
+    const videos = document.getElementsByTagName('video');
+    setInterval(() => { if (videos.length) refreshSettings(); }, 2000);
+    setupAutoFullscreen(() => !!settings.autoFullscreenVideo);
+
+    //media_tools.js
+    tvakhiMediaTools({
+        settings: () => settings,
+        loadModel: () => fetch(browser.runtime.getURL("nomusic/fastenhancer_t.wasm")).then(r => r.arrayBuffer()),
+        notify: event => {
+            browser.runtime.sendNativeMessage("tvbro_content", { action: "mediaToolsEvent", event: event }).catch(() => { });
+        }
+    });
 })();

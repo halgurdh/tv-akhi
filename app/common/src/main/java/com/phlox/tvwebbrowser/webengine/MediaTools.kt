@@ -1,0 +1,65 @@
+package com.phlox.tvwebbrowser.webengine
+
+import android.content.Context
+import android.util.Base64
+import com.phlox.tvwebbrowser.AppContext
+import org.json.JSONObject
+
+/**
+ * Smart skip and No music, done by media_tools.js in the page. The same file is the content script of the GeckoView
+ * extension (the assets of this module are merged into extensions/generic/).
+ */
+object MediaTools {
+    private const val SCRIPT_PATH = "extensions/generic/media_tools.js"
+    private const val MODEL_PATH = "extensions/generic/nomusic/fastenhancer_t.wasm"
+
+    //events from the script
+    const val EVENT_INTRO_SKIPPED = "intro_skipped"
+    const val EVENT_CREDITS_SKIPPED = "credits_skipped"
+    const val EVENT_NO_MUSIC_UNAVAILABLE = "no_music_unavailable"
+    const val EVENT_NO_MUSIC_SLOW = "no_music_slow"
+    val EVENTS = setOf(EVENT_INTRO_SKIPPED, EVENT_CREDITS_SKIPPED, EVENT_NO_MUSIC_UNAVAILABLE, EVENT_NO_MUSIC_SLOW)
+
+    @Volatile private var modelBase64: String? = null
+
+    fun settings(): JSONObject {
+        val config = AppContext.provideConfig()
+        return JSONObject()
+            .put("smartSkip", config.smartSkipEnabled)
+            .put("noMusic", config.noMusicEnabled)
+    }
+
+    /** The FastEnhancer model for WebView pages (they can't fetch the app assets) */
+    fun modelBase64(context: Context): String {
+        modelBase64?.let { return it }
+        val bytes = context.assets.open(MODEL_PATH).use { it.readBytes() }
+        return Base64.encodeToString(bytes, Base64.NO_WRAP).also { modelBase64 = it }
+    }
+
+    /** The script for WebView, with the host that calls the TVBro JS interface */
+    fun webViewScript(context: Context): String {
+        val script = context.assets.open(SCRIPT_PATH).bufferedReader().use { it.readText() }
+        return """
+            (function () {
+                if (!window.TVBro) return;
+                $script
+                tvakhiMediaTools({
+                    settings: function () {
+                        try { return JSON.parse(window.TVBro.getMediaToolsSettings()); } catch (e) { return {}; }
+                    },
+                    loadModel: function () {
+                        return new Promise(function (resolve) {
+                            const binary = atob(window.TVBro.getNoMusicModel());
+                            const bytes = new Uint8Array(binary.length);
+                            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                            resolve(bytes.buffer);
+                        });
+                    },
+                    notify: function (event) {
+                        try { window.TVBro.onMediaToolsEvent(event); } catch (e) { }
+                    }
+                });
+            })();
+        """.trimIndent()
+    }
+}

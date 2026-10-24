@@ -15,6 +15,7 @@ import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.observable.ObservableValue
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineProvider
 import com.phlox.tvwebbrowser.webengine.WebEngineProviderCallback
@@ -53,7 +54,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
     CursorDrawerDelegate.Callback {
     companion object {
         const val ENGINE_NAME = "GeckoView"
-        private const val APP_WEB_EXTENSION_VERSION = 52
+        private const val APP_WEB_EXTENSION_VERSION = 53
         val TAG: String = GeckoWebEngine::class.java.simpleName
         lateinit var runtime: GeckoRuntime
         var appWebExtension = ObservableValue<WebExtension?>(null)
@@ -214,9 +215,14 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
                 override fun onMessage(nativeApp: String, message: Any,
                                        sender: WebExtension.MessageSender): GeckoResult<Any>? {
                     Log.d(TAG, "onMessage: $nativeApp, $message, $sender")
-                    if ((message as? JSONObject)?.optString("action") == "getSettings") {
-                        return GeckoResult.fromValue(JSONObject()
+                    val json = message as? JSONObject ?: return null
+                    when (json.optString("action")) {
+                        "getSettings" -> return GeckoResult.fromValue(MediaTools.settings()
                             .put("autoFullscreenVideo", AppContext.provideConfig().autoFullscreenVideo))
+                        "mediaToolsEvent" -> {
+                            val event = json.optString("event")
+                            if (event in MediaTools.EVENTS) uiHandler.post { callback?.onMediaToolsEvent(event) }
+                        }
                     }
                     return null
                 }

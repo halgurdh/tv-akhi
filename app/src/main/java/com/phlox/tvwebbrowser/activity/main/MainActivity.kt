@@ -85,6 +85,7 @@ import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.utils.childs
 import com.phlox.tvwebbrowser.utils.sameDay
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import com.phlox.tvwebbrowser.widgets.NotificationView
@@ -171,6 +172,8 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         vb.vTabs.listener = tabsListener
 
         vb.ibAdBlock.setOnClickListener { toggleAdBlockForTab() }
+        vb.ibSmartSkip.setOnClickListener { toggleSmartSkip() }
+        vb.ibNoMusic.setOnClickListener { toggleNoMusic() }
         vb.ibPopupBlock.setOnClickListener { lifecycleScope.launch(Dispatchers.Main) { showPopupBlockOptions() } }
         vb.ibHome.setOnClickListener {
             //first press goes to the home page, second press (already there) hides the app back to TV home screen
@@ -598,6 +601,30 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
         vb.tvBlockedPopupCounter.visibility = if (tab.blockedPopups != 0) View.VISIBLE else View.GONE
         vb.tvBlockedPopupCounter.text = tab.blockedPopups.toString()
+
+        updateMediaToolsButtons()
+    }
+
+    private fun updateMediaToolsButtons() {
+        vb.ibSmartSkip.setImageResource(if (config.smartSkipEnabled) R.drawable.ic_smart_skip_on else R.drawable.ic_smart_skip_off)
+        vb.ibNoMusic.setImageResource(if (config.noMusicEnabled) R.drawable.ic_no_music_on else R.drawable.ic_no_music_off)
+    }
+
+    //the pages read the settings every second or two (media_tools.js)
+    private fun toggleSmartSkip() {
+        config.smartSkipEnabled = !config.smartSkipEnabled
+        updateMediaToolsButtons()
+        NotificationView.showBottomRight(vb.rlRoot,
+            if (config.smartSkipEnabled) R.drawable.ic_smart_skip_on else R.drawable.ic_smart_skip_off,
+            getString(if (config.smartSkipEnabled) R.string.smart_skip_on else R.string.smart_skip_off))
+    }
+
+    private fun toggleNoMusic() {
+        config.noMusicEnabled = !config.noMusicEnabled
+        updateMediaToolsButtons()
+        NotificationView.showBottomRight(vb.rlRoot,
+            if (config.noMusicEnabled) R.drawable.ic_no_music_on else R.drawable.ic_no_music_off,
+            getString(if (config.noMusicEnabled) R.string.no_music_on else R.string.no_music_off))
     }
 
     private fun onDownloadRequested(url: String, referer: String, originalDownloadFileName: String, userAgent: String?, mimeType: String? = null,
@@ -1300,6 +1327,17 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             tab.blockedAds++
             vb.tvBlockedAdCounter.visibility = if (tab.blockedAds > 0) View.VISIBLE else View.GONE
             vb.tvBlockedAdCounter.text = tab.blockedAds.toString()
+        }
+
+        override fun onMediaToolsEvent(event: String) {
+            val (icon, message) = when (event) {
+                MediaTools.EVENT_INTRO_SKIPPED -> R.drawable.ic_smart_skip_on to R.string.intro_skipped
+                MediaTools.EVENT_CREDITS_SKIPPED -> R.drawable.ic_smart_skip_on to R.string.credits_skipped
+                MediaTools.EVENT_NO_MUSIC_UNAVAILABLE -> R.drawable.ic_no_music_off to R.string.no_music_unavailable
+                MediaTools.EVENT_NO_MUSIC_SLOW -> R.drawable.ic_no_music_off to R.string.no_music_slow
+                else -> return
+            }
+            NotificationView.showBottomRight(vb.rlRoot, icon, getString(message))
         }
 
         override fun onBlockedDialog(newTab: Boolean) {
