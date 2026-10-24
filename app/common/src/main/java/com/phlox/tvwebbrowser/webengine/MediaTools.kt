@@ -12,6 +12,7 @@ import org.json.JSONObject
 object MediaTools {
     private const val SCRIPT_PATH = "extensions/generic/media_tools.js"
     private const val MODEL_PATH = "extensions/generic/nomusic/fastenhancer_t.wasm"
+    private const val ENGINE_PATH = "extensions/generic/nomusic/engine.js"
 
     //events from the script
     const val EVENT_INTRO_SKIPPED = "intro_skipped"
@@ -36,12 +37,17 @@ object MediaTools {
         return Base64.encodeToString(bytes, Base64.NO_WRAP).also { modelBase64 = it }
     }
 
+    /** The No music engine, also the AudioWorklet module (WebView pages load it from a blob) */
+    fun engineScript(context: Context): String = context.assets.open(ENGINE_PATH).bufferedReader().use { it.readText() }
+
     /** The script for WebView, with the host that calls the TVBro JS interface */
     fun webViewScript(context: Context): String {
+        val engine = engineScript(context)
         val script = context.assets.open(SCRIPT_PATH).bufferedReader().use { it.readText() }
         return """
             (function () {
                 if (!window.TVBro) return;
+                $engine
                 $script
                 tvakhiMediaTools({
                     settings: function () {
@@ -54,6 +60,14 @@ object MediaTools {
                             for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
                             resolve(bytes.buffer);
                         });
+                    },
+                    workletUrls: function () {
+                        try {
+                            const source = window.TVBro.getNoMusicEngine();
+                            return Promise.resolve([URL.createObjectURL(new Blob([source], { type: 'application/javascript' }))]);
+                        } catch (e) {
+                            return Promise.resolve([]);
+                        }
                     },
                     notify: function (event) {
                         try { window.TVBro.onMediaToolsEvent(event); } catch (e) { }

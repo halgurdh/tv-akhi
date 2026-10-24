@@ -1,6 +1,8 @@
 /* TV Akhi media tools, shared by both engines: injected at document start in WebView (see MediaTools.kt) and a content
  * script of the GeckoView extension (see content.js). The host gives the settings and the model, and shows the messages:
- *   tvakhiMediaTools({ settings: () => ({smartSkip, noMusic}), loadModel: () => Promise<ArrayBuffer>, notify: event => {} })
+ *   tvakhiMediaTools({ settings: () => ({smartSkip, noMusic}), loadModel: () => Promise<ArrayBuffer>,
+ *                      workletUrls: () => Promise<[urls of nomusic/engine.js]>, notify: event => {} })
+ * nomusic/engine.js must be loaded before this file.
  *
  * Smart skip: skips the intro and the end credits of TV show episodes, keeping a 2 second safety gap.
  *  - The site's own "Skip intro" / "Skip credits" / "Next episode" buttons are pressed when they show up.
@@ -13,7 +15,8 @@
  *
  * No music: removes the background music and keeps the voices, like NoMusic (https://github.com/mohamedsadiqaguenaou/NoMusic,
  * ISC). Runs its FastEnhancer Lite speech enhancement model (https://github.com/aask1357/fastenhancer, MIT) on the
- * video's audio. Only the videos the page can read the audio of (most streaming players): the others keep their sound.
+ * video's audio, on the audio thread when the site allows it. Only the videos the page can read the audio of (most
+ * streaming players): the others keep their sound. Singing is a voice too: it stays.
  */
 var tvakhiMediaTools = (function () {
     'use strict';
@@ -213,8 +216,11 @@ var tvakhiMediaTools = (function () {
         const templates = load(TEMPLATES_KEY);
         const frames = state.frames.slice(0, INTRO_WINDOW_S);
 
-        for (const recording of recordings) {
-            if (recording.id === state.id) continue;
+        //one episode per call: a TV CPU needs ~0.1 s for one, the sound and the picture mustn't wait
+        const others = recordings.filter(r => r.id !== state.id);
+        if (!others.length) return;
+        state.learnIndex = (state.learnIndex + 1) % others.length;
+        for (const recording of [others[state.learnIndex]]) {
             const run = longestRun(frames, recording.frames);
             const length = run.aEnd - run.aStart + 1;
             if (run.matches < MIN_INTRO_MATCHES || length < MIN_INTRO_S || length > MAX_INTRO_S
@@ -295,7 +301,7 @@ var tvakhiMediaTools = (function () {
             state = {
                 id: id, frames: [], votes: new Map(), templates: null, blind: false,
                 introDone: false, introLearned: false, outroDone: false,
-                creditStart: -1, creditFrames: 0, creditMisses: 0, prevStill: null, lastLearn: 0, saved: false
+                creditStart: -1, creditFrames: 0, creditMisses: 0, prevStill: null, lastLearn: 0, learnIndex: -1, saved: false
             };
             states.set(video, state);
         }
@@ -361,7 +367,7 @@ var tvakhiMediaTools = (function () {
                     }
                 }
             }
-            if (!state.introDone && !state.introLearned && Date.now() - state.lastLearn > 15000) {
+            if (!state.introDone && !state.introLearned && Date.now() - state.lastLearn > 5000) {
                 state.lastLearn = Date.now();
                 learnIntro(state, sec);
             }
@@ -389,153 +395,22 @@ var tvakhiMediaTools = (function () {
         }
     }
 
-    //---------- no music ----------
-
-    const MODEL_RATE = 48000;
-
-    function Fifo() {
-        let data = new Float32Array(8192), start = 0, end = 0;
-        this.length = 0;
-        this.push = function (input) {
-            if (end + input.length > data.length) {
-                const kept = data.subarray(start, end);
-                const bigger = end - start + input.length > data.length ? new Float32Array((end - start + input.length) * 2) : data;
-                bigger.set(kept, 0);
-                end -= start;
-                start = 0;
-                data = bigger;
-            }
-            data.set(input, end);
-            end += input.length;
-            this.length = end - start;
-        };
-        /** Pads with silence */
-        this.pop = function (output, count) {
-            const n = Math.min(count, end - start);
-            output.set(data.subarray(start, start + n), 0);
-            output.fill(0, n, count);
-            start += n;
-            if (start === end) start = end = 0;
-            this.length = end - start;
-        };
-    }
-
-    /** Linear resampler, ratio: output rate / input rate */
-    function Resampler(ratio) {
-        const step = 1 / ratio;
-        let pos = 0, last = 0, out = new Float32Array(0);
-        this.run = function (input) {
-            if (ratio === 1) return input;
-            const n = input.length;
-            const max = Math.ceil((n + 1) * ratio) + 2;
-            if (out.length < max) out = new Float32Array(max);
-            let count = 0, p = pos;
-            while (p < n - 1) {
-                const i = Math.floor(p), frac = p - i;
-                const a = i < 0 ? last : input[i];
-                out[count++] = a + (input[i + 1] - a) * frac;
-                p += step;
-            }
-            pos = p - n;
-            last = input[n - 1];
-            return out.subarray(0, count);
-        };
-    }
-
-    /** FastEnhancer, one stream per channel. Mono (the same left and right) runs once, like NoMusic's worker. */
-    function Enhancer(instance, rate) {
-        const fe = instance.exports;
-        const hop = fe.fe_hop_size();
-        const handles = [fe.fe_stream_new(), fe.fe_stream_new()];
-        const down = [new Resampler(MODEL_RATE / rate), new Resampler(MODEL_RATE / rate)];
-        const up = [new Resampler(rate / MODEL_RATE), new Resampler(rate / MODEL_RATE)];
-        const input = [new Fifo(), new Fifo()], output = [new Fifo(), new Fifo()];
-        const hops = [new Float32Array(hop), new Float32Array(hop)];
-        let memory = null, views = null;
-        let statesEqual = true, rightStale = false, monoRun = 0;
-
-        function refresh() {
-            if (fe.memory.buffer === memory) return;
-            memory = fe.memory.buffer;
-            views = handles.map(h => ({
-                input: new Float32Array(memory, fe.fe_stream_input(h), hop),
-                output: new Float32Array(memory, fe.fe_stream_output(h), hop)
-            }));
-        }
-
-        function processHop() {
-            refresh();
-            let mono = true;
-            for (let i = 0; i < hop; i++) {
-                if (hops[0][i] !== hops[1][i]) { mono = false; break; }
-            }
-            if (mono) {
-                if (!statesEqual && ++monoRun >= 100) { statesEqual = true; rightStale = true; }
-            } else {
-                monoRun = 0;
-            }
-            views[0].input.set(hops[0]);
-            if (mono && statesEqual) {
-                fe.fe_stream_process(handles[0], 1);
-                refresh();
-                rightStale = true;
-                hops[0].set(views[0].output);
-                hops[1].set(views[0].output);
-                return;
-            }
-            if (rightStale) {
-                fe.fe_stream_copy_state(handles[1], handles[0]);
-                rightStale = false;
-            }
-            statesEqual = false;
-            refresh();
-            views[1].input.set(hops[1]);
-            fe.fe_stream_process(handles[0], 1);
-            fe.fe_stream_process(handles[1], 1);
-            refresh();
-            hops[0].set(views[0].output);
-            hops[1].set(views[1].output);
-        }
-
-        this.process = function (left, right) {
-            input[0].push(down[0].run(left));
-            input[1].push(down[1].run(right));
-            while (input[0].length >= hop && input[1].length >= hop) {
-                input[0].pop(hops[0], hop);
-                input[1].pop(hops[1], hop);
-                processHop();
-                output[0].push(up[0].run(hops[0]));
-                output[1].push(up[1].run(hops[1]));
-            }
-            output[0].pop(left, left.length);
-            output[1].pop(right, right.length);
-        };
-
-        this.reset = function () {
-            for (const h of handles) fe.fe_stream_reset(h);
-            statesEqual = true;
-            rightStale = false;
-        };
-
-        if (rate !== MODEL_RATE) {
-            //the resampled hops don't fill the buffers exactly: a hop of latency to never run short
-            output[0].push(new Float32Array(Math.ceil(hop * rate / MODEL_RATE)));
-            output[1].push(new Float32Array(Math.ceil(hop * rate / MODEL_RATE)));
-        }
-    }
+    //---------- no music (the engine: nomusic/engine.js) ----------
 
     function NoMusic(host) {
-        const BUFFER = 2048;
+        const engine = tvakhiNoMusicEngine;
+        const FALLBACK_BUFFER = 4096; //the page thread is busy: a big buffer
+        const MAX_LOAD = 0.85;
         const graphs = new WeakMap();
-        let module = null;
+        let model = null;
         let isUnavailable = false;
 
-        function compile() {
-            if (!module) {
-                module = host.loadModel().then(bytes => WebAssembly.compile(bytes));
-                module.catch(() => { });
+        function loadModel() {
+            if (!model) {
+                model = host.loadModel();
+                model.catch(() => { });
             }
-            return module;
+            return model;
         }
 
         /** Routing a video the page can't read through Web Audio would silence it */
@@ -556,11 +431,68 @@ var tvakhiMediaTools = (function () {
             isUnavailable = true;
         }
 
+        /** The model on the audio thread. Null: the site doesn't allow worklets. */
+        async function workletNode(ctx, onSlow) {
+            if (!ctx.audioWorklet) return null;
+            let isLoaded = false;
+            for (const url of await host.workletUrls()) {
+                try {
+                    await ctx.audioWorklet.addModule(url);
+                    isLoaded = true;
+                    break;
+                } catch (e) {
+                    console.warn('TV Akhi no music worklet: ' + e);
+                }
+            }
+            if (!isLoaded) return null;
+
+            const node = new AudioWorkletNode(ctx, 'tvakhi-no-music',
+                { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2] });
+            const bytes = await loadModel();
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('worklet timeout')), 10000);
+                node.port.onmessage = (e) => {
+                    clearTimeout(timeout);
+                    if (e.data && e.data.ready) resolve(); else reject(new Error(e.data && e.data.error));
+                };
+                node.port.postMessage({ bytes: bytes });
+            });
+            let slow = 0;
+            node.port.onmessage = (e) => {
+                if (!e.data || typeof e.data.load !== 'number') return;
+                slow = e.data.load > MAX_LOAD ? slow + 1 : 0;
+                if (slow >= 3) onSlow();
+            };
+            node.reset = () => node.port.postMessage({ reset: true });
+            return node;
+        }
+
+        /** The model on the page thread */
+        async function scriptNode(ctx, onSlow) {
+            const instance = await WebAssembly.instantiate(await WebAssembly.compile(await loadModel()), {});
+            const enhancer = new engine.Enhancer(instance, ctx.sampleRate);
+            const node = ctx.createScriptProcessor(FALLBACK_BUFFER, 2, 2);
+            const left = new Float32Array(FALLBACK_BUFFER), right = new Float32Array(FALLBACK_BUFFER);
+            const budgetMs = FALLBACK_BUFFER / ctx.sampleRate * 1000;
+            let slow = 0;
+            node.addEventListener('audioprocess', function (e) {
+                const started = performance.now();
+                e.inputBuffer.copyFromChannel(left, 0);
+                e.inputBuffer.copyFromChannel(right, e.inputBuffer.numberOfChannels > 1 ? 1 : 0);
+                enhancer.process(left, right, left, null);
+                e.outputBuffer.copyToChannel(left, 0);
+                e.outputBuffer.copyToChannel(left, 1);
+                slow = performance.now() - started > budgetMs * MAX_LOAD ? slow + 1 : 0;
+                if (slow > 5) onSlow();
+            });
+            node.reset = () => enhancer.reset();
+            return node;
+        }
+
         async function build(video) {
-            const instance = await WebAssembly.instantiate(await compile(), {});
             let ctx;
             try {
-                ctx = new AudioContext({ sampleRate: MODEL_RATE, latencyHint: 'playback' });
+                ctx = new AudioContext({ sampleRate: engine.MODEL_RATE, latencyHint: 'playback' });
             } catch (e) {
                 ctx = new AudioContext({ latencyHint: 'playback' });
             }
@@ -572,29 +504,25 @@ var tvakhiMediaTools = (function () {
                 return null;
             }
 
-            const enhancer = new Enhancer(instance, ctx.sampleRate);
+            const graph = { enabled: false, isTooSlow: false };
+            const onSlow = () => {
+                if (graph.isTooSlow) return;
+                graph.set(false);
+                graph.isTooSlow = true; //plain sound is better than a broken one
+                host.notify('no_music_slow');
+            };
+            let processor;
+            try {
+                processor = await workletNode(ctx, onSlow).catch(e => {
+                    console.warn('TV Akhi no music worklet: ' + e);
+                    return null;
+                }) || await scriptNode(ctx, onSlow);
+            } catch (e) {
+                ctx.close();
+                throw e;
+            }
+            //only now: from here the sound of the video goes through the context
             const source = ctx.createMediaElementSource(video);
-            const processor = ctx.createScriptProcessor(BUFFER, 2, 2);
-            const left = new Float32Array(BUFFER), right = new Float32Array(BUFFER);
-            const budgetMs = BUFFER / ctx.sampleRate * 1000;
-            let slow = 0;
-            const graph = { enabled: false, ctx: ctx };
-
-            processor.addEventListener('audioprocess', function (e) {
-                const started = performance.now();
-                e.inputBuffer.copyFromChannel(left, 0);
-                e.inputBuffer.copyFromChannel(right, e.inputBuffer.numberOfChannels > 1 ? 1 : 0);
-                enhancer.process(left, right);
-                e.outputBuffer.copyToChannel(left, 0);
-                e.outputBuffer.copyToChannel(right, 1);
-                //the TV is too slow: plain sound is better than a broken one
-                slow = performance.now() - started > budgetMs * 0.8 ? slow + 1 : 0;
-                if (slow > 20) {
-                    graph.set(false);
-                    graph.isTooSlow = true;
-                    host.notify('no_music_slow');
-                }
-            });
 
             graph.set = function (enabled) {
                 if (enabled === graph.enabled || (enabled && graph.isTooSlow)) return;
@@ -602,7 +530,7 @@ var tvakhiMediaTools = (function () {
                 source.disconnect();
                 processor.disconnect();
                 if (enabled) {
-                    enhancer.reset();
+                    processor.reset();
                     source.connect(processor);
                     processor.connect(ctx.destination);
                 } else {
@@ -616,7 +544,7 @@ var tvakhiMediaTools = (function () {
         }
 
         this.update = function (video, enabled) {
-            let graph = graphs.get(video);
+            const graph = graphs.get(video);
             if (graph === 'building') return;
             if (graph) {
                 graph.set(enabled);
