@@ -814,8 +814,9 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
     }
 
+    //incognito leaves no history: going in needs the parental PIN, coming back doesn't
     override fun toggleIncognitoMode() {
-        toggleIncognitoMode(true)
+        if (config.incognitoMode) toggleIncognitoMode(true) else ParentalLock.unlock(this) { toggleIncognitoMode(true) }
     }
 
     private fun toggleIncognitoMode(andSwitchProcess: Boolean) = lifecycleScope.launch(Dispatchers.Main) {

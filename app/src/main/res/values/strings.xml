@@ -226,7 +226,7 @@
     <string name="parental_pin_wrong">Wrong PIN</string>
     <string name="parental_pin_too_short">The PIN needs at least 4 digits</string>
     <string name="parental_pin_mismatch">The PINs are not the same</string>
-    <string name="parental_pin_set">Parental PIN set: the filters and No music are locked</string>
+    <string name="parental_pin_set">Parental PIN set: the filters, No music, incognito mode and deleting the history are locked</string>
     <string name="parental_pin_change">Change the PIN</string>
     <string name="parental_pin_remove">Remove the PIN</string>
     <string name="parental_pin_removed">Parental PIN removed</string>

@@ -353,6 +353,7 @@
         android:id="@+id/llParentalPin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/list_item_bg_selector"
         android:layout_marginTop="20dp"
         android:clickable="true"
         android:focusable="true"
