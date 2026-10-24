@@ -1333,6 +1333,9 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             val (icon, message) = when (event) {
                 MediaTools.EVENT_INTRO_SKIPPED -> R.drawable.ic_smart_skip_on to R.string.intro_skipped
                 MediaTools.EVENT_CREDITS_SKIPPED -> R.drawable.ic_smart_skip_on to R.string.credits_skipped
+                MediaTools.EVENT_SKIP_LEARNING -> R.drawable.ic_smart_skip_on to R.string.skip_learning
+                MediaTools.EVENT_SKIP_BLIND -> R.drawable.ic_smart_skip_off to R.string.skip_blind
+                MediaTools.EVENT_NEXT_EPISODE -> R.drawable.ic_smart_skip_on to R.string.next_episode
                 MediaTools.EVENT_NO_MUSIC_UNAVAILABLE -> R.drawable.ic_no_music_off to R.string.no_music_unavailable
                 MediaTools.EVENT_NO_MUSIC_SLOW -> R.drawable.ic_no_music_off to R.string.no_music_slow
                 else -> return
