@@ -41,6 +41,7 @@ class Config(val prefs: SharedPreferences) {
         const val ADBLOCK_ENABLED_PREF_KEY = "adblock_enabled"
         const val OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY = "open_new_windows_in_current_tab"
         const val VOICE_SEARCH_LANGUAGE_KEY = "voice_search_language"
+        const val AUTO_FULLSCREEN_VIDEO_KEY = "auto_fullscreen_video"
         const val APP_WEB_EXTENSION_VERSION_KEY = "app_web_extension_version"
         const val NOTIFICATION_ABOUT_ENGINE_CHANGE_SHOWN_KEY = "notification_about_engine_change_shown"
         const val APP_VERSION_CODE_MARK_KEY = "app_version_code_mark"
@@ -227,6 +228,13 @@ class Config(val prefs: SharedPreferences) {
         get() = prefs.getBoolean(OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY, true)
         set(value) {
             prefs.edit().putBoolean(OPEN_NEW_WINDOWS_IN_CURRENT_TAB_KEY, value).apply()
+        }
+
+    //video started by user goes to fullscreen automatically
+    var autoFullscreenVideo: Boolean
+        get() = prefs.getBoolean(AUTO_FULLSCREEN_VIDEO_KEY, true)
+        set(value) {
+            prefs.edit().putBoolean(AUTO_FULLSCREEN_VIDEO_KEY, value).apply()
         }
 
     var voiceSearchLanguage: String

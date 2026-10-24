@@ -265,6 +265,12 @@ class MainSettingsView @JvmOverloads constructor(
             WebEngineFactory.onAdBlockSettingUpdated(config.adBlockEnabled)
         }
 
+        vb.scAutoFullscreenVideo.isChecked = config.autoFullscreenVideo
+        vb.llAutoFullscreenVideo.setOnClickListener {
+            vb.scAutoFullscreenVideo.isChecked = !vb.scAutoFullscreenVideo.isChecked
+            config.autoFullscreenVideo = vb.scAutoFullscreenVideo.isChecked
+        }
+
         vb.scOpenNewWindowsInCurrentTab.isChecked = config.openNewWindowsInCurrentTab
         vb.llOpenNewWindowsInCurrentTab.setOnClickListener {
             vb.scOpenNewWindowsInCurrentTab.isChecked = !vb.scOpenNewWindowsInCurrentTab.isChecked

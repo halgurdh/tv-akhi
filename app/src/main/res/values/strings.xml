@@ -120,6 +120,7 @@
     <string name="toggle_ads_blocking">Ad blocking (uBlock Origin)</string>
     <string name="open_new_windows_in_current_tab">Open new windows in current tab</string>
     <string name="voice_search_language">Voice search language</string>
+    <string name="auto_fullscreen_video">Play videos in fullscreen</string>
     <string-array name="voice_search_languages">
         <item>System default</item>
         <item>العربية (Arabic)</item>
