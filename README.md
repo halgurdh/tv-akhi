@@ -36,7 +36,10 @@ with uBlock Origin.
     Once two episodes share a sequence, every later episode jumps to 2 seconds before the intro ends. It learns
     from two episodes, so the skipping starts with the third.
   - **End credits:** a credit roll (many lines of text over a dark or frozen picture) near the end of the video is
-    skipped after about 10 seconds of it, so the site can play the next episode.
+    skipped after about 10 seconds of it.
+  - **Next episode:** after the credits, or when an episode ends, TV Akhi follows the page's "next episode" link
+    (الحلقة التالية, or the link to episode N+1). This also works when the player is embedded from another site.
+  - While it's still learning a show, or if it can't see the video, a short message says so.
   - Each part is skipped only once per episode. Seek back to watch it again.
   - Only videos longer than 5 minutes count. It can't see inside DRM-protected videos (Netflix, Disney+ and so on).
     On those sites, only the site's own skip buttons are used.

@@ -289,6 +289,44 @@ var tvakhiMediaTools = (function () {
         return null;
     }
 
+    //---------- next episode ----------
+
+    const NEXT_EPISODE_MESSAGE = 'tvakhi:next-episode';
+    const NEXT_LINK = /(الحلقة|الحلقه) (التالية|التاليه)|next episode/i;
+
+    /** The episode number in a title: "الحلقة 89", "Episode 89", "EP89". 0: none */
+    function episodeNumber(text) {
+        const latin = text.replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660));
+        const m = latin.match(/(?:الحلقة|الحلقه|حلقة|episode|\bep\.?)\s*(\d+)/i);
+        return m ? parseInt(m[1], 10) : 0;
+    }
+
+    /** The "next episode" link of the show page, like the next button in the Java original. Null: the last one. */
+    function nextEpisodeUrl() {
+        const links = Array.from(document.links).filter(a => a.href && !a.href.startsWith('javascript:'));
+        const textOf = a => (a.textContent || '').replace(/\s+/g, ' ').trim();
+        const byLabel = links.find(a => NEXT_LINK.test(textOf(a)));
+        if (byLabel) return byLabel.href;
+        const n = episodeNumber(document.title);
+        if (!n) return null;
+        const next = links.filter(a => episodeNumber(textOf(a)) === n + 1);
+        //the same kind of page (the player page, not the info page) if there are both
+        const samePage = next.find(a => new URL(a.href).pathname === location.pathname);
+        return (samePage || next[0] || {}).href || null;
+    }
+
+    function openNextEpisode(host) {
+        if (window.top !== window) {
+            window.top.postMessage(NEXT_EPISODE_MESSAGE, '*'); //the player is in a frame, the links are in the page
+            return;
+        }
+        const url = nextEpisodeUrl();
+        if (url && url !== location.href) {
+            host.notify('next_episode');
+            location.href = url;
+        }
+    }
+
     //---------- smart skip ----------
 
     const states = new WeakMap();
@@ -300,7 +338,7 @@ var tvakhiMediaTools = (function () {
             if (state) saveRecording(state);
             state = {
                 id: id, frames: [], votes: new Map(), templates: null, blind: false,
-                introDone: false, introLearned: false, outroDone: false,
+                introDone: false, introLearned: false, outroDone: false, isStatusShown: false,
                 creditStart: -1, creditFrames: 0, creditMisses: 0, prevStill: null, lastLearn: 0, learnIndex: -1, saved: false
             };
             states.set(video, state);
@@ -350,10 +388,16 @@ var tvakhiMediaTools = (function () {
             grab(video);
         } catch (e) {
             state.blind = true; //the page can't read this video
+            host.notify('skip_blind');
             return;
         }
 
         if (time < INTRO_WINDOW_S) {
+            if (!state.isStatusShown) {
+                state.isStatusShown = true;
+                //no intro of this site's shows known yet: say it learns, else silence looks broken
+                if (!load(TEMPLATES_KEY).length) host.notify('skip_learning');
+            }
             const h = hash(small(), false);
             state.frames[sec] = h;
             if (!state.introDone && h) {
@@ -391,6 +435,7 @@ var tvakhiMediaTools = (function () {
                 state.outroDone = true;
                 video.currentTime = Math.max(time, duration - 0.5);
                 host.notify('credits_skipped');
+                openNextEpisode(host);
             }
         }
     }
@@ -588,6 +633,24 @@ var tvakhiMediaTools = (function () {
                 }
             }
         }, TICK_MS);
+
+        //the end of an episode: the next one, like after the credits
+        let isNextOpened = false;
+        document.addEventListener('ended', function (e) {
+            const video = e.target;
+            if (isNextOpened || !(video instanceof HTMLVideoElement) || !(host.settings() || {}).smartSkip) return;
+            if (!isFinite(video.duration) || video.duration < MIN_EPISODE_S) return;
+            isNextOpened = true;
+            openNextEpisode(host);
+        }, true);
+        if (window.top === window) {
+            window.addEventListener('message', function (e) {
+                if (e.data === NEXT_EPISODE_MESSAGE && !isNextOpened && (host.settings() || {}).smartSkip) {
+                    isNextOpened = true;
+                    openNextEpisode(host);
+                }
+            });
+        }
 
         window.addEventListener('pagehide', function () {
             for (const video of Array.from(videos)) {
