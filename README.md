@@ -45,7 +45,10 @@ with uBlock Origin.
   on the TV itself; nothing is uploaded.
   - It works with most streaming players (YouTube and other sites that stream video in chunks). Videos the page
     isn't allowed to process keep their normal sound.
-  - It needs a fair amount of CPU. If the TV can't keep up, it switches itself off for that video and says so.
+  - It runs on the browser's audio thread, so a busy page can't make the sound stutter.
+  - It's a speech model: singing counts as voice, so a sung intro song is only partly removed. Smart skip takes care
+    of intros once it has learned them.
+  - If the TV can't keep up, it switches itself off for that video and says so.
 - **Links that open new windows** load in the current tab (can be turned off in Settings).
 
 ## Using TV Akhi with the remote
