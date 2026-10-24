@@ -14,7 +14,8 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 
 /**
- * The parental PIN: with it set, turning off the adult block, the haram filter or No music needs the PIN.
+ * The parental PIN: with it set, turning off the adult block, the haram filter or No music, going incognito and
+ * deleting the history need the PIN.
  * Only a salted hash of the PIN is kept.
  */
 object ParentalLock {

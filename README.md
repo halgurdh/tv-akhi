@@ -69,8 +69,13 @@ with uBlock Origin.
     300,000 sites). Site names containing words like vodka, whisky, liquor, brewery, casino or poker are blocked too.
     There's no public list of alcohol sites, so some wine shops and similar sites can still get through.
   - No filter catches everything: a new site, or one that isn't in the lists, can still open.
-- **🔒 Parental PIN** (Settings → **Parental PIN**): once a PIN is set, turning off the porn block, the haram filter
-  or No music, and changing or removing the PIN, all ask for the PIN. Turning things *on* never does. Only a salted
+- **🔒 Parental PIN** (Settings → **Parental PIN**): once a PIN is set, these all ask for the PIN:
+  - turning off the porn block, the haram filter or No music;
+  - switching to **incognito mode** (coming back out doesn't ask);
+  - **deleting browser history**, all of it or single sites;
+  - changing or removing the PIN.
+
+  Turning a filter *on* never asks, and without a PIN nothing is locked. Only a salted
   hash of the PIN is stored.
   - It protects the settings inside TV Akhi. Someone with access to the TV's Android settings can still clear the
     app's data.
@@ -147,7 +152,8 @@ Settings.
 - **Ad blocking:** on/off.
 - **Smart skip** and **No music:** on/off (the same as the ⏭ and ♪ buttons).
 - **Block porn and nudity** and **Haram filter:** on/off.
-- **Parental PIN:** set, change or remove the PIN that locks the filters and No music.
+- **Parental PIN:** set, change or remove the PIN that locks the filters, No music, incognito mode and deleting
+  history.
 - **Play videos in fullscreen:** on/off.
 - **Open new windows in current tab:** on/off.
 - **Voice search language:** English, العربية or system.

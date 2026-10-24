@@ -1,5 +1,6 @@
 package com.phlox.tvwebbrowser.activity.history
 
+import com.phlox.tvwebbrowser.activity.main.ParentalLock
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
@@ -74,8 +75,13 @@ class HistoryActivity : AppCompatActivity(), AdapterView.OnItemClickListener, Ad
         historyModel.loadItems(false)
     }
 
+    //deleting the history needs the parental PIN (when one is set)
     private fun showDeleteDialog(deleteAll: Boolean) {
         if (adapter!!.items.isEmpty() || (adapter!!.selectedItems.isEmpty() && !deleteAll)) return
+        ParentalLock.unlock(this) { showDeleteConfirmation(deleteAll) }
+    }
+
+    private fun showDeleteConfirmation(deleteAll: Boolean) {
         AlertDialog.Builder(this)
                 .setTitle(R.string.delete)
                 .setMessage(if (deleteAll) R.string.msg_delete_history_all else R.string.msg_delete_history)
@@ -186,9 +192,11 @@ class HistoryActivity : AppCompatActivity(), AdapterView.OnItemClickListener, Ad
         val pm = PopupMenu(this, v, Gravity.BOTTOM)
         pm.menu.add(R.string.delete)
         pm.setOnMenuItemClickListener {
-            lifecycleScope.launch(Dispatchers.Main) {
-                AppDatabase.db.historyDao().delete(v.historyItem!!)
-                adapter!!.remove(v.historyItem!!)
+            ParentalLock.unlock(this) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    AppDatabase.db.historyDao().delete(v.historyItem!!)
+                    adapter!!.remove(v.historyItem!!)
+                }
             }
             true
         }
