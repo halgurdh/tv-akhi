@@ -409,7 +409,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                     }
                 }
 
-                if (ContentFilter.blockedCategory(request.url.host) != null) {
+                //main pages: the search too (forms and in-page searches don't always reach shouldOverrideUrlLoading)
+                val blocked = if (request.isForMainFrame) ContentFilter.categoryOfUrl(request.url.toString())
+                    else ContentFilter.blockedCategory(request.url.host)
+                if (blocked != null) {
                     Log.d(TAG, "Blocked by the content filter: ${request.url}")
                     val page = if (request.isForMainFrame) BLOCKED_PAGE.toByteArray() else ByteArray(0)
                     return WebResourceResponse("text/html", "utf-8", 403, "Blocked", emptyMap(), ByteArrayInputStream(page))

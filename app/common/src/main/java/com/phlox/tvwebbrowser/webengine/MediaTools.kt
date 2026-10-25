@@ -30,9 +30,13 @@ object MediaTools {
     //events of the app, not of the script
     const val EVENT_ADULT_BLOCKED = "adult_blocked"
     const val EVENT_HARAM_BLOCKED = "haram_blocked"
+    const val EVENT_SEARCH_BLOCKED = "search_blocked"
 
-    fun blockedEvent(url: String): String =
-        if (ContentFilter.categoryOfUrl(url) == ContentFilter.Category.HARAM) EVENT_HARAM_BLOCKED else EVENT_ADULT_BLOCKED
+    fun blockedEvent(url: String): String = when (ContentFilter.categoryOfSite(url)) {
+        ContentFilter.Category.HARAM -> EVENT_HARAM_BLOCKED
+        ContentFilter.Category.ADULT -> EVENT_ADULT_BLOCKED
+        null -> EVENT_SEARCH_BLOCKED
+    }
 
     @Volatile private var modelBase64: String? = null
 

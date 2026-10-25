@@ -1358,6 +1358,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                 MediaTools.EVENT_NO_MUSIC_SLOW -> R.drawable.ic_no_music_off to R.string.no_music_slow
                 MediaTools.EVENT_ADULT_BLOCKED -> R.drawable.ic_family_filter to R.string.adult_blocked
                 MediaTools.EVENT_HARAM_BLOCKED -> R.drawable.ic_family_filter to R.string.haram_blocked
+                MediaTools.EVENT_SEARCH_BLOCKED -> R.drawable.ic_family_filter to R.string.search_blocked
                 MediaTools.EVENT_ADULT_PAGE -> {
                     if (tab.webEngine.canGoBack()) tab.webEngine.goBack() else navigate(settingsModel.homePage)
                     R.drawable.ic_family_filter to R.string.adult_blocked

@@ -68,6 +68,13 @@ with uBlock Origin.
     [The Block List Project](https://github.com/blocklistproject/Lists) drugs, gambling and vaping lists (about
     300,000 sites). Site names containing words like vodka, whisky, liquor, brewery, casino or poker are blocked too.
     There's no public list of alcohol sites, so some wine shops and similar sites can still get through.
+  - **Search words:** searches on Google, Bing, DuckDuckGo, Yahoo, YouTube and other search engines are checked for
+    porn, alcohol, drug and gambling words in English, Arabic, Persian, Kurdish, Urdu, Turkish, French, German,
+    Dutch, Spanish and Indonesian/Malay (each word follows its filter's switch). Learning about it is allowed,
+    getting it isn't: *why is alcohol haram*, *dangers of gambling* or *porn addiction help* search normally, while
+    *buy alcohol*, *beer*, *casino near me* or *nude pics* are blocked. A buying or picture/video word always blocks,
+    even with a question word (*why buy alcohol*). Searches made inside a page without loading a new one (like
+    YouTube's search box) aren't seen.
   - No filter catches everything: a new site, or one that isn't in the lists, can still open.
 - **🔒 Parental PIN** (Settings → **Parental PIN**): once a PIN is set, these all ask for the PIN:
   - turning off the porn block, the haram filter or No music;
@@ -75,8 +82,8 @@ with uBlock Origin.
   - **deleting browser history**, all of it or single sites;
   - changing or removing the PIN.
 
-  Turning a filter *on* never asks, and without a PIN nothing is locked. Only a salted
-  hash of the PIN is stored.
+  Turning a filter *on* never asks, and without a PIN nothing is locked. The PIN shows as stars while you type it,
+  and only a salted hash of it is stored.
   - It protects the settings inside TV Akhi. Someone with access to the TV's Android settings can still clear the
     app's data.
 

@@ -217,6 +217,7 @@
     <string name="haram_block">Haram filter: block alcohol, drugs and gambling</string>
     <string name="adult_blocked">Blocked: this site has adult content</string>
     <string name="haram_blocked">Blocked by the haram filter (alcohol, drugs or gambling)</string>
+    <string name="search_blocked">Search blocked by the family filter. Questions like \"why is it haram\" are allowed.</string>
     <string name="parental_pin">Parental PIN</string>
     <string name="parental_pin_off">Off</string>
     <string name="parental_pin_on">On</string>

@@ -4,7 +4,10 @@ import android.app.AlertDialog
 import android.content.Context
 import android.text.InputFilter
 import android.text.InputType
+import android.text.method.PasswordTransformationMethod
+import android.view.View
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import com.phlox.tvwebbrowser.AppContext
@@ -81,6 +84,9 @@ object ParentalLock {
             inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
             filters = arrayOf(InputFilter.LengthFilter(8))
             isSingleLine = true
+            transformationMethod = Stars
+            //no full screen keyboard field: it could show the digits
+            imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
         }
         val padding = (24 * context.resources.displayMetrics.density).toInt()
         val container = FrameLayout(context).apply {
@@ -96,5 +102,15 @@ object ParentalLock {
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         dialog.show()
         input.requestFocus()
+    }
+
+    /** Every digit as a star, right away (the password one shows the last digit for a moment) */
+    private object Stars : PasswordTransformationMethod() {
+        override fun getTransformation(source: CharSequence, view: View): CharSequence = object : CharSequence {
+            override val length get() = source.length
+            override fun get(index: Int) = '*'
+            override fun subSequence(startIndex: Int, endIndex: Int) = "*".repeat(endIndex - startIndex)
+            override fun toString() = "*".repeat(length)
+        }
     }
 }
