@@ -20,7 +20,7 @@ import java.util.*
 class AutoUpdateModel: ActiveModel() {
     val config = AppContext.provideConfig()
     var needToShowUpdateDlgAgain: Boolean = false
-    val updateChecker = UpdateChecker(BuildConfig.VERSION_CODE)
+    val updateChecker = UpdateChecker(BuildConfig.VERSION_NAME)
     var lastUpdateNotificationTime: Calendar
     var needAutoCheckUpdates: Boolean
         get() = config.autoCheckUpdates && BuildConfig.BUILT_IN_AUTO_UPDATE
@@ -32,18 +32,20 @@ class AutoUpdateModel: ActiveModel() {
             Calendar.getInstance()
     }
 
-    fun checkUpdate(force: Boolean, onDoneCallback: () -> Unit) = modelScope.launch(Dispatchers.Main) {
+    /** onDoneCallback(false): the check failed (offline, GitHub not answering) */
+    fun checkUpdate(force: Boolean, onDoneCallback: (Boolean) -> Unit) = modelScope.launch(Dispatchers.Main) {
+        var isChecked = true
         if (updateChecker.versionCheckResult == null || force) {
             launch(Dispatchers.IO) {
                 try {
-                    updateChecker.check("https://raw.githubusercontent.com/truefedex/tv-bro/master/latest_version.json",
-                        arrayOf(config.updateChannel))
+                    updateChecker.check(UPDATE_REPO)
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    isChecked = false
                 }
             }.join()
         }
-        onDoneCallback()
+        onDoneCallback(isChecked)
     }
 
     fun showUpdateDialogIfNeeded(activity: MainActivity, force: Boolean = false) {
@@ -112,5 +114,10 @@ class AutoUpdateModel: ActiveModel() {
 
     fun saveAutoCheckUpdates(need: Boolean) {
         config.autoCheckUpdates = need
+    }
+
+    companion object {
+        //the releases on GitHub with the APKs (tv-akhi-<abi>.apk)
+        const val UPDATE_REPO = "halgurdh/tv-akhi"
     }
 }

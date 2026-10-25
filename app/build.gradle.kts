@@ -17,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId = "io.github.halgurdh.tvakhi"
-        versionCode = 78
-        versionName = "1.0.9"
+        versionCode = 80
+        versionName = "1.1.0"
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -79,7 +79,8 @@ android {
         }
         create("foss") {
             dimension = "appstore"
-            buildConfigField("Boolean", "BUILT_IN_AUTO_UPDATE", "false")
+            //TV Akhi isn't on F-Droid: it updates itself from its GitHub releases
+            buildConfigField("Boolean", "BUILT_IN_AUTO_UPDATE", "true")
         }
 
         create("geckoIncluded") {

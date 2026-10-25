@@ -357,8 +357,16 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                     val catcher = WebView(view.context)
                     catcher.webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(v: WebView, request: WebResourceRequest): Boolean {
-                            this@WebViewEx.loadUrl(request.url.toString())
+                            val url = request.url.toString()
                             v.post { v.destroy() }
+                            //a pop-up to a blocked site (mostly the ad a player opens on the first click): dropped,
+                            //the page (and its video) stays instead of turning into the blocked page
+                            if (ContentFilter.categoryOfUrl(url) != null) {
+                                Log.d(TAG, "Blocked pop-up: $url")
+                                callback.onBlockedDialog(true)
+                                return true
+                            }
+                            this@WebViewEx.loadUrl(url)
                             return true
                         }
                     }

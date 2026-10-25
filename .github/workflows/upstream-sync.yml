@@ -1,0 +1,67 @@
+name: Upstream sync
+
+# Every Monday: merges what's new in TV Bro (truefedex/tv-bro) with tools/sync_upstream.sh, builds and tests it, and
+# opens a pull request. Files only TV Bro changed come as they are; files TV Akhi changed keep TV Akhi's version and
+# are listed in the pull request with TV Bro's change, to merge by hand if it's a major or breaking fix.
+# Needs Settings -> Actions -> General -> "Allow GitHub Actions to create and approve pull requests".
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="sync-upstream-$(date +%Y-%m-%d)"
+          git checkout -b "$branch"
+          bash tools/sync_upstream.sh
+          if [ -f sync-report.md ]; then
+            echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.merge.outputs.branch
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # TV Bro's changes can break TV Akhi: the pull request says so instead of failing here.
+      - name: Build and test
+        id: check
+        if: steps.merge.outputs.branch
+        continue-on-error: true
+        run: ./gradlew :app:testFossGeckoIncludedDebugUnitTest :app:assembleFossGeckoIncludedDebug
+
+      - name: Open pull request
+        if: steps.merge.outputs.branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.merge.outputs.branch }}
+          CHECK: ${{ steps.check.outcome }}
+        run: |
+          if [ "$CHECK" = success ]; then
+            status="✅ Builds and the unit tests pass. Test it on the TV before merging."
+          else
+            status="❌ **The build or the unit tests fail after the merge.** See the workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          { echo "$status"; echo; cat sync-report.md; } > body.md
+          # GitHub's limit for a pull request body
+          head -c 65000 body.md > body-short.md
+          git push -u origin "$BRANCH"
+          gh pr create --base "${{ github.event.repository.default_branch }}" --head "$BRANCH" \
+            --title "Sync with upstream TV Bro ($(date +%Y-%m-%d))" --body-file body-short.md

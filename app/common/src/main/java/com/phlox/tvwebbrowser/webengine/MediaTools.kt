@@ -13,6 +13,7 @@ object MediaTools {
     private const val SCRIPT_PATH = "extensions/generic/media_tools.js"
     private const val MODEL_PATH = "extensions/generic/nomusic/fastenhancer_t.wasm"
     private const val ENGINE_PATH = "extensions/generic/nomusic/engine.js"
+    private const val DENOISER_PATH = "extensions/generic/nomusic/rnnoise.wasm"
 
     //events from the script
     const val EVENT_INTRO_SKIPPED = "intro_skipped"
@@ -39,6 +40,7 @@ object MediaTools {
     }
 
     @Volatile private var modelBase64: String? = null
+    @Volatile private var denoiserBase64: String? = null
 
     fun settings(): JSONObject {
         val config = AppContext.provideConfig()
@@ -53,6 +55,13 @@ object MediaTools {
         modelBase64?.let { return it }
         val bytes = context.assets.open(MODEL_PATH).use { it.readBytes() }
         return Base64.encodeToString(bytes, Base64.NO_WRAP).also { modelBase64 = it }
+    }
+
+    /** The RNNoise model, after FastEnhancer */
+    fun denoiserBase64(context: Context): String {
+        denoiserBase64?.let { return it }
+        val bytes = context.assets.open(DENOISER_PATH).use { it.readBytes() }
+        return Base64.encodeToString(bytes, Base64.NO_WRAP).also { denoiserBase64 = it }
     }
 
     /** The No music engine, also the AudioWorklet module (WebView pages load it from a blob) */
@@ -74,6 +83,14 @@ object MediaTools {
                     loadModel: function () {
                         return new Promise(function (resolve) {
                             const binary = atob(window.TVBro.getNoMusicModel());
+                            const bytes = new Uint8Array(binary.length);
+                            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                            resolve(bytes.buffer);
+                        });
+                    },
+                    loadDenoiser: function () {
+                        return new Promise(function (resolve) {
+                            const binary = atob(window.TVBro.getNoMusicDenoiser());
                             const bytes = new Uint8Array(binary.length);
                             for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
                             resolve(bytes.buffer);

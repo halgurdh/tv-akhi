@@ -1,6 +1,7 @@
 /* TV Akhi media tools, shared by both engines: injected at document start in WebView (see MediaTools.kt) and a content
  * script of the GeckoView extension (see content.js). The host gives the settings and the model, and shows the messages:
  *   tvakhiMediaTools({ settings: () => ({smartSkip, noMusic}), loadModel: () => Promise<ArrayBuffer>,
+ *                      loadDenoiser: () => Promise<ArrayBuffer>,
  *                      workletUrls: () => Promise<[urls of nomusic/engine.js]>, notify: event => {} })
  * nomusic/engine.js must be loaded before this file.
  *
@@ -17,9 +18,11 @@
  *  Each part is skipped once per video: seeking back shows it again.
  *
  * No music: removes the background music and keeps the voices, like NoMusic (https://github.com/mohamedsadiqaguenaou/NoMusic,
- * ISC). Runs its FastEnhancer Lite speech enhancement model (https://github.com/aask1357/fastenhancer, MIT) on the
- * video's audio, on the audio thread when the site allows it. Only the videos the page can read the audio of (most
- * streaming players): the others keep their sound. Singing is a voice too: it stays.
+ * ISC). Runs its FastEnhancer Lite speech enhancement model (https://github.com/aask1357/fastenhancer, MIT), then
+ * RNNoise (https://github.com/xiph/rnnoise, BSD) with a gate that closes between the words, on the video's audio, on
+ * the audio thread when the site allows it. A TV too slow for it gets a lighter version, step by step. Only the videos
+ * the page can read the audio of (most streaming players): the others keep their sound. Singing is a voice too: it
+ * stays.
  */
 var tvakhiMediaTools = (function () {
     'use strict';
@@ -563,13 +566,25 @@ var tvakhiMediaTools = (function () {
 
     //---------- no music (the engine: nomusic/engine.js) ----------
 
+    /**
+     * One AudioContext for the page: every video (or audio) it filters goes to `input` -> the engine -> `output` ->
+     * the speakers. A video is taken as it starts playing; until the engine is ready it is silent (no music in the
+     * first second), then the sound fades in. Turned off, the videos go straight to the speakers (a video taken by
+     * Web Audio can't leave it).
+     */
     function NoMusic(host) {
         const engine = tvakhiNoMusicEngine;
         const FALLBACK_BUFFER = 4096; //the page thread is busy: a big buffer
-        const MAX_LOAD = 0.85;
-        const graphs = new WeakMap();
-        let model = null;
-        let isUnavailable = false;
+        //The audio thread's time in the models: over LIGHTEN_LOAD (3 s in a row) one step lighter, the sound stutters
+        //above (measured on a TCL TV: 0.70 with underruns, the page and the video took most of a core next to it);
+        //over MAX_LOAD with nothing lighter: off.
+        const LIGHTEN_LOAD = 0.6, MAX_LOAD = 0.85;
+        const FADE_S = 0.3;
+        const sources = new Map(); //media element -> its MediaElementAudioSourceNode
+        const skipped = new WeakSet(); //the ones it can't read the sound of (said once)
+        let model = null, denoiser = null;
+        let ctx = null, input = null, output = null, processor = null, chain = null;
+        let isEnabled = false, isUnavailable = false, isTooSlow = false, isResuming = false;
 
         function loadModel() {
             if (!model) {
@@ -577,6 +592,17 @@ var tvakhiMediaTools = (function () {
                 model.catch(() => { });
             }
             return model;
+        }
+
+        /** RNNoise's bytes, null without them (FastEnhancer alone) */
+        function loadDenoiser() {
+            if (!denoiser) {
+                denoiser = host.loadDenoiser ? host.loadDenoiser().catch(e => {
+                    console.warn('TV Akhi no music denoiser: ' + e);
+                    return null;
+                }) : Promise.resolve(null);
+            }
+            return denoiser;
         }
 
         /** Routing a video the page can't read through Web Audio would silence it */
@@ -592,12 +618,70 @@ var tvakhiMediaTools = (function () {
             }
         }
 
+        function filtering() {
+            return isEnabled && !isUnavailable && !isTooSlow;
+        }
+
+        function route(source) {
+            source.disconnect();
+            source.connect(filtering() ? input : ctx.destination);
+        }
+
+        function routeAll() {
+            for (const source of sources.values()) route(source);
+        }
+
+        function fadeIn() {
+            const now = ctx.currentTime;
+            output.gain.cancelScheduledValues(now);
+            output.gain.setValueAtTime(0, now);
+            output.gain.linearRampToValueAtTime(1, now + FADE_S);
+        }
+
+        /** The engine connected only while filtering: it doesn't work for nothing (the fallback would, on the page thread) */
+        function connectProcessor() {
+            if (!processor) return;
+            try { input.disconnect(); } catch (e) { }
+            try { processor.disconnect(); } catch (e) { }
+            if (!filtering()) return;
+            processor.reset();
+            input.connect(processor);
+            processor.connect(output);
+            fadeIn();
+        }
+
         function fail() {
             if (!isUnavailable) host.notify('no_music_unavailable');
             isUnavailable = true;
+            if (ctx) routeAll();
         }
 
-        /** The model on the audio thread. Null: the site doesn't allow worklets. */
+        let isLightening = false, canLighten = true;
+
+        /** The load it's too slow above: LIGHTEN_LOAD while there's a lighter step, then MAX_LOAD */
+        function maxLoad() {
+            return canLighten ? LIGHTEN_LOAD : MAX_LOAD;
+        }
+
+        /** Too slow: one step lighter (RNNoise once, then FastEnhancer alone), off only when there's nothing lighter */
+        function onSlow() {
+            if (isTooSlow || isLightening) return;
+            if (canLighten) {
+                isLightening = true;
+                processor.lighten().then(lighter => {
+                    isLightening = false;
+                    if (lighter) console.info('TV Akhi no music: too slow, now ' + lighter);
+                    else canLighten = false; //the lightest: off only over MAX_LOAD
+                });
+                return;
+            }
+            isTooSlow = true; //plain sound is better than a broken one
+            routeAll();
+            connectProcessor();
+            host.notify('no_music_slow');
+        }
+
+        /** The models on the audio thread. Null: the site doesn't allow worklets. */
         async function workletNode(ctx, onSlow) {
             if (!ctx.audioWorklet) return null;
             let isLoaded = false;
@@ -614,29 +698,47 @@ var tvakhiMediaTools = (function () {
 
             const node = new AudioWorkletNode(ctx, 'tvakhi-no-music',
                 { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2] });
-            const bytes = await loadModel();
+            const bytes = await loadModel(), denoiserBytes = await loadDenoiser();
             await new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => reject(new Error('worklet timeout')), 10000);
                 node.port.onmessage = (e) => {
                     clearTimeout(timeout);
                     if (e.data && e.data.ready) resolve(); else reject(new Error(e.data && e.data.error));
                 };
-                node.port.postMessage({ bytes: bytes });
+                node.port.postMessage({ bytes: bytes, denoiser: denoiserBytes });
             });
-            let slow = 0;
+            let slow = 0, loads = 0, lightened = null, gateFrames = [0, 0, 0];
             node.port.onmessage = (e) => {
-                if (!e.data || typeof e.data.load !== 'number') return;
-                slow = e.data.load > MAX_LOAD ? slow + 1 : 0;
+                if (!e.data) return;
+                if ('lightened' in e.data && lightened) {
+                    lightened(e.data.lightened);
+                    lightened = null;
+                    slow = 0; //the lighter one gets its own seconds
+                }
+                if (typeof e.data.load !== 'number') return;
+                const gate = e.data.gate || [0, 0, 0];
+                gateFrames = gateFrames.map((n, i) => n + gate[i]);
+                if (++loads % 5 === 0) {
+                    const all = gateFrames[0] + gateFrames[1] + gateFrames[2] || 1;
+                    console.info('TV Akhi no music: load ' + e.data.load.toFixed(2) + ', gate closed '
+                        + Math.round(gateFrames[0] * 100 / all) + '%, a little ' + Math.round(gateFrames[1] * 100 / all)
+                        + '%, open ' + Math.round(gateFrames[2] * 100 / all) + '%');
+                    gateFrames = [0, 0, 0];
+                }
+                slow = e.data.load > maxLoad() ? slow + 1 : 0;
                 if (slow >= 3) onSlow();
             };
             node.reset = () => node.port.postMessage({ reset: true });
+            node.lighten = () => new Promise(resolve => {
+                lightened = resolve;
+                node.port.postMessage({ lighten: true });
+            });
             return node;
         }
 
-        /** The model on the page thread */
+        /** The models on the page thread */
         async function scriptNode(ctx, onSlow) {
-            const instance = await WebAssembly.instantiate(await WebAssembly.compile(await loadModel()), {});
-            const enhancer = new engine.Enhancer(instance, ctx.sampleRate);
+            const enhancer = await engine.create(await loadModel(), await loadDenoiser(), ctx.sampleRate);
             const node = ctx.createScriptProcessor(FALLBACK_BUFFER, 2, 2);
             const left = new Float32Array(FALLBACK_BUFFER), right = new Float32Array(FALLBACK_BUFFER);
             const budgetMs = FALLBACK_BUFFER / ctx.sampleRate * 1000;
@@ -648,89 +750,98 @@ var tvakhiMediaTools = (function () {
                 enhancer.process(left, right, left, null);
                 e.outputBuffer.copyToChannel(left, 0);
                 e.outputBuffer.copyToChannel(left, 1);
-                slow = performance.now() - started > budgetMs * MAX_LOAD ? slow + 1 : 0;
-                if (slow > 5) onSlow();
+                slow = performance.now() - started > budgetMs * maxLoad() ? slow + 1 : 0;
+                if (slow > 5) {
+                    slow = 0;
+                    onSlow();
+                }
             });
             node.reset = () => enhancer.reset();
+            node.lighten = () => Promise.resolve(enhancer.lighten());
             return node;
         }
 
-        async function build(video) {
-            let ctx;
+        function ensureContext() {
+            if (ctx) return;
             try {
-                ctx = new AudioContext({ sampleRate: engine.MODEL_RATE, latencyHint: 'playback' });
+                ctx = new AudioContext({ sampleRate: engine.MODEL_RATE, latencyHint: 'balanced' });
             } catch (e) {
-                ctx = new AudioContext({ latencyHint: 'playback' });
+                ctx = new AudioContext({ latencyHint: 'balanced' });
             }
-            if (ctx.state !== 'running') {
-                try { await ctx.resume(); } catch (e) { }
-            }
-            if (ctx.state !== 'running') { //no user gesture yet: try again later
-                ctx.close();
-                return null;
-            }
+            input = ctx.createGain();
+            output = ctx.createGain();
+            output.connect(ctx.destination);
+            ctx.addEventListener('statechange', function () {
+                if (ctx.state === 'suspended') ctx.resume().catch(() => { });
+            });
+        }
 
-            const graph = { enabled: false, isTooSlow: false };
-            const onSlow = () => {
-                if (graph.isTooSlow) return;
-                graph.set(false);
-                graph.isTooSlow = true; //plain sound is better than a broken one
-                host.notify('no_music_slow');
-            };
-            let processor;
-            try {
+        /** The engine, built once (a suspended context is enough) */
+        function ensureChain() {
+            if (chain) return chain;
+            chain = (async () => {
                 processor = await workletNode(ctx, onSlow).catch(e => {
                     console.warn('TV Akhi no music worklet: ' + e);
                     return null;
                 }) || await scriptNode(ctx, onSlow);
-            } catch (e) {
-                ctx.close();
-                throw e;
-            }
-            //only now: from here the sound of the video goes through the context
-            const source = ctx.createMediaElementSource(video);
-
-            graph.set = function (enabled) {
-                if (enabled === graph.enabled || (enabled && graph.isTooSlow)) return;
-                graph.enabled = enabled;
-                source.disconnect();
-                processor.disconnect();
-                if (enabled) {
-                    processor.reset();
-                    source.connect(processor);
-                    processor.connect(ctx.destination);
-                } else {
-                    source.connect(ctx.destination);
-                }
-            };
-            ctx.addEventListener('statechange', function () {
-                if (ctx.state === 'suspended') ctx.resume().catch(() => { });
-            });
-            return graph;
-        }
-
-        this.update = function (video, enabled) {
-            const graph = graphs.get(video);
-            if (graph === 'building') return;
-            if (graph) {
-                graph.set(enabled);
-                return;
-            }
-            if (!enabled || isUnavailable || video.paused || !canFilter(video)) return;
-
-            graphs.set(video, 'building');
-            build(video).then(built => {
-                if (built) {
-                    graphs.set(video, built);
-                    built.set(true);
-                } else {
-                    graphs.delete(video);
-                }
-            }).catch(e => {
+                console.info('TV Akhi no music: ready (' + (processor instanceof AudioWorkletNode ? 'audio thread' : 'page thread') + ')');
+                connectProcessor();
+            })();
+            chain.catch(e => {
                 console.warn('TV Akhi no music: ' + e);
-                graphs.delete(video);
                 fail();
             });
+            return chain;
+        }
+
+        /** Takes a playing video (once): from then on its sound goes through the context */
+        function hook(media) {
+            if (sources.has(media) || !filtering() || media.paused) return;
+            if (!canFilter(media)) {
+                if (!skipped.has(media)) {
+                    skipped.add(media);
+                    console.info('TV Akhi no music: can\'t read the sound of ' + (media.currentSrc || media.src || 'a video without source'));
+                }
+                return;
+            }
+            ensureContext();
+            ensureChain();
+            if (ctx.state !== 'running') {
+                //no user gesture yet: a video taken now would be silent, try again when the context runs
+                if (isResuming) return;
+                isResuming = true;
+                console.info('TV Akhi no music: waiting for the browser to allow sound (' + ctx.state + ')');
+                ctx.resume().catch(() => { }).then(() => {
+                    isResuming = false;
+                    if (ctx.state === 'running') hook(media);
+                });
+                return;
+            }
+            let source;
+            try {
+                source = ctx.createMediaElementSource(media);
+            } catch (e) {
+                //already taken by the page's own AudioContext: it keeps its sound
+                console.warn('TV Akhi no music: ' + e);
+                return;
+            }
+            sources.set(media, source);
+            route(source);
+            console.info('TV Akhi no music: filtering a ' + media.tagName.toLowerCase() + ' on ' + location.host);
+            if (processor) fadeIn(); //else: when the engine is ready
+        }
+
+        this.setEnabled = function (enabled) {
+            if (enabled === isEnabled) return;
+            isEnabled = enabled;
+            if (!ctx) return;
+            routeAll();
+            connectProcessor();
+        };
+
+        this.update = function (media, enabled) {
+            this.setEnabled(enabled);
+            hook(media);
         };
     }
 
@@ -770,6 +881,7 @@ var tvakhiMediaTools = (function () {
             const settings = host.settings() || {};
             if (settings.adultBlock) checkAdultPage(host);
             if (settings.smartSkip) passKeys();
+            noMusic.setEnabled(!!settings.noMusic);
             if (!videos.length) return;
             for (const video of Array.from(videos)) {
                 try {
@@ -780,6 +892,18 @@ var tvakhiMediaTools = (function () {
                 }
             }
         }, TICK_MS);
+
+        //No music takes a video (or audio) as it starts, not up to a tick later with its first second unfiltered.
+        //`play` doesn't bubble: caught on the way down, for every element of the page.
+        document.addEventListener('play', function (e) {
+            const media = e.target;
+            if (!(media instanceof HTMLMediaElement)) return;
+            try {
+                noMusic.update(media, !!(host.settings() || {}).noMusic);
+            } catch (err) {
+                console.warn('TV Akhi media tools: ' + err);
+            }
+        }, true);
 
         //the end of an episode: the next one, like after the credits
         let isNextOpened = false;

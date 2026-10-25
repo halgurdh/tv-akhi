@@ -57,6 +57,13 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
 
         val callback = webEngine.callback ?: return GeckoResult.deny()
 
+        //a pop-up to a blocked site (mostly the ad a player opens on the first click): dropped, the page stays
+        if (request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW &&
+            ContentFilter.categoryOfUrl(request.uri) != null) {
+            callback.onBlockedDialog(true)
+            return GeckoResult.deny()
+        }
+
         if (callback.shouldOverrideUrlLoading(request.uri)) {
             return GeckoResult.deny()
         }
@@ -96,6 +103,10 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
     override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession>? {
         Log.d(TAG, "onNewSession: $uri")
         val callback = webEngine.callback ?: return null
+        if (ContentFilter.categoryOfUrl(uri) != null) {
+            callback.onBlockedDialog(true) //a pop-up to a blocked site: dropped, the page stays
+            return null
+        }
         if (AppContext.provideConfig().openNewWindowsInCurrentTab) {
             //auto-opened popups are already filtered by onPopupPrompt, load the rest in the current tab
             session.loadUri(uri)
