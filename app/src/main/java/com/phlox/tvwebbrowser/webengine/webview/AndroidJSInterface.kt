@@ -23,6 +23,9 @@ class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
     fun getNoMusicModel(): String = MediaTools.modelBase64(TVBro.instance)
 
     @JavascriptInterface
+    fun getNoMusicDenoiser(): String = MediaTools.denoiserBase64(TVBro.instance)
+
+    @JavascriptInterface
     fun getNoMusicEngine(): String = MediaTools.engineScript(TVBro.instance)
 
     @JavascriptInterface

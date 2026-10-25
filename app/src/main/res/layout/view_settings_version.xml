@@ -123,29 +123,22 @@
         android:layout_marginTop="30dp"
         android:text="@string/auto_check_for_updates"/>
 
-    <TextView
-        android:id="@+id/tvUpdateChannel"
+    <Button
+        android:id="@+id/btnCheckUpdates"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/chkAutoCheckUpdates"
-        android:layout_marginTop="30dp"
-        android:text="@string/update_channel"
-        android:visibility="invisible"/>
-
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/spUpdateChannel"
-        android:layout_marginTop="0dp"
-        android:layout_toEndOf="@+id/tvUpdateChannel"
-        android:layout_alignBaseline="@+id/tvUpdateChannel"
-        android:visibility="invisible"/>
+        android:layout_marginTop="20dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:text="@string/check_for_updates"
+        android:background="@drawable/button_bg_selector"/>
 
     <TextView
         android:id="@+id/tvNewVersion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvUpdateChannel"
+        android:layout_below="@+id/btnCheckUpdates"
         android:layout_marginTop="30dp"
         android:text="@string/new_version_available_s"
         android:visibility="invisible"/>

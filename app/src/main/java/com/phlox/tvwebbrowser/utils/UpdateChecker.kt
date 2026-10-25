@@ -21,63 +21,38 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-class UpdateChecker(val currentVersionCode: Int) {
+/**
+ * Updates from the GitHub releases of the app (like SmartTube): the latest release's version name against ours, its
+ * notes as the changelog, and the APK for this TV's CPU among its files (tv-akhi-armeabi-v7a.apk, ...).
+ */
+class UpdateChecker(val currentVersionName: String) {
     var versionCheckResult: UpdateCheckResult? = null
 
-    class ChangelogEntry(val versionCode: Int, val versionName: String, val changes: String)
-    class UpdateCheckResult(val latestVersionCode: Int, val latestVersionName: String, val channel:String,
-                            val url: String, val changelog: ArrayList<ChangelogEntry>, val availableChannels: Array<String>)
+    class UpdateCheckResult(val latestVersionName: String, val url: String, val changes: String)
     interface DialogCallback {
         fun download()
         fun later()
         fun settings()
     }
 
-    fun check(urlOfVersionFile: String, channelsToCheck: Array<String>) {
-        val urlConnection = URL(urlOfVersionFile).openConnection() as HttpURLConnection
+    /** [repo]: "owner/name" on GitHub */
+    fun check(repo: String) {
+        val urlConnection = URL("https://api.github.com/repos/$repo/releases/latest").openConnection() as HttpURLConnection
+        urlConnection.setRequestProperty("Accept", "application/vnd.github+json")
+        urlConnection.connectTimeout = TIMEOUT_MS
+        urlConnection.readTimeout = TIMEOUT_MS
         try {
             val content = urlConnection.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(content)
-            val channelsJson = json.getJSONArray("channels")
-            var latestVersionCode = 0
-            var latestVersionName = ""
-            var url = ""
-            var latestVersionChannelName = ""
-            val availableChannels = ArrayList<String>()
-            val currentCPUArch = Build.SUPPORTED_ABIS[0]
-            for (i in 0 until channelsJson.length()) {
-                val channelJson = channelsJson.getJSONObject(i)
-                availableChannels.add(channelJson.getString("name"))
-                if (channelsToCheck.contains(channelJson.getString("name"))) {
-                    val minAPI = if (channelJson.has("minAPI")) channelJson.getInt("minAPI") else 21
-                    if (latestVersionCode < channelJson.getInt("latestVersionCode") &&
-                            minAPI <= Build.VERSION.SDK_INT) {
-                        latestVersionCode = channelJson.getInt("latestVersionCode")
-                        latestVersionName = channelJson.getString("latestVersionName")
-                        url = channelJson.getString("url")
-                        if (channelJson.has("urls")) {
-                            val urls = channelJson.getJSONArray("urls")
-                            for (j in 0 until urls.length()) {
-                                val fileUrl = urls.getString(j)
-                                if (fileUrl.endsWith("$currentCPUArch.apk")) {
-                                    url = fileUrl
-                                    break
-                                }
-                            }
-                        }
-                        latestVersionChannelName = channelJson.getString("name")
-                    }
-                }
-            }
-            val changelogJson = json.getJSONArray("changelog")
-            val changelog = ArrayList<ChangelogEntry>()
-            for (i in 0 until changelogJson.length()) {
-                val versionChangesJson = changelogJson.getJSONObject(i)
-                changelog.add(ChangelogEntry(versionChangesJson.getInt("versionCode"),
-                        versionChangesJson.getString("versionName"),
-                        versionChangesJson.getString("changes")))
-            }
-            versionCheckResult = UpdateCheckResult(latestVersionCode, latestVersionName, latestVersionChannelName, url, changelog, availableChannels.toTypedArray())
+            val assets = json.getJSONArray("assets")
+            val apks = (0 until assets.length()).map { assets.getJSONObject(it) }
+                .filter { it.getString("name").endsWith(".apk") }
+            //the CPU's ABIs, best first (a 64-bit TV can also run the 32-bit APK)
+            val apk = Build.SUPPORTED_ABIS.firstNotNullOfOrNull { abi ->
+                apks.firstOrNull { it.getString("name").endsWith("$abi.apk") }
+            } ?: throw java.io.IOException("No APK for this TV in the latest release")
+            versionCheckResult = UpdateCheckResult(json.getString("tag_name").removePrefix("v"),
+                apk.getString("browser_download_url"), json.optString("body"))
         } finally {
             urlConnection.disconnect()
         }
@@ -85,23 +60,18 @@ class UpdateChecker(val currentVersionCode: Int) {
 
     fun showUpdateDialog(context: Activity, callback: DialogCallback) {
         val version = versionCheckResult ?: return
-        if (version.latestVersionCode < currentVersionCode) {
-            throw IllegalStateException("Version less than current")
-        }
-        var message = ""
-        for (changelogEntry in version.changelog) {
-            if (changelogEntry.versionCode > currentVersionCode) {
-                message += "<b>${changelogEntry.versionName}</b><br>" +
-                        changelogEntry.changes.replace("\n", "<br>") + "<br>"
-            }
-        }
+        if (!hasUpdate()) return
         val textView = TextView(context)
-        textView.text = Html.fromHtml(message)
+        textView.text = Html.fromHtml("<b>${version.latestVersionName}</b><br>" + notesToHtml(version.changes),
+            Html.FROM_HTML_MODE_LEGACY)
         val padding = Utils.D2P(context, 25f).toInt()
         textView.setPadding(padding, padding, padding, padding)
+        //release notes can be long
+        val scroll = android.widget.ScrollView(context)
+        scroll.addView(textView)
         AlertDialog.Builder(context)
                 .setTitle(R.string.new_version_dialog_title)
-                .setView(textView)
+                .setView(scroll)
                 .setPositiveButton(R.string.download) { _, _ -> callback.download() }
                 .setNegativeButton(R.string.later) { _, _ -> callback.later() }
                 .setNeutralButton(R.string.settings) { _, _ -> callback.settings() }
@@ -206,11 +176,31 @@ class UpdateChecker(val currentVersionCode: Int) {
 
     fun hasUpdate(): Boolean {
         val versionCheckResult = this.versionCheckResult ?: return false
-        return versionCheckResult.latestVersionCode > currentVersionCode
+        return compareVersions(versionCheckResult.latestVersionName, currentVersionName) > 0
     }
 
     companion object {
         private const val UPDATE_APK_FILE_NAME = "update.apk"
+        private const val TIMEOUT_MS = 15000
+
+        /** "1.1.0" against "1.0.10": by number, part by part (a missing part is 0) */
+        fun compareVersions(a: String, b: String): Int {
+            val x = a.split('.', '-').map { it.toIntOrNull() ?: 0 }
+            val y = b.split('.', '-').map { it.toIntOrNull() ?: 0 }
+            for (i in 0 until maxOf(x.size, y.size)) {
+                val diff = x.getOrElse(i) { 0 } - y.getOrElse(i) { 0 }
+                if (diff != 0) return diff
+            }
+            return 0
+        }
+
+        /** The release notes are Markdown: bold, list items and lines, the rest as text */
+        fun notesToHtml(markdown: String): String = android.text.TextUtils.htmlEncode(markdown)
+            .replace(Regex("\\*\\*(.+?)\\*\\*"), "<b>$1</b>")
+            .replace(Regex("(?m)^\\s*[-*] "), "• ")
+            .replace(Regex("(?m)^#+\\s*(.*)$"), "<b>$1</b>")
+            .replace("\r", "")
+            .replace("\n", "<br>")
         fun clearTempFilesIfAny(context: Context) {
             var tempFile = File(context.cacheDir, UPDATE_APK_FILE_NAME)
             if (tempFile.exists()) {

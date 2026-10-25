@@ -60,6 +60,7 @@ communicatePort.onMessage.addListener(message => {
     tvakhiMediaTools({
         settings: () => settings,
         loadModel: () => fetch(browser.runtime.getURL("nomusic/fastenhancer_t.wasm")).then(r => r.arrayBuffer()),
+        loadDenoiser: () => fetch(browser.runtime.getURL("nomusic/rnnoise.wasm")).then(r => r.arrayBuffer()),
         //the extension file, or a copy in a blob if the page refuses it
         workletUrls: () => fetch(browser.runtime.getURL("nomusic/engine.js")).then(r => r.text())
             .then(source => [browser.runtime.getURL("nomusic/engine.js"),

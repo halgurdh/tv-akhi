@@ -49,14 +49,19 @@ with uBlock Origin.
   - Only videos longer than 5 minutes count. It can't see inside DRM-protected videos (Netflix, Disney+ and so on).
     On those sites, only the site's own skip buttons are used.
 - **🔇 No music** (off by default) removes the background music from videos and keeps the voices. It's based on
-  [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) and runs its FastEnhancer Lite speech-enhancement model
-  on the TV itself; nothing is uploaded.
+  [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) and runs its FastEnhancer Lite speech-enhancement model,
+  then RNNoise, on the TV itself; nothing is uploaded.
+  - **Silent between sentences:** a voice gate uses RNNoise's voice detection to mute what's left of the music when
+    nobody speaks. It looks 30 ms ahead, so the start of a word isn't cut, and it stays open through the short pauses
+    between words. Music that only sounds a bit like a voice opens it just a little.
+  - A video is filtered from its first second: it starts silent for a moment, then its sound fades in.
   - It works with most streaming players (YouTube and other sites that stream video in chunks). Videos the page
     isn't allowed to process keep their normal sound.
-  - It runs on the browser's audio thread, so a busy page can't make the sound stutter.
+  - It runs in mono on the browser's audio thread, so a busy page can't make the sound stutter.
   - It's a speech model: singing counts as voice, so a sung intro song is only partly removed. Smart skip takes care
     of intros once it has learned them.
-  - If the TV can't keep up, it switches itself off for that video and says so.
+  - **Slow TVs:** if the TV can't keep up, No music gets lighter step by step (RNNoise once instead of twice, then
+    FastEnhancer alone). It only switches off for that video, and says so, if even that is too much.
 - **Links that open new windows** load in the current tab (can be turned off in Settings).
 - **🛡 Family filters** (both on by default, in Settings):
   - **Block porn and nudity:** adult sites are blocked, using
@@ -199,8 +204,10 @@ You don't need to copy anything to the TV. The laptop sends the app over your ho
    The first time, the TV asks **"Allow USB debugging?"**. Tick **Always allow from this computer** and press **OK**.
    If `adb install` says "unauthorized", accept the prompt on the TV and run it again.
 
-   **Updating:** run the same `adb install` command with `-r` (`adb install -r tv-akhi-armeabi-v7a.apk`). Your tabs,
-   bookmarks and history stay.
+   **Updating:** from 1.1.0 on, TV Akhi updates itself: it checks this repository's releases once a day and offers
+   the new version, and **Settings → Version & updates → Check for updates** checks right away (you may have to allow TV Akhi
+   to install apps once). Or run the same `adb install` command with `-r`
+   (`adb install -r tv-akhi-armeabi-v7a.apk`). Your tabs, bookmarks and history stay.
 6. **Open it** from the TV's apps list (**TV Akhi**). You can then turn developer options off again if you like.
 
 **Android 11 and newer:** some TVs only offer **Wireless debugging**, which uses a pairing code instead of port 5555.
@@ -247,4 +254,5 @@ The family filters use [StevenBlack/hosts](https://github.com/StevenBlack/hosts)
 [The Block List Project](https://github.com/blocklistproject/Lists) (Unlicense); `tools/make_filter_lists.py`
 rebuilds them.
 No music is based on [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) (ISC license) and uses its WebAssembly
-build of the [FastEnhancer](https://github.com/aask1357/fastenhancer) Lite model (MIT license).
+build of the [FastEnhancer](https://github.com/aask1357/fastenhancer) Lite model (MIT license) and of
+[RNNoise](https://github.com/xiph/rnnoise) (BSD license).

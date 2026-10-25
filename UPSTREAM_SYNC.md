@@ -9,6 +9,16 @@ TV Akhi is a fork of [TV Bro](https://github.com/truefedex/tv-bro) (`truefedex/t
   major or breaking fix, such as a new GeckoView/WebView API, a security fix, or a crash fix. Merge
   those by hand and keep the fork's changes.
 
+## Automatic sync
+
+Every Monday the **Upstream sync** workflow (`.github/workflows/upstream-sync.yml`) runs `tools/sync_upstream.sh`:
+it merges upstream into a `sync-upstream-<date>` branch, taking the files only upstream changed and keeping the
+fork's version of the files both sides changed. Then it builds, runs the unit tests and opens a pull request. The
+pull request lists the kept files with upstream's change of each, and says if the build or the tests broke. Run it
+by hand from the Actions tab, or locally with `tools/sync_upstream.sh` on a new branch.
+
+It needs **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests**.
+
 ## Which files the fork has changed
 
 Don't rely on a fixed list. Ask git for it:
@@ -55,8 +65,15 @@ After syncing, build, run `./gradlew :app:testFossGeckoIncludedDebugUnitTest`, a
   - The home page shows most visited sites.
   - The "Open new windows in current tab" setting.
   - The voice search language setting.
-- **Branding:** the name "TV Akhi" in all `strings.xml` files, and the credit in `view_settings_version.xml`.
+- **Branding:** the name "TV Akhi" in all `strings.xml` files, the credit in `view_settings_version.xml`, and the
+  "Support the author" link (`https://github.com/halgurdh`) in `VersionSettingsView.kt` and the repository's
+  Sponsor button (`.github/FUNDING.yml`, which keeps TV Bro's author as the second link, as credit).
   Upstream's string changes conflict with the rename, so re-apply the rename after taking new upstream strings.
+- **Updates** come from this fork's GitHub releases (`halgurdh/tv-akhi`, files `tv-akhi-<abi>.apk`), not upstream's
+  `latest_version.json`: `UpdateChecker.kt`, `AutoUpdateModel.kt` and the Check for updates button in
+  `VersionSettingsView.kt`. The `foss` flavor has the updater on too.
+- **Smart skip, No music, family filters and the parental PIN** (`MediaTools.kt`, `media_tools.js`, `nomusic/`,
+  `ContentFilter.kt`, `SearchFilter.kt`, `ParentalLock.kt`) don't exist upstream.
 - **Release builds** fall back to debug signing when no keystore is set (`app/build.gradle.kts`).
 - **App ID** is `io.github.halgurdh.tvakhi`. Release signing reads `keystore.properties`, which is local and not committed.
 - **Home page in GeckoView** is served from `app/gecko/src/main/assets/extensions/generic/home/`, a copy of

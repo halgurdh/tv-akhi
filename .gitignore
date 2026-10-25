@@ -10,3 +10,4 @@
 /buildSrc/build
 keystore.properties
 *.jks
+sync-report.md

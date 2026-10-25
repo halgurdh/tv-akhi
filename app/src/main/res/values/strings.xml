@@ -88,6 +88,10 @@
     <string name="auto_check_for_updates">Auto check for updates</string>
     <string name="update">Update</string>
     <string name="new_version_available_s">New version available: %s</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="checking_for_updates">Checking…</string>
+    <string name="up_to_date_s">You have the latest version (%s)</string>
+    <string name="update_check_failed">Couldn\'t check for updates. Is the TV online?</string>
     <string name="web_browser_optimized_for_tvs">Web browser optimized for TVs</string>
     <string name="warning">Warning</string>
     <string name="unprotected_connection">Unprotected connection</string>

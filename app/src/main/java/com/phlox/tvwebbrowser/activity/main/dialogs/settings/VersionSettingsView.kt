@@ -7,9 +7,8 @@ import android.text.Html
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.ScrollView
+import android.widget.Toast
 import androidx.webkit.WebViewCompat
 import com.phlox.tvwebbrowser.AppContext
 import com.phlox.tvwebbrowser.BuildConfig
@@ -31,7 +30,7 @@ class VersionSettingsView @JvmOverloads constructor(
 ) : ScrollView(context, attrs, defStyleAttr) {
 
     companion object {
-        private const val URL_SUPPORT_AUTHOR = "https://donatello.to/truefedex"
+        private const val URL_SUPPORT_AUTHOR = "https://github.com/halgurdh"
         private const val URL_LICENSE =
             "https://raw.githubusercontent.com/truefedex/tv-bro/refs/heads/master/LICENSE.md"
         private const val URL_PRIVACY_POLICY =
@@ -93,26 +92,7 @@ class VersionSettingsView @JvmOverloads constructor(
                 updateUIVisibility()
             }
 
-            vb.spUpdateChannel.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: AdapterView<*>,
-                    view: View,
-                    position: Int,
-                    id: Long
-                ) {
-                    val selectedChannel =
-                        autoUpdateModel.updateChecker.versionCheckResult!!.availableChannels[position]
-                    if (selectedChannel == config.updateChannel) return
-                    config.updateChannel = selectedChannel
-                    autoUpdateModel.checkUpdate(true) {
-                        updateUIVisibility()
-                    }
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>) {
-
-                }
-            }
+            vb.btnCheckUpdates.setOnClickListener { checkNow() }
 
             vb.btnUpdate.setOnClickListener {
                 callback?.onNeedToCloseSettings()
@@ -122,6 +102,27 @@ class VersionSettingsView @JvmOverloads constructor(
             updateUIVisibility()
         } else {
             vb.chkAutoCheckUpdates.visibility = View.INVISIBLE
+            vb.btnCheckUpdates.visibility = View.GONE
+        }
+    }
+
+    /** The button: asks GitHub now, then the update dialog or a word that there's nothing new */
+    private fun checkNow() {
+        vb.btnCheckUpdates.isEnabled = false
+        vb.btnCheckUpdates.setText(R.string.checking_for_updates)
+        autoUpdateModel.checkUpdate(true) { isChecked ->
+            vb.btnCheckUpdates.isEnabled = true
+            vb.btnCheckUpdates.setText(R.string.check_for_updates)
+            when {
+                !isChecked -> Toast.makeText(context, R.string.update_check_failed, Toast.LENGTH_LONG).show()
+                autoUpdateModel.updateChecker.hasUpdate() -> {
+                    callback?.onNeedToCloseSettings()
+                    autoUpdateModel.showUpdateDialogIfNeeded(activity as MainActivity, true)
+                }
+                else -> Toast.makeText(context, context.getString(R.string.up_to_date_s, BuildConfig.VERSION_NAME),
+                    Toast.LENGTH_LONG).show()
+            }
+            updateUIVisibility()
         }
     }
 
@@ -135,7 +136,8 @@ class VersionSettingsView @JvmOverloads constructor(
     }
 
     private fun updateUIVisibility() {
-        if (autoUpdateModel.updateChecker.versionCheckResult == null) {
+        //only with auto check on: off, the TV asks GitHub only when the button is pressed
+        if (autoUpdateModel.updateChecker.versionCheckResult == null && autoUpdateModel.needAutoCheckUpdates) {
             autoUpdateModel.checkUpdate(false) {
                 if (autoUpdateModel.updateChecker.versionCheckResult != null) {
                     updateUIVisibility()
@@ -144,26 +146,9 @@ class VersionSettingsView @JvmOverloads constructor(
             return
         }
 
-        vb.tvUpdateChannel.visibility = if (autoUpdateModel.needAutoCheckUpdates) View.VISIBLE else View.INVISIBLE
-        vb.spUpdateChannel.visibility = if (autoUpdateModel.needAutoCheckUpdates) View.VISIBLE else View.INVISIBLE
-
-        if (autoUpdateModel.needAutoCheckUpdates) {
-            val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item,
-                autoUpdateModel.updateChecker.versionCheckResult!!.availableChannels)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            vb.spUpdateChannel.adapter = adapter
-            val selected = autoUpdateModel.updateChecker.versionCheckResult!!.availableChannels.indexOf(config.updateChannel)
-            if (selected != -1) {
-                val tmp = vb.spUpdateChannel.onItemSelectedListener
-                vb.spUpdateChannel.onItemSelectedListener = null
-                vb.spUpdateChannel.setSelection(selected)
-                vb.spUpdateChannel.onItemSelectedListener = tmp
-            }
-        }
-
         val hasUpdate = autoUpdateModel.updateChecker.hasUpdate()
-        vb.tvNewVersion.visibility = if (autoUpdateModel.needAutoCheckUpdates && hasUpdate) View.VISIBLE else View.INVISIBLE
-        vb.btnUpdate.visibility = if (autoUpdateModel.needAutoCheckUpdates && hasUpdate) View.VISIBLE else View.INVISIBLE
+        vb.tvNewVersion.visibility = if (hasUpdate) View.VISIBLE else View.INVISIBLE
+        vb.btnUpdate.visibility = if (hasUpdate) View.VISIBLE else View.INVISIBLE
         if (hasUpdate) {
             vb.tvNewVersion.text = context.getString(R.string.new_version_available_s, autoUpdateModel.updateChecker.versionCheckResult!!.latestVersionName)
         }
