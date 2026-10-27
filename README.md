@@ -5,7 +5,7 @@ An ad-free web browser for Android TV, built for the TV remote.
 TV Akhi is based on [TV Bro](https://github.com/truefedex/tv-bro) by Fedir Tsapana and adds built-in ad blocking
 with uBlock Origin.
 
-For other devices see my FireFox Fork: 
+For other devices see my [FireFox](https://github.com/mozilla-firefox/firefox) Fork: 
 
 [AkhiBrowser](https://github.com/halgurdh/akhiBrowser) runs on Windows, macOS and Linux (Firefox desktop), and on Android (Fenix with GeckoView). For Android TV, see TV Akhi, which shares the same NoMusic and content filters.
 
