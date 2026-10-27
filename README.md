@@ -4,6 +4,12 @@ An ad-free web browser for Android TV, built for the TV remote.
 
 💛 [**Support this project:**](https://paypal.me/halgurdh) — this is free and ad-free by choice; donations help keep it that way.
 
+## Shout-out
+
+A big thank you to [Mohamed Sadiq](https://github.com/mohamedsadiqaguenaou), the author of
+[NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic). AkhiBrowser's background music removal is their work: go
+give their project a star. I took his [Safaa](https://github.com/mohamedsadiqaguenaou/safaa) project as an inspiration.
+
 TV Akhi is based on [TV Bro](https://github.com/truefedex/tv-bro) by Fedir Tsapana and adds built-in ad blocking
 with uBlock Origin.
 
