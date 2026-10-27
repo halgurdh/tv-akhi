@@ -2,7 +2,7 @@
 
 An ad-free web browser for Android TV, built for the TV remote.
 
-By Halgurd Hussein (AI assisted) · Donate with PayPal
+💛 [**Support this project:**](https://paypal.me/halgurdh) — this is free and ad-free by choice; donations help keep it that way.
 
 TV Akhi is based on [TV Bro](https://github.com/truefedex/tv-bro) by Fedir Tsapana and adds built-in ad blocking
 with uBlock Origin.
