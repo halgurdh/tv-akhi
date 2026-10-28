@@ -17,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId = "io.github.halgurdh.tvakhi"
-        versionCode = 80
-        versionName = "1.1.0"
+        versionCode = 81
+        versionName = "1.2.0"
 
         javaCompileOptions {
             annotationProcessorOptions {
