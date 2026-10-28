@@ -90,6 +90,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
     @Volatile private var adBlockPageFlagsCache: Pair<String, Int>? = null
     private val documentStartScriptSupported = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
     private val uiHandler = Handler(Looper.getMainLooper())
+    private val mediaControls = WebViewMediaControls(this)
     private val pagePermissions = WebViewPagePermissions(object : WebViewPagePermissions.Host {
         override fun hasAndroidPermission(permission: String): Boolean =
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -413,6 +414,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                 super.onPageStarted(view, url, favicon)
                 Log.d(TAG, "onPageStarted url: $url")
                 currentOriginalUrl = url.toUri()
+                mediaControls.onPageStarted()
                 adBlockPageUrl = url
                 if (!documentStartScriptSupported && callback.isAdBlockingEnabled()) {
                     evaluateJavascript(WebViewAdBlock.contentScript(context), null)
@@ -425,6 +427,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                 Log.d(TAG, "onPageFinished url: $url")
                 callback.onPageFinished(url)
                 evaluateJavascript(getGenericJSInjects(), null)
+                mediaControls.onPageFinished()
             }
 
             override fun onLoadResource(view: WebView, url: String) {
@@ -618,6 +621,9 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         super.draw(canvas)
         return thumbnail
     }
+
+    /** A media key of the remote for the media of the page */
+    fun mediaCommand(command: MediaCommand) = mediaControls.command(command)
 
     fun hideCustomView() {
         webChromeClient_.onHideCustomView()
