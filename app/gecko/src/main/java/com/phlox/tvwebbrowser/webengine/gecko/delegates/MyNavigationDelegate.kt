@@ -9,18 +9,17 @@ import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.WebRequestError
-import java.io.BufferedReader
+import android.util.Base64
+import com.phlox.tvwebbrowser.webengine.LoadErrorPage
 
 class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession.NavigationDelegate {
     companion object {
         val TAG: String = MyNavigationDelegate::class.java.simpleName
-        const val ERROR_TEMPLATE_FILE = "pages/error.html"
     }
 
     var canGoBack = false
     var canGoForward = false
     var locationURL: String? = null
-    private var errorTemplate: String? = null
 
     override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
         this.canGoBack = canGoBack
@@ -131,11 +130,12 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
             "onLoadError=" + uri + " error category=" + error.category + " error=" + error.code
         )
 
+        val kind = GeckoLoadErrors.kind(error.category, error.code)
+        val errorCode = categoryToString(error.category).removePrefix("ERROR_CATEGORY_") + " : " +
+                errorToString(error.code)
+        val page = LoadErrorPage.create(AppContext.get(), kind, uri, errorCode)
         return GeckoResult.fromValue(
-            "data:text/html," + createErrorPage(
-                error.category,
-                error.code
-            )
+            "data:text/html;charset=utf-8;base64," + Base64.encodeToString(page.toByteArray(), Base64.NO_WRAP)
         )
     }
 
@@ -183,35 +183,6 @@ class MyNavigationDelegate(private val webEngine: GeckoWebEngine) : GeckoSession
             WebRequestError.ERROR_HTTPS_ONLY -> "ERROR_HTTPS_ONLY"
             WebRequestError.ERROR_BAD_HSTS_CERT -> "ERROR_BAD_HSTS_CERT"
             else -> "UNKNOWN"
-        }
-    }
-
-    private fun createErrorPage(category: Int, error: Int): String {
-        return createErrorPage(
-            categoryToString(category) + " : " + errorToString(error)
-        )
-    }
-
-    private fun createErrorPage(error: String): String {
-        val template = readErrorTemplate() ?: "\$ERROR"
-        return template.replace("\$ERROR", error)
-    }
-
-    private fun readErrorTemplate(): String? {
-        var errorTemplate = this.errorTemplate
-
-        if (errorTemplate != null) return errorTemplate
-
-        return try {
-            errorTemplate = AppContext.get().resources.assets
-                .open(ERROR_TEMPLATE_FILE)
-                .bufferedReader()
-                .use(BufferedReader::readText)
-            this.errorTemplate = errorTemplate
-            errorTemplate
-        } catch (e: Exception) {
-            Log.d(TAG, "Failed to open error page template", e)
-            null
         }
     }
 }

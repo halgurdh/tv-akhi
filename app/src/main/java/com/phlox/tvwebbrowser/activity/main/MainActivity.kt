@@ -85,6 +85,7 @@ import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.utils.childs
 import com.phlox.tvwebbrowser.utils.sameDay
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
@@ -1497,6 +1498,14 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             isFullscreen = false
             //the engine view may leave fullscreen by itself on BACK down (WebView does)
             backNavigationEventsAdapter.consumeCurrentPress()
+        }
+
+        override fun onEngineViewLost() {
+            //the page process of WebView crashed or was killed: the current tab shows the crash page in a new view,
+            //a background tab gets its new view when it is shown
+            if (tabsModel.currentTab.value != tab) return
+            changeTab(tab)
+            (tab.webEngine as? WebViewWebEngine)?.showLostPage()
         }
 
         override fun onVisited(url: String) {

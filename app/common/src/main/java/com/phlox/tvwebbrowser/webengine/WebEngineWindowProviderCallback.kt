@@ -42,6 +42,8 @@ interface WebEngineWindowProviderCallback {
     fun getHomePageLinks(): List<HomePageLink>
     fun onPrepareForFullscreen()
     fun onExitFullscreen()
+    /** The view of the engine is gone (its page process crashed or was killed), [WebEngine.getView] is null now */
+    fun onEngineViewLost() {}
     fun onVisited(url: String)
     fun suggestActionsForLink(baseUri: String?, linkUri: String?, srcUri: String?,
                               title: String?, altText: String?, textContent: String?,
