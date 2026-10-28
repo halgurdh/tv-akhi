@@ -28,15 +28,19 @@ import android.webkit.HttpAuthHandler
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
 import android.webkit.PermissionRequest
+import android.webkit.RenderProcessGoneDetail
+import android.webkit.SafeBrowsingResponse
 import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
 import android.webkit.WebBackForwardList
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.annotation.RequiresApi
 import java.io.ByteArrayInputStream
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -52,6 +56,8 @@ import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.R
 import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.webengine.MediaTools
+import com.phlox.tvwebbrowser.webengine.LoadErrorKind
+import com.phlox.tvwebbrowser.webengine.LoadErrorPage
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
 import com.phlox.tvwebbrowser.utils.Utils
@@ -91,6 +97,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
     private val documentStartScriptSupported = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
     private val uiHandler = Handler(Looper.getMainLooper())
     private val mediaControls = WebViewMediaControls(this)
+    //the error page for the page that failed to load, shown when WebView finished its own one
+    private var pendingErrorPage: PendingErrorPage? = null
+    //a Safe Browsing hit of a main frame: its url and threat type, for the error page that follows
+    private var safeBrowsingThreat: Pair<String, Int>? = null
     private val pagePermissions = WebViewPagePermissions(object : WebViewPagePermissions.Host {
         override fun hasAndroidPermission(permission: String): Boolean =
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -115,6 +125,8 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
 
     interface Callback {
         fun getActivity(): Activity?
+        /** The page process of WebView crashed or was killed (low memory): this view can not be used anymore */
+        fun onRenderProcessGone(didCrash: Boolean)
         fun onOpenInNewTabRequested(url: String)
         fun onDownloadRequested(url: String)
         fun onThumbnailError()
@@ -413,6 +425,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
             override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 Log.d(TAG, "onPageStarted url: $url")
+                if (pendingErrorPage?.url != url) pendingErrorPage = null
                 currentOriginalUrl = url.toUri()
                 mediaControls.onPageStarted()
                 adBlockPageUrl = url
@@ -425,9 +438,54 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
             override fun onPageFinished(view: WebView, url: String?) {
                 super.onPageFinished(view, url)
                 Log.d(TAG, "onPageFinished url: $url")
+                val errorPage = pendingErrorPage
+                if (errorPage != null) {
+                    pendingErrorPage = null
+                    if (errorPage.url == url) showErrorPage(errorPage)
+                }
                 callback.onPageFinished(url)
                 evaluateJavascript(getGenericJSInjects(), null)
                 mediaControls.onPageFinished()
+            }
+
+            override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                super.onReceivedError(view, request, error)
+                if (!request.isForMainFrame) return
+                val url = request.url.toString()
+                Log.d(TAG, "onReceivedError url: $url code: ${error.errorCode} ${error.description}")
+                //the certificate warning is shown instead
+                if (lastSSLError?.url == url) return
+                val kind = WebViewLoadErrors.kind(error.errorCode)
+                val threat = safeBrowsingThreat?.takeIf { it.first == url }
+                safeBrowsingThreat = null
+                val errorCode = if (error.errorCode == ERROR_UNSAFE_RESOURCE && threat != null) {
+                    WebViewLoadErrors.safeBrowsingThreatName(threat.second)
+                } else {
+                    error.description?.toString() ?: ""
+                }
+                pendingErrorPage = PendingErrorPage(url, LoadErrorPage.create(context, kind, url, errorCode))
+            }
+
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                Log.e(TAG, "onRenderProcessGone crash: ${detail.didCrash()}")
+                //the engine drops this view; returning false would end the app
+                callback.onRenderProcessGone(detail.didCrash())
+                return true
+            }
+
+            @RequiresApi(Build.VERSION_CODES.O_MR1)
+            override fun onSafeBrowsingHit(view: WebView, request: WebResourceRequest, threatType: Int,
+                                           callback: SafeBrowsingResponse) {
+                Log.w(TAG, "onSafeBrowsingHit url: ${request.url} threat: $threatType main frame: ${request.isForMainFrame}")
+                if (request.isForMainFrame) {
+                    //instead of the warning of WebView: the load fails with ERROR_UNSAFE_RESOURCE, and
+                    //onReceivedError shows the page of a dangerous site
+                    safeBrowsingThreat = request.url.toString() to threatType
+                    callback.backToSafety(false)
+                } else {
+                    super.onSafeBrowsingHit(view, request, threatType, callback)
+                }
             }
 
             override fun onLoadResource(view: WebView, url: String) {
@@ -624,6 +682,27 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
 
     /** A media key of the remote for the media of the page */
     fun mediaCommand(command: MediaCommand) = mediaControls.command(command)
+
+    private class PendingErrorPage(val url: String, val page: String)
+
+    /** Shows the error page of [kind] for [url] as a page of its own (a new view, which has no page to replace) */
+    fun showLoadErrorPage(kind: LoadErrorKind, url: String, errorCode: String) {
+        loadDataWithBaseURL(null, LoadErrorPage.create(context, kind, url, errorCode), "text/html", "UTF-8", url)
+    }
+
+    /**
+     * Shows the error page in place of the one of WebView, which is in the history already: writing it over
+     * that one adds no entry. If its scripts do not run there, it is loaded instead (Back then goes through
+     * the page of WebView too)
+     */
+    private fun showErrorPage(errorPage: PendingErrorPage) {
+        evaluateJavascript(WebViewLoadErrors.replaceDocumentScript(errorPage.page)) { result ->
+            if (result != "true") {
+                Log.w(TAG, "Failed to replace the error page of WebView: $result")
+                loadDataWithBaseURL(null, errorPage.page, "text/html", "UTF-8", errorPage.url)
+            }
+        }
+    }
 
     fun hideCustomView() {
         webChromeClient_.onHideCustomView()

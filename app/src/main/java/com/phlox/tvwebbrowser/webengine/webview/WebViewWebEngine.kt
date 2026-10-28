@@ -17,6 +17,7 @@ import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.LoadErrorKind
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
@@ -32,6 +33,10 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
     internal var callback: WebEngineWindowProviderCallback? = null
     private var viewParent: CursorLayout? = null
     private var fullScreenView: View? = null
+    //the page whose process was gone, for the crash page of the next view
+    private var lostPage: LostPage? = null
+
+    private class LostPage(val url: String, val crashed: Boolean)
     private val permissionsRequests = HashMap<Int, Boolean>()//request code, isGeolocationPermissionRequest
     private val jsInterface = AndroidJSInterface(this)
 
@@ -249,7 +254,30 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
         return viewParent?.cursorDrawerDelegate
     }
 
+    /** After the page process was gone: the new view shows the crash page with a Reload button */
+    fun showLostPage() {
+        val page = lostPage ?: return
+        lostPage = null
+        webView?.showLoadErrorPage(LoadErrorKind.CRASHED, page.url,
+            if (page.crashed) "RENDER_PROCESS_CRASHED" else "RENDER_PROCESS_KILLED")
+    }
+
     private val webViewCallback = object : WebViewEx.Callback {
+        override fun onRenderProcessGone(didCrash: Boolean) {
+            val view = webView ?: return
+            val url = view.url ?: tab.url
+            if (fullScreenView != null) {
+                fullScreenView = null
+                callback?.onExitFullscreen()
+            }
+            (view.parent as? ViewGroup)?.removeView(view)
+            view.destroy()
+            webView = null
+            lostPage = LostPage(url, didCrash)
+            //the current tab gets a new view now, a background one when it is shown
+            callback?.onEngineViewLost()
+        }
+
         override fun getActivity(): Activity? {
             return callback?.getActivity()
         }
