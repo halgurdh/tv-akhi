@@ -191,4 +191,17 @@
   <string name="allow_autoplay_media">לאפשר הפעלה אוטומטית של מדיה</string>
   <string name="web_engine_debug">ניפוי שגיאות מנוע ווב (נדרשת הפעלה מחדש)</string>
   <string name="web_engine_debug_warning_message">הפעלת ניפוי שגיאות של מנוע הווב עלולה לחשוף תוכן דפים, עוגיות ונתוני סשן רגישים לכל מי שיש לו גישה לניפוי שגיאות במכשיר. יש להפעיל רק במכשירים מהימנים לצורכי פתרון תקלות.</string>
+  <string name="player_back_to_page">חזרה לדף</string>
+  <string name="player_error">לא ניתן לנגן את הסרטון הזה</string>
+  <string name="player_audio">שמע</string>
+  <string name="player_auto">אוטומטי</string>
+  <string name="player_menu_row">%1$s: %2$s</string>
+  <string name="player_off">כבוי</string>
+  <string name="player_quality">איכות</string>
+  <string name="player_speed">מהירות</string>
+  <string name="player_subtitles">כתוביות</string>
+  <string name="player_track">רצועה %d</string>
+  <string name="play_in_built_in_player">נגן בנגן המובנה</string>
+  <string name="built_in_player">נגן מובנה</string>
+  <string name="settings_match_frame_rate">התאם את קצב הפריימים לסרטונים</string>
 </resources>

@@ -39,6 +39,7 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
 import android.webkit.CookieManager
+import android.os.SystemClock
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
 import android.webkit.WebStorage
@@ -86,6 +87,11 @@ import com.phlox.tvwebbrowser.utils.childs
 import com.phlox.tvwebbrowser.utils.sameDay
 import com.phlox.tvwebbrowser.webengine.WebEngine
 import com.phlox.tvwebbrowser.webengine.MediaPlaybackSupport
+import com.phlox.tvwebbrowser.webengine.MediaCommand
+import com.phlox.tvwebbrowser.webengine.PageVideo
+import com.phlox.tvwebbrowser.webengine.PageVideosSupport
+import com.phlox.tvwebbrowser.activity.main.view.PlayerScreenView
+import com.phlox.tvwebbrowser.utils.ExternalVideoPlayer
 import com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
@@ -154,7 +160,46 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
 
         override fun renderOsd(osd: VideoModeController.Osd?) = vb.vVideoOsd.render(osd)
+
+        /** Down takes the video of the page to the built-in player, where its stream is known */
+        override fun onUpDown(down: Boolean): Boolean = down && openMediaVideoInPlayer()
     })
+
+    /** The video of the page the media keys control plays, when its stream is known ([PageVideosSupport.mediaVideo]) */
+    private var mediaVideo: PageVideo? = null
+    private var mediaVideoJob: Job? = null
+
+    private val playerCallback = object : PlayerScreenView.Callback {
+        override fun cookies(url: String): String? = CookieManager.getInstance().getCookie(url)
+
+        override fun openInOtherApp(video: PageVideo): Boolean = ExternalVideoPlayer.open(this@MainActivity, video,
+            CookieManager.getInstance().getCookie(video.url))
+
+        override fun onClosed() {
+            tabsModel.currentTab.value?.webEngine?.getView()?.requestFocus()
+        }
+    }
+
+    /** The video of the fullscreen view goes on in the built-in player, from where it is; false if its stream is not known */
+    private fun openMediaVideoInPlayer(): Boolean {
+        val video = mediaVideo ?: return false
+        val engine = tabsModel.currentTab.value?.webEngine
+        val media = engine as? MediaPlaybackSupport
+        val position = media?.mediaState?.value?.positionAt(SystemClock.elapsedRealtime()) ?: 0.0
+        //the page leaves fullscreen and pauses its media: the player plays it instead
+        media?.pausePlayback()
+        if (isFullscreen) engine?.hideFullscreenView()
+        vb.vPlayerScreen.show(video, position)
+        return true
+    }
+
+    private fun mediaCommandOf(keyCode: Int): MediaCommand? = when (keyCode) {
+        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> MediaCommand.TOGGLE
+        KeyEvent.KEYCODE_MEDIA_STOP -> MediaCommand.STOP
+        KeyEvent.KEYCODE_MEDIA_REWIND -> MediaCommand.REWIND
+        KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> MediaCommand.FAST_FORWARD
+        else -> null
+    }
     private lateinit var prefs: SharedPreferences
     protected val config = AppContext.provideConfig()
     private val voiceSearchHelper = VoiceSearchHelper(this, VOICE_SEARCH_REQUEST_CODE,
@@ -218,6 +263,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         vb.ibCloseTab.setOnClickListener { tabsModel.currentTab.value?.apply { closeTab(this) } }
 
         vb.vActionBar.callback = this
+        vb.vPlayerScreen.attach(lifecycleScope, playerCallback)
 
         vb.llBottomPanel.childs.forEach {
             it.setOnTouchListener(bottomButtonsOnTouchListener)
@@ -450,6 +496,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         if (::tabsModel.isInitialized) {
             tabsModel.onDetachActivity()
         }
+        if (::vb.isInitialized) vb.vPlayerScreen.close()
         super.onDestroy()
     }
 
@@ -578,8 +625,20 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         mediaStateJob?.cancel()
         mediaStateJob = null
         videoMode.setMedia(null)
+        mediaVideoJob?.cancel()
+        mediaVideoJob = null
+        onMediaVideoChanged(null)
+        (tabsModel.currentTab.value?.webEngine as? PageVideosSupport)?.let { videos ->
+            mediaVideoJob = lifecycleScope.launch { videos.mediaVideo.collect { onMediaVideoChanged(it) } }
+        }
         val media = tabsModel.currentTab.value?.webEngine as? MediaPlaybackSupport ?: return
         mediaStateJob = lifecycleScope.launch { media.mediaState.collect { videoMode.setMedia(it) } }
+    }
+
+    private fun onMediaVideoChanged(video: PageVideo?) {
+        mediaVideo = video
+        //the seek bar shows what Down does
+        videoMode.hint = if (video != null) getString(R.string.built_in_player) else null
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -772,10 +831,12 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         val intentFilter = IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
         registerReceiver(mConnectivityChangeReceiver, intentFilter)
         tabsModel.currentTab.value?.webEngine?.onResume()
+        if (::vb.isInitialized) vb.vPlayerScreen.onResume()
     }
 
     override fun onPause() {
         unregisterReceiver(mConnectivityChangeReceiver)
+        if (::vb.isInitialized) vb.vPlayerScreen.onPause()
         tabsModel.currentTab.value?.apply {
             webEngine.onPause()
             onPause()
@@ -936,6 +997,20 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                     //handleBackNavigation decides (the video mode may take Back), not the fullscreen view of the engine
                     return true
                 }
+                if (!keyCodeBackNavigation && vb.vPlayerScreen.isOpen) {
+                    //the media keys go to the built-in player while it is open
+                    mediaCommandOf(keyCode)?.let {
+                        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) vb.vPlayerScreen.mediaCommand(it)
+                        return true
+                    }
+                    if (vb.vPlayerScreen.dispatchPlayerKey(event)) return true
+                    return localCallback.dispatchKeyEvent(event)
+                }
+                //the Menu key (where it reaches the app) does what Down does in the video mode
+                if (keyCode == KeyEvent.KEYCODE_MENU && videoMode.isActive && mediaVideo != null) {
+                    if (event.action == KeyEvent.ACTION_UP) openMediaVideoInPlayer()
+                    return true
+                }
                 if (!keyCodeBackNavigation && videoMode.dispatchKeyEvent(event)) {
                     return true
                 }
@@ -982,6 +1057,12 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         if (tabsModel.currentTab.value?.webEngine?.isVirtualCursorMode() == false) {
             tabsModel.currentTab.value?.webEngine?.setVirtualCursorMode(true)
             backNavigationEventsAdapter.gameControllersLongPressBForBackNavigation = false
+            return
+        }
+
+        if (vb.vPlayerScreen.backCallback.isEnabled) {
+            //the menu of the built-in player, else the player itself closes
+            vb.vPlayerScreen.backCallback.handleOnBackPressed()
             return
         }
 

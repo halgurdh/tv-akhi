@@ -188,4 +188,17 @@
   <string name="allow_autoplay_media">Zezwól na automatyczne odtwarzanie multimediów</string>
   <string name="web_engine_debug">Debugowanie silnika webowego (wymagany restart)</string>
   <string name="web_engine_debug_warning_message">Wlaczenie debugowania silnika webowego moze ujawnic zawartosc stron, pliki cookie oraz wrazliwe dane sesji kazdej osobie z dostepem do debugowania urzadzenia. Wlaczaj tylko na zaufanych urzadzeniach do diagnozowania problemow.</string>
+  <string name="player_back_to_page">Wróć do strony</string>
+  <string name="player_error">Nie można odtworzyć tego filmu</string>
+  <string name="player_audio">Dźwięk</string>
+  <string name="player_auto">Auto</string>
+  <string name="player_menu_row">%1$s: %2$s</string>
+  <string name="player_off">Wył.</string>
+  <string name="player_quality">Jakość</string>
+  <string name="player_speed">Prędkość</string>
+  <string name="player_subtitles">Napisy</string>
+  <string name="player_track">Ścieżka %d</string>
+  <string name="play_in_built_in_player">Odtwórz we wbudowanym odtwarzaczu</string>
+  <string name="built_in_player">Wbudowany odtwarzacz</string>
+  <string name="settings_match_frame_rate">Dopasuj liczbę klatek do filmu</string>
 </resources>

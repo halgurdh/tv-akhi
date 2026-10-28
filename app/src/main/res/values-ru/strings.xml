@@ -188,4 +188,17 @@
   <string name="allow_autoplay_media">Разрешить автовоспроизведение медиа</string>
   <string name="web_engine_debug">Отладка веб-движка (требуется перезапуск)</string>
   <string name="web_engine_debug_warning_message">Включение отладки веб-движка может раскрыть содержимое страниц, cookie и чувствительные данные сессии любому, у кого есть доступ к отладке устройства. Включайте только на доверенных устройствах для устранения неполадок.</string>
+  <string name="player_back_to_page">Назад на страницу</string>
+  <string name="player_error">Не удаётся воспроизвести это видео</string>
+  <string name="player_audio">Аудио</string>
+  <string name="player_auto">Авто</string>
+  <string name="player_menu_row">%1$s: %2$s</string>
+  <string name="player_off">Выкл.</string>
+  <string name="player_quality">Качество</string>
+  <string name="player_speed">Скорость</string>
+  <string name="player_subtitles">Субтитры</string>
+  <string name="player_track">Дорожка %d</string>
+  <string name="play_in_built_in_player">Воспроизвести во встроенном плеере</string>
+  <string name="built_in_player">Встроенный плеер</string>
+  <string name="settings_match_frame_rate">Подстраивать частоту кадров под видео</string>
 </resources>

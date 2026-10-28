@@ -187,4 +187,17 @@
   <string name="allow_autoplay_media">Automatische Medienwiedergabe zulassen</string>
   <string name="web_engine_debug">Web-Engine-Debugging (Neustart erforderlich)</string>
   <string name="web_engine_debug_warning_message">Das Aktivieren des Web-Engine-Debuggings kann Seiteninhalte, Cookies und sensible Sitzungsdaten fuer jeden mit Zugriff auf das Geraetedebugging offenlegen. Nur auf vertrauenswuerdigen Geraeten zur Fehlersuche aktivieren.</string>
+  <string name="player_back_to_page">Zurück zur Seite</string>
+  <string name="player_error">Dieses Video kann nicht abgespielt werden</string>
+  <string name="player_audio">Audio</string>
+  <string name="player_auto">Auto</string>
+  <string name="player_menu_row">%1$s: %2$s</string>
+  <string name="player_off">Aus</string>
+  <string name="player_quality">Qualität</string>
+  <string name="player_speed">Geschwindigkeit</string>
+  <string name="player_subtitles">Untertitel</string>
+  <string name="player_track">Spur %d</string>
+  <string name="play_in_built_in_player">Im integrierten Player abspielen</string>
+  <string name="built_in_player">Integrierter Player</string>
+  <string name="settings_match_frame_rate">Bildrate an Videos anpassen</string>
 </resources>

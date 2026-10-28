@@ -45,6 +45,7 @@ class Config(val prefs: SharedPreferences) {
         const val SMART_SKIP_KEY = "smart_skip"
         const val NO_MUSIC_KEY = "no_music"
         const val ADULT_BLOCK_KEY = "adult_block"
+        const val MATCH_FRAME_RATE_KEY = "match_frame_rate"
         //keys of the brsteej branch's build
         private const val BRSTEEJ_BUILD_KEY = "dedicated_site"
         private const val BRSTEEJ_BUILD_DOMAIN_KEY = "dedicated_site_domain"
@@ -268,6 +269,13 @@ class Config(val prefs: SharedPreferences) {
         get() = prefs.getBoolean(NO_MUSIC_KEY, false)
         set(value) {
             prefs.edit().putBoolean(NO_MUSIC_KEY, value).apply()
+        }
+
+    //the built-in player switches the display to the frame rate of the video (TV only)
+    var matchFrameRate: Boolean
+        get() = prefs.getBoolean(MATCH_FRAME_RATE_KEY, false)
+        set(value) {
+            prefs.edit().putBoolean(MATCH_FRAME_RATE_KEY, value).apply()
         }
 
     //block porn and nudity sites, SafeSearch (ContentFilter)

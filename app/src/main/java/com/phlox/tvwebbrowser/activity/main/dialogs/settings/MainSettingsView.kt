@@ -267,6 +267,12 @@ class MainSettingsView @JvmOverloads constructor(
             WebEngineFactory.onAdBlockSettingUpdated(config.adBlockEnabled)
         }
 
+        vb.scMatchFrameRate.isChecked = config.matchFrameRate
+        vb.llMatchFrameRate.setOnClickListener {
+            config.matchFrameRate = !config.matchFrameRate
+            vb.scMatchFrameRate.isChecked = config.matchFrameRate
+        }
+
         vb.scAutoFullscreenVideo.isChecked = config.autoFullscreenVideo
         vb.llAutoFullscreenVideo.setOnClickListener {
             vb.scAutoFullscreenVideo.isChecked = !vb.scAutoFullscreenVideo.isChecked

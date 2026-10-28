@@ -188,4 +188,17 @@
   <string name="allow_autoplay_media">允许媒体自动播放</string>
   <string name="web_engine_debug">Web 引擎调试（需要重启）</string>
   <string name="web_engine_debug_warning_message">启用 Web 引擎调试可能会将页面内容、Cookie 和敏感会话数据暴露给任何具有设备调试访问权限的人。仅在受信任设备上用于故障排查时启用。</string>
+  <string name="player_back_to_page">返回页面</string>
+  <string name="player_error">无法播放此视频</string>
+  <string name="player_audio">音频</string>
+  <string name="player_auto">自动</string>
+  <string name="player_menu_row">%1$s：%2$s</string>
+  <string name="player_off">关闭</string>
+  <string name="player_quality">画质</string>
+  <string name="player_speed">速度</string>
+  <string name="player_subtitles">字幕</string>
+  <string name="player_track">音轨 %d</string>
+  <string name="play_in_built_in_player">在内置播放器中播放</string>
+  <string name="built_in_player">内置播放器</string>
+  <string name="settings_match_frame_rate">匹配视频帧率</string>
 </resources>

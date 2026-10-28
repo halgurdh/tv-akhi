@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.SystemClock
 import android.text.format.DateUtils
 import android.util.AttributeSet
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -33,9 +32,8 @@ class VideoOsdView @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     init {
-        orientation = HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        setBackgroundResource(R.drawable.video_osd_bg)
+        orientation = VERTICAL
+        setBackgroundResource(R.drawable.ds_toast_bg)
         val padding = resources.getDimensionPixelSize(R.dimen.video_osd_padding)
         setPadding(padding, padding, padding, padding)
     }
@@ -56,7 +54,9 @@ class VideoOsdView @JvmOverloads constructor(context: Context, attrs: AttributeS
         val osd = osd ?: return
         val media = osd.media
         val duration = media.duration
-        vb.ivState.setImageResource(if (media.playing) R.drawable.ic_video_play else R.drawable.ic_video_pause)
+        vb.llHint.isVisible = osd.hint != null
+        vb.tvHint.text = osd.hint
+        vb.ivState.setImageResource(if (media.playing) R.drawable.ic_play else R.drawable.ic_pause)
         val delta = osd.seekDelta
         vb.tvDelta.isVisible = delta != null && abs(delta) >= 0.5
         if (delta != null) vb.tvDelta.text = (if (delta < 0) "−" else "+") + format(abs(delta))

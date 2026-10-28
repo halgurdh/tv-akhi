@@ -16,7 +16,8 @@ import kotlin.math.min
  * faster, to where the key goes up), OK plays and pauses, Up and Down give the cursor back for the controls of
  * the page. Back with the cursor ([backCallback]) hides it again; Back in the video mode leaves fullscreen
  * (the fullscreen callback of the activity, below [backCallback]). The seek bar ([Osd]) shows on seeks, on
- * play and pause and while the video is paused. Media keys keep working through the shortcuts.
+ * play and pause and while the video is paused, and for a while when the video mode starts or a [hint] comes
+ * (longer with a hint). Media keys keep working through the shortcuts.
  */
 class VideoModeController(private val host: Host) {
     interface Host {
@@ -29,13 +30,20 @@ class VideoModeController(private val host: Host) {
         fun renderOsd(osd: Osd?)
         /** [active] changed: the keys go to the video (true) or to the cursor */
         fun onActiveChanged(active: Boolean) {}
+        /**
+         * Up or Down ([down]): true if the host takes it (the built-in player opens its menu, Down takes the video
+         * of the page there); else they give the cursor back
+         */
+        fun onUpDown(down: Boolean): Boolean = false
     }
 
     /**
      * What the seek bar shows: the media, and while a seek goes on, where it goes ([seekTarget],
      * [seekDelta] from where it started), in seconds.
      */
-    data class Osd(val media: MediaState, val seekTarget: Double? = null, val seekDelta: Double? = null)
+    data class Osd(val media: MediaState, val seekTarget: Double? = null, val seekDelta: Double? = null,
+                   /** What Down does, drawn after its key cap ("Built-in player") */
+                   val hint: String? = null)
 
     private val handler = Handler(Looper.getMainLooper())
     private var fullscreen = false
@@ -46,6 +54,14 @@ class VideoModeController(private val host: Host) {
     /** The keys go to the video */
     var isActive = false
         private set
+
+    /** Shown in the seek bar; a new one shows the bar */
+    var hint: String? = null
+        set(value) {
+            if (field == value) return
+            field = value
+            if (value != null && isActive) showOsd(HINT_SHOWN_MS) else renderOsd()
+        }
 
     /** Hides the cursor that Up or Down gave back, while there is a video in fullscreen */
     val backCallback = object : OnBackPressedCallback(false) {
@@ -123,8 +139,10 @@ class VideoModeController(private val host: Host) {
                 swallowedKeys.add(keyCode)
                 if (event.repeatCount == 0) {
                     endSeek(apply = true)
-                    cursorRequested = true
-                    update()
+                    if (!host.onUpDown(keyCode == KeyEvent.KEYCODE_DPAD_DOWN)) {
+                        cursorRequested = true
+                        update()
+                    }
                 }
             }
             else -> return false
@@ -196,8 +214,9 @@ class VideoModeController(private val host: Host) {
         }
     }
 
-    private fun showOsd() {
-        osdUntil = SystemClock.elapsedRealtime() + OSD_SHOWN_MS
+    /** Shows the seek bar for [duration] ms at least, also while the video plays */
+    private fun showOsd(duration: Long = OSD_SHOWN_MS) {
+        osdUntil = max(osdUntil, SystemClock.elapsedRealtime() + duration)
         renderOsd()
     }
 
@@ -210,7 +229,8 @@ class VideoModeController(private val host: Host) {
             isActive = active
             if (active) {
                 host.hideCursor()
-                showOsd()
+                //with the hint: the user sees at once that Down plays it in the built-in player
+                showOsd(if (hint != null) HINT_SHOWN_MS else OSD_SHOWN_MS)
             } else {
                 endSeek(apply = true)
                 if (fullscreen && cursorRequested) host.showCursor()
@@ -234,7 +254,7 @@ class VideoModeController(private val host: Host) {
             host.renderOsd(null)
             return
         }
-        host.renderOsd(Osd(media, target, target?.let { it - seekStart }))
+        host.renderOsd(Osd(media, target, target?.let { it - seekStart }, hint))
         //the next change: the end of the seek shown or of the bar while it plays
         val next = listOf(seekShownUntil, osdUntil).filter { it > now }.minOrNull() ?: return
         handler.postDelayed(updateRunnable, next - now)
@@ -244,6 +264,8 @@ class VideoModeController(private val host: Host) {
         /** Seconds of a press of Left or Right */
         const val STEP = 10.0
         private const val OSD_SHOWN_MS = 3000L
+        /** The seek bar with a new hint, as when the video goes fullscreen with a stream the built-in player can play */
+        const val HINT_SHOWN_MS = 5000L
         private const val SEEK_SHOWN_MS = 2000L
         /** Seconds: a position this near to the target means the page got there */
         private const val SEEK_REACHED_TOLERANCE = 1.5
