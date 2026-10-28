@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the seek bar of the video mode (VideoOsdView) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/video_osd_background" />
+    <corners android:radius="16dp" />
+</shape>

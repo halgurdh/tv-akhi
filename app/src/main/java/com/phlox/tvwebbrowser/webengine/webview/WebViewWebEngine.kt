@@ -18,6 +18,11 @@ import com.phlox.tvwebbrowser.model.WebTabState
 import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.webengine.WebEngine
 import com.phlox.tvwebbrowser.webengine.LoadErrorKind
+import com.phlox.tvwebbrowser.webengine.MediaPlaybackSupport
+import com.phlox.tvwebbrowser.webengine.MediaState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
@@ -28,11 +33,13 @@ import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
 import com.phlox.tvwebbrowser.widgets.cursor.CursorLayout
 
 
-class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.Callback {
+class WebViewWebEngine(val tab: WebTabState) : WebEngine, MediaPlaybackSupport, CursorDrawerDelegate.Callback {
     private var webView: WebViewEx? = null
     internal var callback: WebEngineWindowProviderCallback? = null
     private var viewParent: CursorLayout? = null
     private var fullScreenView: View? = null
+    private val _mediaState = MutableStateFlow<MediaState?>(null)
+    override val mediaState: StateFlow<MediaState?> = _mediaState.asStateFlow()
     //the page whose process was gone, for the crash page of the next view
     private var lostPage: LostPage? = null
 
@@ -186,6 +193,14 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
         webView?.mediaCommand(MediaCommand.FAST_FORWARD)
     }
 
+    override fun seekTo(position: Double) {
+        webView?.seekMediaTo(position)
+    }
+
+    override fun seekBy(delta: Double) {
+        webView?.seekMediaBy(delta)
+    }
+
     override suspend fun renderThumbnail(bitmap: Bitmap?): Bitmap? {
         return webView?.renderThumbnail(bitmap)
     }
@@ -208,6 +223,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
         callback = null
         if (completely) {
             webView = null
+            _mediaState.value = null
         }
     }
 
@@ -215,6 +231,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
         val webView = webView
         if (webView != null && !webView.isAttachedToWindow) {
             this.webView = null
+            _mediaState.value = null
         }
     }
 
@@ -263,6 +280,10 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
     }
 
     private val webViewCallback = object : WebViewEx.Callback {
+        override fun onMediaStateChanged(state: MediaState?) {
+            _mediaState.value = state
+        }
+
         override fun onRenderProcessGone(didCrash: Boolean) {
             val view = webView ?: return
             val url = view.url ?: tab.url
@@ -273,6 +294,7 @@ class WebViewWebEngine(val tab: WebTabState) : WebEngine, CursorDrawerDelegate.C
             (view.parent as? ViewGroup)?.removeView(view)
             view.destroy()
             webView = null
+            _mediaState.value = null
             lostPage = LostPage(url, didCrash)
             //the current tab gets a new view now, a background one when it is shown
             callback?.onEngineViewLost()
