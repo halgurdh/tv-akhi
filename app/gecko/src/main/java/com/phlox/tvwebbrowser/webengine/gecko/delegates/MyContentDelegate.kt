@@ -38,6 +38,7 @@ class MyContentDelegate(private val webEngine: GeckoWebEngine): GeckoSession.Con
     }
 
     override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
+        webEngine.mediaSessionDelegate.pageFullscreen = fullScreen
         if (fullScreen) {
             webEngine.callback?.onPrepareForFullscreen()
         } else {
