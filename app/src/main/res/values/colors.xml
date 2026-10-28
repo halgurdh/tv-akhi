@@ -27,6 +27,11 @@
 
     <color name="progressbar_tint">#75D5FA</color>
 
+    <!-- the seek bar of the video mode, over the fullscreen video -->
+    <color name="video_osd_background">#CC1E1F22</color>
+    <color name="video_osd_text">#FFFFFF</color>
+    <color name="video_osd_accent">#75D5FA</color>
+
     <color name="web_tab_text_color">#000</color>
     <color name="web_tab_selected_text_color">#006EC5</color>
 

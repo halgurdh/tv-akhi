@@ -85,6 +85,7 @@ import com.phlox.tvwebbrowser.utils.activemodel.ActiveModelsRepository
 import com.phlox.tvwebbrowser.utils.childs
 import com.phlox.tvwebbrowser.utils.sameDay
 import com.phlox.tvwebbrowser.webengine.WebEngine
+import com.phlox.tvwebbrowser.webengine.MediaPlaybackSupport
 import com.phlox.tvwebbrowser.webengine.webview.WebViewWebEngine
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.webengine.MediaTools
@@ -93,6 +94,7 @@ import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import com.phlox.tvwebbrowser.widgets.NotificationView
 import com.phlox.tvwebbrowser.widgets.cursor.CursorDrawerDelegate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -129,6 +131,30 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     private lateinit var autoUpdateModel: AutoUpdateModel
     private lateinit var uiHandler: Handler
     private var isFullscreen: Boolean = false
+    private var mediaStateJob: Job? = null
+
+    /** The remote controls the video of the fullscreen view */
+    private val videoMode = VideoModeController(object : VideoModeController.Host {
+        private val engine get() = tabsModel.currentTab.value?.webEngine
+
+        override fun hideCursor() = vb.flWebViewContainer.cursorDrawerDelegate.hideCursor()
+
+        override fun showCursor() = vb.flWebViewContainer.cursorDrawerDelegate.animateAppearing()
+
+        override fun togglePlayback() {
+            engine?.togglePlayback()
+        }
+
+        override fun seekTo(position: Double) {
+            (engine as? MediaPlaybackSupport)?.seekTo(position)
+        }
+
+        override fun seekBy(delta: Double) {
+            (engine as? MediaPlaybackSupport)?.seekBy(delta)
+        }
+
+        override fun renderOsd(osd: VideoModeController.Osd?) = vb.vVideoOsd.render(osd)
+    })
     private lateinit var prefs: SharedPreferences
     protected val config = AppContext.provideConfig()
     private val voiceSearchHelper = VoiceSearchHelper(this, VOICE_SEARCH_REQUEST_CODE,
@@ -544,6 +570,16 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
 
     private fun changeTab(newTab: WebTabState) {
         tabsModel.changeTab(newTab, { tab: WebTabState -> createWebView(tab) }, vb.flWebViewContainer, WebEngineCallback(newTab))
+        followMediaOfCurrentTab()
+    }
+
+    /** The video mode follows the media of the shown tab */
+    private fun followMediaOfCurrentTab() {
+        mediaStateJob?.cancel()
+        mediaStateJob = null
+        videoMode.setMedia(null)
+        val media = tabsModel.currentTab.value?.webEngine as? MediaPlaybackSupport ?: return
+        mediaStateJob = lifecycleScope.launch { media.mediaState.collect { videoMode.setMedia(it) } }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -896,6 +932,13 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                 val keyCode = if (event.keyCode != 0) event.keyCode else event.scanCode
                 val keyCodeBackNavigation = keyCode == KeyEvent.KEYCODE_ESCAPE ||
                         keyCode == KeyEvent.KEYCODE_BUTTON_B || keyCode == KeyEvent.KEYCODE_BACK
+                if (keyCodeBackNavigation && isFullscreen) {
+                    //handleBackNavigation decides (the video mode may take Back), not the fullscreen view of the engine
+                    return true
+                }
+                if (!keyCodeBackNavigation && videoMode.dispatchKeyEvent(event)) {
+                    return true
+                }
                 val shortcutMgr = ShortcutMgr.getInstance()
                 val currentTab = tabsModel.currentTab.value
                 if (!keyCodeBackNavigation &&
@@ -946,6 +989,9 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             vb.vCursorMenu.close(CursorMenuView.CloseAnimation.ROTATE_OUT)
         } else if (vb.flWebViewContainer.cursorDrawerDelegate.canHandleBackNavigation()) {
             vb.flWebViewContainer.cursorDrawerDelegate.handleBackNavigation()
+        } else if (videoMode.backCallback.isEnabled) {
+            //the cursor that Up or Down gave back over the fullscreen video: hidden again
+            videoMode.backCallback.handleOnBackPressed()
         } else if (isFullscreen) {
             tabsModel.currentTab.value?.webEngine?.hideFullscreenView()
         } else if (vb.llBottomPanel.isVisible && !vb.rlActionBar.isVisible) {
@@ -1486,6 +1532,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
                     or View.SYSTEM_UI_FLAG_FULLSCREEN
                     or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
             isFullscreen = true
+            videoMode.setFullscreen(true)
         }
 
         override fun onExitFullscreen() {
@@ -1496,6 +1543,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
             isFullscreen = false
+            videoMode.setFullscreen(false)
             //the engine view may leave fullscreen by itself on BACK down (WebView does)
             backNavigationEventsAdapter.consumeCurrentPress()
         }

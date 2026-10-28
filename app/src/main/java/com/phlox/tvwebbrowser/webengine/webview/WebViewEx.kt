@@ -58,6 +58,7 @@ import com.phlox.tvwebbrowser.adblock.WebViewAdBlock
 import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.LoadErrorKind
 import com.phlox.tvwebbrowser.webengine.LoadErrorPage
+import com.phlox.tvwebbrowser.webengine.MediaState
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
 import com.phlox.tvwebbrowser.utils.Utils
@@ -96,7 +97,7 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
     @Volatile private var adBlockPageFlagsCache: Pair<String, Int>? = null
     private val documentStartScriptSupported = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
     private val uiHandler = Handler(Looper.getMainLooper())
-    private val mediaControls = WebViewMediaControls(this)
+    private val mediaControls = WebViewMediaControls(this) { callback.onMediaStateChanged(it) }
     //the error page for the page that failed to load, shown when WebView finished its own one
     private var pendingErrorPage: PendingErrorPage? = null
     //a Safe Browsing hit of a main frame: its url and threat type, for the error page that follows
@@ -127,6 +128,8 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         fun getActivity(): Activity?
         /** The page process of WebView crashed or was killed (low memory): this view can not be used anymore */
         fun onRenderProcessGone(didCrash: Boolean)
+        /** The media the keys of the remote control changed (null: the page has none) */
+        fun onMediaStateChanged(state: MediaState?)
         fun onOpenInNewTabRequested(url: String)
         fun onDownloadRequested(url: String)
         fun onThumbnailError()
@@ -682,6 +685,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
 
     /** A media key of the remote for the media of the page */
     fun mediaCommand(command: MediaCommand) = mediaControls.command(command)
+
+    fun seekMediaTo(position: Double) = mediaControls.seekTo(position)
+
+    fun seekMediaBy(delta: Double) = mediaControls.seekBy(delta)
 
     private class PendingErrorPage(val url: String, val page: String)
 
