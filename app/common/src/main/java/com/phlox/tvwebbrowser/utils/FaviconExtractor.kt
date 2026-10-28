@@ -14,7 +14,6 @@ class FaviconExtractor {
         const val DEFAULT_ICON_TYPE = "image/x-icon"
         const val DEFAULT_ICON_SIZE = 16
         const val DEFAULT_ICON_SIZE_STRING = "${DEFAULT_ICON_SIZE}x$DEFAULT_ICON_SIZE"
-        const val MAX_HTML_HEADER_CHARS = 256 * 1024
     }
 
     private val headerClosingTagsPattern: Pattern = Pattern.compile("<\\s*(?:body|/\\s*head)(?:\\s+|>)")
@@ -74,15 +73,7 @@ class FaviconExtractor {
      * @throws java.io.IOException
      */
     fun extractFavIconsFromURL(url: URL): ArrayList<IconInfo> {
-        val connection = url.openConnection()
-        val contentType = connection.contentType
-        val (result, manifestHref) = if (contentType != null && !contentType.contains("html", true)) {
-            //not a web page (file download, media stream, etc.), nothing to parse here
-            connection.getInputStream().close()
-            Pair(ArrayList<IconInfo>(), null)
-        } else {
-            connection.getInputStream().bufferedReader().use { extractFavIconsFromHTML(url, it) }
-        }
+        val (result, manifestHref) = url.openConnection().inputStream.bufferedReader().use { extractFavIconsFromHTML(url, it) }
         if (manifestHref != null) {
             val manifestURL = URL(url, manifestHref)
             try {
@@ -161,23 +152,16 @@ class FaviconExtractor {
         val iconInfos = ArrayList<IconInfo>()
         var manifestHref: String? = null
 
-        //read by chunks with a hard limit: the page may be huge, have no line breaks or not be HTML at all
         val headerPartOfHTML = StringBuilder()
-        val buffer = CharArray(8 * 1024)
-        val headerClosingMatcher = headerClosingTagsPattern.matcher("")
+        var line = html.readLine()
         try {
-            while (headerPartOfHTML.length < MAX_HTML_HEADER_CHARS) {
-                val count = html.read(buffer, 0, minOf(buffer.size, MAX_HTML_HEADER_CHARS - headerPartOfHTML.length))
-                if (count == -1) {
+            while (line != null) {
+                headerPartOfHTML.appendLine(line)
+                val matcher = headerClosingTagsPattern.matcher(line)
+                if (matcher.find()) {
                     break
                 }
-                //search a bit before the new chunk to find a closing tag split between chunks
-                val searchFrom = maxOf(0, headerPartOfHTML.length - 32)
-                headerPartOfHTML.appendRange(buffer, 0, count)
-                headerClosingMatcher.reset(headerPartOfHTML)
-                if (headerClosingMatcher.find(searchFrom)) {
-                    break
-                }
+                line = html.readLine()
             }
         } catch (e: Exception) {
             e.printStackTrace()
