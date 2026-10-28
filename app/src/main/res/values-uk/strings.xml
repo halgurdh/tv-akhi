@@ -188,4 +188,17 @@
   <string name="allow_autoplay_media">Дозволити автовідтворення медіа</string>
   <string name="web_engine_debug">Налагодження вебрушія (потрібен перезапуск)</string>
   <string name="web_engine_debug_warning_message">Увімкнення налагодження вебрушія може розкрити вміст сторінок, cookie та чутливі дані сесії будь-кому, хто має доступ до налагодження пристрою. Вмикайте лише на довірених пристроях для усунення несправностей.</string>
+  <string name="player_back_to_page">Назад до сторінки</string>
+  <string name="player_error">Не вдається відтворити це відео</string>
+  <string name="player_audio">Аудіо</string>
+  <string name="player_auto">Авто</string>
+  <string name="player_menu_row">%1$s: %2$s</string>
+  <string name="player_off">Вимк.</string>
+  <string name="player_quality">Якість</string>
+  <string name="player_speed">Швидкість</string>
+  <string name="player_subtitles">Субтитри</string>
+  <string name="player_track">Доріжка %d</string>
+  <string name="play_in_built_in_player">Відтворити у вбудованому плеєрі</string>
+  <string name="built_in_player">Вбудований плеєр</string>
+  <string name="settings_match_frame_rate">Підлаштовувати частоту кадрів під відео</string>
 </resources>

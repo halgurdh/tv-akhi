@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The video mode and the built-in player from TV Bro 3.0, with local values for the design system tokens of
+     TV Bro that their layouts use (TV Akhi has no such theme). They are drawn over the video: always dark. -->
+<resources>
+    <color name="ds_ink">#FFFFFF</color>
+    <color name="ds_menu">#F21E1F22</color>
+    <color name="ds_line">#33FFFFFF</color>
+    <color name="ds_focus">#3375D5FA</color>
+
+    <dimen name="ds_key_cap_height">24dp</dimen>
+    <dimen name="ds_key_cap_padding">8dp</dimen>
+    <dimen name="ds_space_gutter">16dp</dimen>
+    <dimen name="ds_space_icon_text">12dp</dimen>
+    <dimen name="ds_text_key_cap">13sp</dimen>
+    <dimen name="ds_text_menu_caption">11sp</dimen>
+    <dimen name="ds_text_menu_item">14sp</dimen>
+    <dimen name="ds_text_toast">18sp</dimen>
+    <dimen name="ds_panel_text_button_height">36dp</dimen>
+    <dimen name="ds_panel_text_button_padding">16dp</dimen>
+    <dimen name="text_size_caption">14sp</dimen>
+    <dimen name="player_error_width">560dp</dimen>
+    <dimen name="player_osd_margin_bottom">48dp</dimen>
+    <dimen name="player_title_margin_top">48dp</dimen>
+    <dimen name="player_menu_width">360dp</dimen>
+    <dimen name="video_osd_hint_key_gap">8dp</dimen>
+    <dimen name="video_osd_hint_text">16sp</dimen>
+    <dimen name="video_osd_row_gap">10dp</dimen>
+    <dimen name="ds_bookmark_menu_width">230dp</dimen>
+    <dimen name="ds_bookmarks_panel_margin_bottom">16dp</dimen>
+    <dimen name="ds_border_hairline">1dp</dimen>
+    <dimen name="ds_space_menu_inset">18dp</dimen>
+    <dimen name="ds_size_menu_row">37dp</dimen>
+    <dimen name="ds_size_icon_menu">18dp</dimen>
+
+    <style name="Widget.TVBro.KeyCap" parent="">
+        <item name="android:textSize">@dimen/ds_text_key_cap</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/video_osd_text</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minWidth">@dimen/ds_key_cap_height</item>
+        <item name="android:paddingStart">@dimen/ds_key_cap_padding</item>
+        <item name="android:paddingEnd">@dimen/ds_key_cap_padding</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:background">@drawable/ds_key_cap_bg</item>
+    </style>
+    <style name="Widget.TVBro.Text" parent="" />
+    <style name="Widget.TVBro.Text.Caption">
+        <item name="android:textSize">@dimen/text_size_caption</item>
+    </style>
+    <style name="Widget.TVBro.Text.MenuCaption">
+        <item name="android:textSize">@dimen/ds_text_menu_caption</item>
+    </style>
+    <style name="Widget.TVBro.Text.MenuItem">
+        <item name="android:textSize">@dimen/ds_text_menu_item</item>
+    </style>
+    <style name="Widget.TVBro.Text.Toast">
+        <item name="android:textSize">@dimen/ds_text_toast</item>
+    </style>
+    <style name="Widget.TVBro.Text.MenuItem.Row">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">@dimen/ds_space_menu_inset</item>
+        <item name="android:textColor">@color/ds_ink</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="Widget.TVBro.MenuRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/ds_size_menu_row</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">@dimen/ds_space_menu_inset</item>
+        <item name="android:paddingEnd">@dimen/ds_space_menu_inset</item>
+        <item name="android:background">@drawable/ds_menu_row_bg</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+    <style name="Widget.TVBro.MenuSeparator" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/ds_border_hairline</item>
+        <item name="android:background">@color/ds_line</item>
+    </style>
+    <style name="Widget.TVBro.MenuIcon" parent="">
+        <item name="android:layout_width">@dimen/ds_size_icon_menu</item>
+        <item name="android:layout_height">@dimen/ds_size_icon_menu</item>
+        <item name="tint">@color/ds_ink</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="Widget.TVBro.TextButton" parent="" />
+    <style name="Widget.TVBro.TextButton.Ds" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/ds_panel_text_button_height</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">@dimen/ds_panel_text_button_padding</item>
+        <item name="android:paddingEnd">@dimen/ds_panel_text_button_padding</item>
+        <item name="android:background">@drawable/ds_icon_button_bg</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:textSize">@dimen/ds_text_menu_item</item>
+        <item name="android:textColor">@color/ds_ink</item>
+    </style>
+</resources>

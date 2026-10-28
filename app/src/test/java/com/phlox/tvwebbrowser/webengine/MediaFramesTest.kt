@@ -1,6 +1,5 @@
-package com.phlox.tvwebbrowser.webengine.webview
+package com.phlox.tvwebbrowser.webengine
 
-import com.phlox.tvwebbrowser.webengine.MediaState
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -64,14 +63,31 @@ class MediaFramesTest {
     }
 
     @Test
+    fun theSourceOfTheMedia() {
+        assertEquals(MediaSource("https://a.com/v.mp4", false), MediaReports.source(JSONObject(
+            """{"media":true,"playing":true,"src":"https://a.com/v.mp4","mse":false}""")))
+        assertEquals(MediaSource(null, true), MediaReports.source(JSONObject("""{"media":true,"src":null,"mse":true}""")))
+        assertNull(MediaReports.source(JSONObject("""{"media":false}""")))
+    }
+
+    @Test
     fun parsesTheReportsOfTheScript() {
-        val state = WebViewMediaControls.parse(JSONObject(
+        val state = MediaReports.parse(JSONObject(
             """{"media":true,"playing":true,"fullscreen":true,"position":12.5,"duration":600,"rate":1.5}"""), 42)
         assertEquals(MediaState(playing = true, position = 12.5, duration = 600.0, fullscreen = true, rate = 1.5, at = 42),
             state)
         //JSON.stringify makes an endless duration null
-        assertNull(WebViewMediaControls.parse(JSONObject(
+        assertNull(MediaReports.parse(JSONObject(
             """{"media":true,"playing":false,"fullscreen":false,"position":3,"duration":null,"rate":0}"""), 0)?.duration)
-        assertNull(WebViewMediaControls.parse(JSONObject("""{"media":false}"""), 0))
+        assertNull(MediaReports.parse(JSONObject("""{"media":false}"""), 0))
+    }
+
+    @Test
+    fun theReportsTellMutedMedia() {
+        assertEquals(true, MediaReports.parse(JSONObject(
+            """{"media":true,"playing":true,"fullscreen":false,"position":0,"duration":30,"rate":1,"muted":true}"""), 0)?.muted)
+        //reports of older scripts have no "muted": the media is taken to have sound
+        assertEquals(false, MediaReports.parse(JSONObject(
+            """{"media":true,"playing":true,"fullscreen":false,"position":0,"duration":30,"rate":1}"""), 0)?.muted)
     }
 }

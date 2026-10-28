@@ -186,4 +186,17 @@
   <string name="allow_autoplay_media">允許媒體自動播放</string>
   <string name="web_engine_debug">Web 引擎偵錯（需要重新啟動）</string>
   <string name="web_engine_debug_warning_message">啟用 Web 引擎偵錯可能會將頁面內容、Cookie 與敏感的工作階段資料暴露給任何具有裝置偵錯存取權的人。僅在受信任裝置上為疑難排解時啟用。</string>
+    <string name="player_back_to_page">返回頁面</string>
+    <string name="player_error">無法播放此影片</string>
+    <string name="player_audio">音訊</string>
+    <string name="player_auto">自動</string>
+    <string name="player_menu_row">%1$s：%2$s</string>
+    <string name="player_off">關閉</string>
+    <string name="player_quality">畫質</string>
+    <string name="player_speed">速度</string>
+    <string name="player_subtitles">字幕</string>
+    <string name="player_track">音軌 %d</string>
+    <string name="play_in_built_in_player">在內建播放器中播放</string>
+    <string name="built_in_player">內建播放器</string>
+    <string name="settings_match_frame_rate">配合影片的畫面更新率</string>
 </resources>

@@ -59,6 +59,8 @@ import com.phlox.tvwebbrowser.webengine.MediaTools
 import com.phlox.tvwebbrowser.webengine.LoadErrorKind
 import com.phlox.tvwebbrowser.webengine.LoadErrorPage
 import com.phlox.tvwebbrowser.webengine.MediaState
+import com.phlox.tvwebbrowser.webengine.MediaCommand
+import com.phlox.tvwebbrowser.webengine.PageVideo
 import com.phlox.tvwebbrowser.webengine.ContentFilter
 import com.phlox.tvwebbrowser.utils.DPADNavigationEventsAdapter
 import com.phlox.tvwebbrowser.utils.Utils
@@ -97,7 +99,8 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
     @Volatile private var adBlockPageFlagsCache: Pair<String, Int>? = null
     private val documentStartScriptSupported = WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)
     private val uiHandler = Handler(Looper.getMainLooper())
-    private val mediaControls = WebViewMediaControls(this) { callback.onMediaStateChanged(it) }
+    private val mediaControls = WebViewMediaControls(this, { callback.onMediaStateChanged(it) },
+        { callback.onPageVideosChanged(it) }, { callback.onMediaVideoChanged(it) })
     //the error page for the page that failed to load, shown when WebView finished its own one
     private var pendingErrorPage: PendingErrorPage? = null
     //a Safe Browsing hit of a main frame: its url and threat type, for the error page that follows
@@ -130,6 +133,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
         fun onRenderProcessGone(didCrash: Boolean)
         /** The media the keys of the remote control changed (null: the page has none) */
         fun onMediaStateChanged(state: MediaState?)
+        /** The videos of the page other players can play changed */
+        fun onPageVideosChanged(videos: List<PageVideo>)
+        /** The video among them that the media the keys control plays (null: none known) */
+        fun onMediaVideoChanged(video: PageVideo?)
         fun onOpenInNewTabRequested(url: String)
         fun onDownloadRequested(url: String)
         fun onThumbnailError()

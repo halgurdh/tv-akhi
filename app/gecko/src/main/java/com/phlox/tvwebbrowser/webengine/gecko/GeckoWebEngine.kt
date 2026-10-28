@@ -486,6 +486,10 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
         mediaSessionDelegate.mediaSession?.seekForward()
     }
 
+    override fun pausePlayback() {
+        mediaSessionDelegate.mediaSession?.pause()
+    }
+
     override fun seekTo(position: Double) {
         mediaSessionDelegate.mediaSession?.seekTo(position.coerceAtLeast(0.0), false)
     }

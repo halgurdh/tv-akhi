@@ -272,6 +272,14 @@
         android:elevation="16dp"
         android:visibility="gone" />
 
+    <!-- the built-in player, over the whole window -->
+    <com.phlox.tvwebbrowser.activity.main.view.PlayerScreenView
+        android:id="@+id/vPlayerScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="20dp"
+        android:outlineProvider="none" />
+
     <ProgressBar
         android:id="@+id/progressBarGeneric"
         style="?android:attr/progressBarStyleLarge"
