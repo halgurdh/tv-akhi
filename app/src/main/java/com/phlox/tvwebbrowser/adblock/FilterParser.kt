@@ -12,7 +12,7 @@ object FilterParser {
 
     /** Options whose filters we can't honour; such filters are dropped instead of being applied wrongly */
     private val UNSUPPORTED_OPTIONS = hashSetOf(
-        "popup", "popunder", "removeparam", "queryprune", "csp", "header", "permissions", "replace",
+        "popunder", "removeparam", "queryprune", "csp", "header", "permissions", "replace",
         "urlskip", "uritransform", "urltransform", "rewrite", "cname", "ipaddress", "inline-script",
         "inline-font", "top", "redirect-rule", "empty", "mp4", "webrtc", "genericblock", "elemhide-exception"
     )

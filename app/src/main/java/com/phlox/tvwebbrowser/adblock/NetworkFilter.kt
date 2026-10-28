@@ -14,9 +14,11 @@ object RequestType {
     const val FONT = 1 shl 9
     const val WEBSOCKET = 1 shl 10
     const val DOCUMENT = 1 shl 11
+    /** a new window opened by the page; only `$popup` filters (and plain `||host^` ones) apply to it */
+    const val POPUP = 1 shl 12
 
     const val ALL_BUT_DOCUMENT = (1 shl 11) - 1
-    const val ALL = ALL_BUT_DOCUMENT or DOCUMENT
+    const val ALL = ALL_BUT_DOCUMENT or DOCUMENT or POPUP
     /** WebView doesn't tell the resource type, this is used when it can't be guessed */
     const val UNKNOWN = SCRIPT or XHR or OTHER
 
@@ -33,6 +35,7 @@ object RequestType {
         "websocket" -> WEBSOCKET
         "other" -> OTHER
         "document", "doc" -> DOCUMENT
+        "popup" -> POPUP
         "all" -> ALL
         else -> 0
     }

@@ -78,6 +78,20 @@ class AdBlockEngineTest {
     }
 
     @Test
+    fun popups() {
+        val e = engine("||popads.example^\$popup,third-party", "||adserver.example^", "||cdn.example^\$script",
+            "@@||popads.example/ok^\$popup", "/clickunder/*\$popup")
+        val page = "https://player.site/"
+        assertTrue(e.blocks("https://popads.example/go?id=1", page, RequestType.POPUP))
+        assertFalse(e.blocks("https://popads.example/go", "https://www.popads.example/", RequestType.POPUP))
+        assertFalse(e.blocks("https://popads.example/x.js", page, RequestType.SCRIPT)) //$popup only
+        assertTrue(e.blocks("https://adserver.example/redirect", page, RequestType.POPUP)) //plain host filter
+        assertFalse(e.blocks("https://cdn.example/watch", page, RequestType.POPUP)) //other types don't
+        assertFalse(e.blocks("https://popads.example/ok/1", page, RequestType.POPUP))
+        assertTrue(e.blocks("https://any.example/clickunder/5", page, RequestType.POPUP))
+    }
+
+    @Test
     fun pageFlags() {
         val e = engine("@@||trusted.com^\$document", "@@||nogeneric.com^\$ghide", "##.ad", "nogeneric.com##.specific")
         assertEquals(PageFlags.DOCUMENT, e.network.pageFlags("https://www.trusted.com/page"))

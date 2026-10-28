@@ -106,7 +106,7 @@ class NetworkEngine {
     }
 
     private fun plainHostFilter(req: Request, parents: List<String>): NetworkFilter? {
-        if (req.typeBits and RequestType.ALL_BUT_DOCUMENT == 0) return null
+        if (req.typeBits and (RequestType.ALL_BUT_DOCUMENT or RequestType.POPUP) == 0) return null
         for (h in parents) if (h in plainHosts) return FilterParser.parseNetwork("||$h^")
         return null
     }

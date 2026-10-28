@@ -361,7 +361,10 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                             v.post { v.destroy() }
                             //a pop-up to a blocked site (mostly the ad a player opens on the first click): dropped,
                             //the page (and its video) stays instead of turning into the blocked page
-                            if (ContentFilter.categoryOfUrl(url) != null) {
+                            //the same for ad pop-ups, or the ad (or the ad blocker's "Page blocked") replaces the video
+                            val openerUrl = currentOriginalUrl?.toString()
+                            if (ContentFilter.categoryOfUrl(url) != null || (callback.isAdBlockingEnabled() &&
+                                    WebViewAdBlock.isBlockedPopup(url, openerUrl, adBlockPageFlags(openerUrl)))) {
                                 Log.d(TAG, "Blocked pop-up: $url")
                                 callback.onBlockedDialog(true)
                                 return true

@@ -218,6 +218,21 @@ object WebViewAdBlock {
         return Redirects.response(result.filter.redirect, type)
     }
 
+    /** Whether a new window to [url] opened by the page at [openerUrl] is an ad (`$popup` filters, ad servers) */
+    fun isBlockedPopup(url: String, openerUrl: String?, openerFlags: Int): Boolean {
+        if (!isEnabled()) return false
+        val engine = engine ?: return false
+        if (openerFlags and PageFlags.DOCUMENT != 0) return false
+        if (!url.startsWith("http")) return false
+        val result = try {
+            engine.network.match(Request(url, DomainUtils.hostOf(url), DomainUtils.hostOf(openerUrl ?: url), RequestType.POPUP))
+        } catch (e: Exception) {
+            Log.e(TAG, "match error", e)
+            return false
+        }
+        return result is MatchResult.Blocked
+    }
+
     private fun blockedPageResponse(url: String, filter: String): WebResourceResponse {
         fun esc(s: String) = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
         val html = """<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width">
