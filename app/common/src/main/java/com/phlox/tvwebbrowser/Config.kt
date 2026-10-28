@@ -45,6 +45,9 @@ class Config(val prefs: SharedPreferences) {
         const val SMART_SKIP_KEY = "smart_skip"
         const val NO_MUSIC_KEY = "no_music"
         const val ADULT_BLOCK_KEY = "adult_block"
+        //keys of the brsteej branch's build
+        private const val BRSTEEJ_BUILD_KEY = "dedicated_site"
+        private const val BRSTEEJ_BUILD_DOMAIN_KEY = "dedicated_site_domain"
         const val HARAM_BLOCK_KEY = "haram_block"
         const val PARENTAL_PIN_KEY = "parental_pin"
         const val APP_WEB_EXTENSION_VERSION_KEY = "app_web_extension_version"
@@ -174,17 +177,28 @@ class Config(val prefs: SharedPreferences) {
             prefs.edit().putString(HOME_PAGE_KEY, value).apply()
         }
 
+    init {
+        //the build of the brsteej branch made brsteej the home page: back to the home page of the app, once
+        if (prefs.contains(BRSTEEJ_BUILD_KEY)) {
+            prefs.edit()
+                .remove(BRSTEEJ_BUILD_KEY)
+                .remove(BRSTEEJ_BUILD_DOMAIN_KEY)
+                .putInt(HOME_PAGE_MODE, HomePageMode.HOME_PAGE.ordinal)
+                .putString(HOME_PAGE_KEY, HOME_URL_ALIAS)
+                .apply()
+        }
+    }
+
     var searchEngineURL = ObservableStringPreference(SearchEnginesURLs[SearchEnginesNames.indexOf("ddg")], SEARCH_ENGINE_URL_PREF_KEY)
 
     var webEngine: String
         get() {
             if (!prefs.contains(WEB_ENGINE)) {
-                prefs.edit().putString(
-                    WEB_ENGINE, if (canRecommendGeckoView())
-                    SupportedWebEngines[0] else SupportedWebEngines[1]).apply()
+                //WebView by default (lighter on TVs), GeckoView can be chosen in the settings
+                prefs.edit().putString(WEB_ENGINE, ENGINE_WEB_VIEW).apply()
             }
 
-            return prefs.getString(WEB_ENGINE, SupportedWebEngines[0])!!
+            return prefs.getString(WEB_ENGINE, ENGINE_WEB_VIEW)!!
         }
         set(value) {
             prefs.edit().putString(WEB_ENGINE, value).apply()

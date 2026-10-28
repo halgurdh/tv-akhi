@@ -949,10 +949,6 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             tabsModel.currentTab.value?.webEngine?.hideFullscreenView()
         } else if (vb.llBottomPanel.isVisible && !vb.rlActionBar.isVisible) {
             hideBottomPanel()
-        } else if (vb.rlActionBar.isVisible && tabsModel.currentTab.value?.webEngine?.canGoBack() == true) {
-            //first press shows the menu, second press goes back like in a normal browser
-            hideMenuOverlay()
-            tabsModel.currentTab.value?.webEngine?.goBack()
         } else {
             toggleMenu()
         }
