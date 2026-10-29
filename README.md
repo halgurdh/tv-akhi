@@ -13,11 +13,6 @@ give their project a star. I took his [Safaa](https://github.com/mohamedsadiqagu
 TV Akhi is based on [TV Bro](https://github.com/truefedex/tv-bro) by Fedir Tsapana and adds built-in ad blocking
 with uBlock Origin.
 
-## Other device support?
-
-For other devices see my FireFox Fork: 
-[AkhiBrowser](https://github.com/halgurdh/akhiBrowser) runs on Windows, macOS and Linux (Firefox desktop), and on Android (Fenix with GeckoView). For Android TV, see TV Akhi, which shares the same NoMusic and content filters.
-
 ## Features
 
 - **Ad blocking with uBlock Origin:**
