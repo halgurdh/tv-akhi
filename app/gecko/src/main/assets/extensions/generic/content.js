@@ -47,7 +47,10 @@ communicatePort.onMessage.addListener(message => {
     let settings = {};
     function refreshSettings() {
         browser.runtime.sendNativeMessage("tvbro_content", { action: "getSettings" })
-            .then(result => { settings = result || {}; })
+            .then(result => {
+                settings = result || {};
+                tvakhiImageBlur.setEnabled(!!settings.imageBlur);
+            })
             .catch(() => { });
     }
     refreshSettings();

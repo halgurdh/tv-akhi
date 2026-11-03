@@ -218,6 +218,8 @@
     <string name="no_music_unavailable">No music cannot run on this site</string>
     <string name="no_music_slow">No music paused: the TV is too slow for this video</string>
     <string name="adult_block">Block porn and nudity (SafeSearch on)</string>
+    <string name="image_blur">Blur images with nudity (uses more memory)</string>
+    <string name="image_blur_needs_gecko">The image blur needs the GeckoView engine. Choose it in these settings.</string>
     <string name="haram_block">Haram filter: block alcohol, drugs and gambling</string>
     <string name="adult_blocked">Blocked: this site has adult content</string>
     <string name="haram_blocked">Blocked by the haram filter (alcohol, drugs or gambling)</string>

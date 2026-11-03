@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "tvbro-generic",
-  "version": "1.5",
+  "version": "1.6",
   "description": "TV Bro Generic Addon",
   "browser_specific_settings": {
     "gecko": {
@@ -13,9 +13,13 @@
       "matches": [
         "*://*/*"
       ],
+      "css": [
+        "imageblur/image_blur.css"
+      ],
       "js": [
         "nomusic/engine.js",
         "media_tools.js",
+        "imageblur/image_blur.js",
         "content.js"
       ],
       "run_at": "document_start",
@@ -34,7 +38,8 @@
   ],
   "background": {
     "scripts": [
-      "background.js"
+      "background.js",
+      "imageblur/image_blur_background.js"
     ],
     "persistent": false
   },

@@ -315,6 +315,19 @@ class MainSettingsView @JvmOverloads constructor(
             }
         }
 
+        //GeckoView only, the blur is part of its extension
+        vb.scImageBlur.isChecked = config.isWebEngineGecko() && config.imageBlurEnabled
+        vb.llImageBlur.setOnClickListener {
+            if (!config.isWebEngineGecko()) {
+                Toast.makeText(context, R.string.image_blur_needs_gecko, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            lockedSwitch(config.imageBlurEnabled) {
+                config.imageBlurEnabled = !config.imageBlurEnabled
+                vb.scImageBlur.isChecked = config.imageBlurEnabled
+            }
+        }
+
         vb.scHaramBlock.isChecked = config.haramBlockEnabled
         vb.llHaramBlock.setOnClickListener {
             lockedSwitch(config.haramBlockEnabled) {

@@ -50,6 +50,7 @@ class Config(val prefs: SharedPreferences) {
         private const val BRSTEEJ_BUILD_KEY = "dedicated_site"
         private const val BRSTEEJ_BUILD_DOMAIN_KEY = "dedicated_site_domain"
         const val HARAM_BLOCK_KEY = "haram_block"
+        const val IMAGE_BLUR_KEY = "image_blur"
         const val PARENTAL_PIN_KEY = "parental_pin"
         const val APP_WEB_EXTENSION_VERSION_KEY = "app_web_extension_version"
         const val NOTIFICATION_ABOUT_ENGINE_CHANGE_SHOWN_KEY = "notification_about_engine_change_shown"
@@ -290,6 +291,13 @@ class Config(val prefs: SharedPreferences) {
         get() = prefs.getBoolean(HARAM_BLOCK_KEY, true)
         set(value) {
             prefs.edit().putBoolean(HARAM_BLOCK_KEY, value).apply()
+        }
+
+    //blur images with nudity (imageblur/ of the GeckoView extension), off by default: it takes memory on a TV
+    var imageBlurEnabled: Boolean
+        get() = prefs.getBoolean(IMAGE_BLUR_KEY, false)
+        set(value) {
+            prefs.edit().putBoolean(IMAGE_BLUR_KEY, value).apply()
         }
 
     //"salt:sha-256" of the PIN that locks the filters and No music (ParentalLock), null: no PIN

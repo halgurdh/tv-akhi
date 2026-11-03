@@ -267,3 +267,5 @@ rebuilds them.
 No music is based on [NoMusic](https://github.com/mohamedsadiqaguenaou/NoMusic) (ISC license) and uses its WebAssembly
 build of the [FastEnhancer](https://github.com/aask1357/fastenhancer) Lite model (MIT license) and of
 [RNNoise](https://github.com/xiph/rnnoise) (BSD license).
+The image blur uses the [NSFWJS](https://github.com/infinitered/nsfwjs) model (MIT license) on
+[TensorFlow.js](https://github.com/tensorflow/tfjs) (Apache 2.0 license).
