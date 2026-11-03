@@ -16,7 +16,7 @@ android {
     namespace = "com.phlox.tvwebbrowser"
 
     defaultConfig {
-        applicationId = "io.github.halgurdh.tvakhi"
+        applicationId = "io.github.halgurdh.tvakhi2"
         versionCode = 82
         versionName = "1.3.0"
 
