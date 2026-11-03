@@ -23,10 +23,14 @@ jobs:
 
       - name: Get the private submodule
         run: |
-          git config --global url."https://x-access-token:${CORE_REPO_TOKEN}@github.com/halgurdh/tv-akhi-core".insteadOf https://github.com/halgurdh/tv-akhi-core
+          mkdir -p ~/.ssh
+          echo "$CORE_DEPLOY_KEY" > ~/.ssh/core_key
+          chmod 600 ~/.ssh/core_key
+          git config --global core.sshCommand "ssh -i ~/.ssh/core_key -o StrictHostKeyChecking=accept-new"
+          git config --global url."git@github.com:halgurdh/tv-akhi-core".insteadOf https://github.com/halgurdh/tv-akhi-core
           git submodule update --init
         env:
-          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
+          CORE_DEPLOY_KEY: ${{ secrets.CORE_DEPLOY_KEY }}
 
       - uses: actions/setup-java@v4
         with:
