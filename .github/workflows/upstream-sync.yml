@@ -22,6 +22,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get the private submodule
+        run: |
+          git config --global url."https://x-access-token:${CORE_REPO_TOKEN}@github.com/halgurdh/tv-akhi-core".insteadOf https://github.com/halgurdh/tv-akhi-core
+          git submodule update --init
+        env:
+          CORE_REPO_TOKEN: ${{ secrets.CORE_REPO_TOKEN }}
+
       - name: Merge upstream
         id: merge
         run: |

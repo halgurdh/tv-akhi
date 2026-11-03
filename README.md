@@ -255,6 +255,9 @@ Tests: `./gradlew :app:testFossGeckoIncludedDebugUnitTest`
 
 TV Akhi uses TV Bro's sources: https://github.com/truefedex/tv-bro. See [LICENSE.md](LICENSE.md).
 How to take changes from TV Bro: [UPSTREAM_SYNC.md](UPSTREAM_SYNC.md).
+
+TV Akhi's own code (the family filters, no music, the ad block engine, the parental lock, the home page) is in a
+private repository, pulled in as a git submodule at `private/`. Without access to it this tree doesn't build.
 Ad blocking uses [uBlock Origin](https://github.com/gorhill/uBlock) and the filter lists from
 [uAssets](https://github.com/uBlockOrigin/uAssets).
 Smart skip uses the recap, intro and credits times of [TheIntroDB](https://theintrodb.org).
