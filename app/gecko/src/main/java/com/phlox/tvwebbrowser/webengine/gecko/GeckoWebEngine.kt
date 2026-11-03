@@ -244,8 +244,10 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine,
                     Log.d(TAG, "onMessage: $nativeApp, $message, $sender")
                     val json = message as? JSONObject ?: return null
                     when (json.optString("action")) {
+                        //as text: a JSONObject doesn't reach the page ("Invalid event data for callback")
                         "getSettings" -> return GeckoResult.fromValue(MediaTools.settings()
-                            .put("autoFullscreenVideo", AppContext.provideConfig().autoFullscreenVideo))
+                            .put("autoFullscreenVideo", AppContext.provideConfig().autoFullscreenVideo)
+                            .toString())
                         "mediaToolsEvent" -> {
                             val event = json.optString("event")
                             if (event in MediaTools.EVENTS) uiHandler.post { callback?.onMediaToolsEvent(event) }
