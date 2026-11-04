@@ -15,7 +15,7 @@ with uBlock Origin.
 
 ## Other device support?
 
-For other devices see my [FireFox](https://github.com/mozilla-firefox/firefox) Fork: [AkhiBrowser](https://github.com/halgurdh/akhibrowser) 
+For other devices see my FireFox Fork: [AkhiBrowser](https://github.com/halgurdh/akhibrowser) 
 
 ## Features
 
