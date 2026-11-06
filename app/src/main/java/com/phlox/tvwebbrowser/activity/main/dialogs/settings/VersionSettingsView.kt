@@ -30,11 +30,13 @@ class VersionSettingsView @JvmOverloads constructor(
 ) : ScrollView(context, attrs, defStyleAttr) {
 
     companion object {
+        private const val URL_PROJECT = "https://github.com/halgurdh/tv-akhi"
         private const val URL_SUPPORT_AUTHOR = "https://github.com/halgurdh"
         private const val URL_LICENSE =
             "https://raw.githubusercontent.com/truefedex/tv-bro/refs/heads/master/LICENSE.md"
         private const val URL_PRIVACY_POLICY =
-            "https://raw.githubusercontent.com/truefedex/tv-bro/refs/heads/master/PRIVACY.md"
+            "$URL_PROJECT/blob/master/PRIVACY.md"
+        private const val URL_TERMS = "$URL_PROJECT/blob/master/TERMS.md"
     }
     private var vb = ViewSettingsVersionBinding.inflate(LayoutInflater.from(getContext()), this, true)
     var config = AppContext.provideConfig()
@@ -58,7 +60,7 @@ class VersionSettingsView @JvmOverloads constructor(
         val engineVersion = "Engine: " + WebEngineFactory.getWebEngineVersionString()
         vb.tvWebViewVersion.text = engineVersion
 
-        vb.tvLink.text = Html.fromHtml("<p><u>https://github.com/truefedex/tv-bro</u></p>",
+        vb.tvLink.text = Html.fromHtml("<p><u>$URL_PROJECT</u></p>",
             Html.FROM_HTML_MODE_LEGACY)
         vb.tvLink.setOnClickListener {
             loadUrl(vb.tvLink.text.toString())
@@ -77,6 +79,11 @@ class VersionSettingsView @JvmOverloads constructor(
         vb.tvPrivacy.text = context.getString(R.string.privacy_policy)
         vb.tvPrivacy.setOnClickListener {
             loadUrl(URL_PRIVACY_POLICY)
+        }
+
+        vb.tvTerms.text = context.getString(R.string.terms_and_conditions)
+        vb.tvTerms.setOnClickListener {
+            loadUrl(URL_TERMS)
         }
 
         vb.tvUkraine.setOnClickListener {

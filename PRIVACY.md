@@ -1,22 +1,18 @@
 ### Privacy policy ###
 
-**Last updated:** March 28, 2026
+**Last updated:** November 6, 2026
 
-This policy describes how **TV Bro** (“the application”) handles information. The application is open-source software. The primary author is **Fedir Tsapana**. Development may also involve a **changing set of voluntary contributors**; you can see the current list on the [GitHub contributors page](https://github.com/truefedex/tv-bro/graphs/contributors).
+This policy describes how **TV Akhi** (“the app”) handles information. TV Akhi is provided by **Rezgari Tech** and is based in part on [TV Bro](https://github.com/truefedex/tv-bro) by Fedir Tsapana. TV Akhi is a web browser, so information you choose to send to websites and other services is handled by those services, not by this policy.
 
 ---
 
 #### Information the application collects ####
 
-The current version of the application **does not collect personal data** and **does not transmit analytics or usage data** from your device to us or to third-party analytics services as part of the app’s own behavior.
-
-#### Earlier versions ####
-
-**Older releases** of the application may have included **Firebase Crashlytics** (or similar crash-reporting tooling) that could send **crash diagnostics** to Google’s infrastructure. Those reports, when enabled, were handled under Google’s terms and privacy practices applicable at the time. If you use an old build, consult that build’s documentation or source to confirm what was included.
+The app is not designed to send your browsing history, passwords, form contents, or analytics/advertising identifiers to Rezgari Tech. This does **not** mean that no information leaves your device: loading a website, using a search engine, or using an online feature sends requests to the relevant service. Those services may receive your IP address, request details, and other information according to their own policies. The app stores browser data such as settings, bookmarks, and history locally on your device.
 
 #### Websites you visit ####
 
-TV Bro is a **web browser**. When you browse the internet:
+TV Akhi is a **web browser**. When you browse the internet:
 
 - **Websites, networks, and services you use** may collect, store, and process data according to **their own** privacy policies and practices.
 - **Your device, ISP, DNS provider, and other intermediaries** may see network activity when you load pages or use online services.
@@ -36,12 +32,11 @@ The application does not knowingly collect personal information from children. P
 
 #### Changes to this policy ####
 
-We may update this policy from time to time. The **“Last updated”** date at the top will change when we do. Continued use of the application after changes means you accept the revised policy.
+We may update this policy from time to time. The **“Last updated”** date at the top will change when we do. Check this page for the current version.
 
 #### Contact ####
 
-For privacy-related questions about this project, you may reach the author via the contact options linked from the official project page:  
-https://github.com/truefedex/tv-bro
+For privacy-related questions about TV Akhi, contact [support@akhibrowser.com](mailto:support@akhibrowser.com).
 
 ---
 
