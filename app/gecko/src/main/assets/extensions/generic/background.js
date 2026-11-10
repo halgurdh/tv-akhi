@@ -5,7 +5,17 @@ let tvBroPort = browser.runtime.connectNative("tvbro_bg");
 
 //serve home page from files bundled with the extension (TV Akhi branding) instead of the upstream web version;
 //the url stays the same so home.js content script keeps working
-const HOME_PAGE_PREFIX = "https://tvbro.phlox.dev/appcontent/home/";
+const HOME_PAGE_PREFIX = "https://akhibrowser.com/appcontent/home/";
+//address used by older versions (upstream TV Bro): redirect before any request leaves the device
+const LEGACY_HOME_PAGE_PREFIX = "https://tvbro.phlox.dev/appcontent/home/";
+
+browser.webRequest.onBeforeRequest.addListener(
+    function (details) {
+        return { redirectUrl: HOME_PAGE_PREFIX + details.url.substring(LEGACY_HOME_PAGE_PREFIX.length) };
+    },
+    { urls: [LEGACY_HOME_PAGE_PREFIX + "*"] },
+    ["blocking"]
+);
 
 browser.webRequest.onBeforeRequest.addListener(
     function (details) {

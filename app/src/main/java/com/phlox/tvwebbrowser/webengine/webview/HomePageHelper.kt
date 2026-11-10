@@ -32,7 +32,7 @@ object HomePageHelper {
             }
         } /*else if (url.startsWith(Config.HOME_PAGE_URL) &&
             (url.endsWith(".svg") || url.endsWith(".png"))) {
-            //load images of tvbro.phlox.dev from assets for offline mode
+            //load images of the home page from assets for offline mode
             val data = TVBro.instance.assets.open("pages/home" + request.url.path!!.replace("/appcontent/home", "")).use { it.readBytes() }
             var imageType = url.substring(url.lastIndexOf(".") + 1)
             if (imageType == "svg") {

@@ -9,6 +9,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.phlox.tvwebbrowser.AppContext
+import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.utils.Utils
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.isGecko
@@ -68,7 +69,7 @@ data class WebTabState(@PrimaryKey(autoGenerate = true)
 
     constructor(context: Context, json: JSONObject) : this() {
         try {
-            url = json.getString("url")
+            url = Config.migrateHomePageUrl(json.getString("url"))
             title = json.getString("title")
             selected = json.getBoolean("selected")
             if (json.has("thumbnail")) {

@@ -1,1 +1,1 @@
-* Several bugfixes (handling physical keyboards, page preview rendering)
+* Home page is no longer requested from a third-party server; it is bundled with the app

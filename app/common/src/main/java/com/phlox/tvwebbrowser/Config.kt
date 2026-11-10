@@ -18,6 +18,19 @@ class Config(val prefs: SharedPreferences) {
         const val UPDATE_CHANNEL_KEY = "update_channel"
         const val TV_BRO_UA_PREFIX = "TV Bro/1.0 "
         const val HOME_URL_ALIAS = "about:home"
+
+        fun homePagePrefixOf(url: String?): String? = when {
+            url == null -> null
+            url.startsWith(HOME_PAGE_URL, ignoreCase = true) -> HOME_PAGE_URL
+            url.startsWith(LEGACY_HOME_PAGE_URL, ignoreCase = true) -> LEGACY_HOME_PAGE_URL
+            else -> null
+        }
+
+        fun isHomePageUrl(url: String?) = homePagePrefixOf(url) != null
+
+        fun migrateHomePageUrl(url: String): String =
+            if (url.startsWith(LEGACY_HOME_PAGE_URL, ignoreCase = true))
+                HOME_PAGE_URL + url.substring(LEGACY_HOME_PAGE_URL.length) else url
         const val KEEP_SCREEN_ON_KEY = "keep_screen_on"
         /** When true, analog stick / hat axes from generic motion events are not translated to DPAD keys. */
         const val DISABLE_MOTION_AXES_DPAD_NAVIGATION_KEY = "disable_motion_axes_dpad_navigation"
@@ -67,7 +80,9 @@ class Config(val prefs: SharedPreferences) {
         //"" - system default language
         val VoiceSearchLanguages = arrayOf("", "ar", "en")
         val SupportedWebEngines = arrayOf(ENGINE_GECKO_VIEW, ENGINE_WEB_VIEW)
-        const val HOME_PAGE_URL = "https://tvbro.phlox.dev/appcontent/home/"
+        const val HOME_PAGE_URL = "https://akhibrowser.com/appcontent/home/"
+        //upstream TV Bro address, still found in tabs and history saved by older versions
+        const val LEGACY_HOME_PAGE_URL = "https://tvbro.phlox.dev/appcontent/home/"
         //const val HOME_PAGE_URL = "http://10.0.2.2:5000/appcontent/home/"
 
         fun canRecommendGeckoView(): Boolean {

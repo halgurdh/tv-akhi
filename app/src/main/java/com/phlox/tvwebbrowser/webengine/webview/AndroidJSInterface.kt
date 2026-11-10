@@ -139,6 +139,6 @@ class AndroidJSInterface(private val webEngine: WebViewWebEngine) {
     }
 
     private fun isHomePage(): Boolean {
-        return webEngine.tab.url == Config.HOME_PAGE_URL || webEngine.tab.url == Config.HOME_URL_ALIAS
+        return Config.isHomePageUrl(webEngine.tab.url) || webEngine.tab.url == Config.HOME_URL_ALIAS
     }
 }

@@ -27,6 +27,7 @@
     },
     {
       "matches": [
+        "https://akhibrowser.com/appcontent/home/*",
         "https://tvbro.phlox.dev/appcontent/home/*",
         "*://*/appcontent/home/*"
       ],

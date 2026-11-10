@@ -388,13 +388,13 @@ open class WebViewEx(context: Context, val callback: Callback, val jsInterface: 
                 Log.d(TAG, "shouldInterceptRequest url: ${request.url}")
                 val currentPageUrl = currentOriginalUrl
 
-                if (currentPageUrl != null && currentPageUrl.toString().startsWith(Config.HOME_PAGE_URL,
-                        ignoreCase = true)) {
+                if (Config.isHomePageUrl(currentPageUrl?.toString())) {
                     HomePageHelper.shouldInterceptRequest(view, request)?.let {
                         return it
                     }
-                    if (request.url.toString().startsWith(Config.HOME_PAGE_URL)) {
-                        var relativePath = request.url.toString().substring(Config.HOME_PAGE_URL.length)
+                    val homePrefix = Config.homePagePrefixOf(request.url.toString())
+                    if (homePrefix != null) {
+                        var relativePath = request.url.toString().substring(homePrefix.length)
                         if (relativePath.isEmpty() || relativePath == "/") {
                             relativePath = "index.html"
                         }
