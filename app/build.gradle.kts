@@ -74,6 +74,8 @@ android {
         }
         create("google") {
             dimension = "appstore"
+            //the Play Store listing's package name; GitHub builds keep the default so they update existing installs
+            applicationId = "org.tvakhi"
             //now auto-update violates Google Play policies
             buildConfigField("Boolean", "BUILT_IN_AUTO_UPDATE", "false")
         }
