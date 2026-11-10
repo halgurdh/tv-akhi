@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import com.phlox.tvwebbrowser.AppContext
+import com.phlox.tvwebbrowser.Config
 import com.phlox.tvwebbrowser.TVBro
 import com.phlox.tvwebbrowser.model.HostConfig
 import com.phlox.tvwebbrowser.model.WebTabState
@@ -61,7 +62,10 @@ class TabsModel : ActiveModel() {
             }
         }
         val tabsDao = AppDatabase.db.tabsDao()
-        tabsStates.replaceAll(tabsDao.getAll(config.incognitoMode))
+        val tabs = tabsDao.getAll(config.incognitoMode)
+        //tabs saved by versions that used the upstream TV Bro home page address
+        tabs.forEach { it.url = Config.migrateHomePageUrl(it.url) }
+        tabsStates.replaceAll(tabs)
         loaded = true
     }
 

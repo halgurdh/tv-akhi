@@ -124,7 +124,7 @@ class ActionBar @JvmOverloads constructor(
     }
 
     fun setAddressBoxText(text: String) {
-        if (text == Config.HOME_PAGE_URL) {
+        if (Config.isHomePageRoot(text)) {
             vb.etUrl.setText("")
         } else {
             vb.etUrl.setText(text)

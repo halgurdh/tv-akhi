@@ -165,7 +165,7 @@ class MainActivityViewModel: ActiveModel() {
 
     fun logVisitedHistory(title: String?, url: String, faviconHash: String?) {
         Log.d(TAG, "logVisitedHistory: $url")
-        if ((url == lastHistoryItem?.url) || url == Config.HOME_PAGE_URL || !url.startsWith("http", true)) {
+        if ((url == lastHistoryItem?.url) || Config.isHomePageRoot(url) || !url.startsWith("http", true)) {
             return
         }
 

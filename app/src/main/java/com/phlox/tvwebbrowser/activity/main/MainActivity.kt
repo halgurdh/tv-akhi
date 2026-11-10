@@ -297,7 +297,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         viewModel.homePageLinks.subscribe(this) {
             Log.i(TAG, "homePageLinks updated")
             val currentUrl = tabsModel.currentTab.value?.url ?: return@subscribe
-            if (Config.HOME_PAGE_URL == currentUrl) {
+            if (Config.isHomePageRoot(currentUrl)) {
                 tabsModel.currentTab.value?.webEngine?.reload()
             }
         }
@@ -469,7 +469,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         //live engine url: tab.url is updated only on page loads, not on in-page navigation (e.g. YouTube)
         val url = tab.webEngine.url ?: tab.url
         return url.isEmpty() || url == Config.HOME_URL_ALIAS || url == settingsModel.homePage ||
-                url.startsWith(Config.HOME_PAGE_URL)
+                Config.isHomePageUrl(url)
     }
 
     fun navigateBack(goHomeIfNoHistory: Boolean = false) {
@@ -1447,7 +1447,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
 
         override fun isDialogsBlockingEnabled(): Boolean {
-            if (tab.url == Config.HOME_PAGE_URL) return false
+            if (Config.isHomePageRoot(tab.url)) return false
             return shouldBlockNewWindow(dialog = true, userGesture = false)
         }
 

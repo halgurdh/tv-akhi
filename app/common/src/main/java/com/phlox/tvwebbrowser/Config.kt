@@ -28,9 +28,13 @@ class Config(val prefs: SharedPreferences) {
 
         fun isHomePageUrl(url: String?) = homePagePrefixOf(url) != null
 
+        /** The home page itself (current or legacy address), not one of its sub-paths. */
+        fun isHomePageRoot(url: String?) = url == HOME_PAGE_URL || url == LEGACY_HOME_PAGE_URL
+
         fun migrateHomePageUrl(url: String): String =
             if (url.startsWith(LEGACY_HOME_PAGE_URL, ignoreCase = true))
                 HOME_PAGE_URL + url.substring(LEGACY_HOME_PAGE_URL.length) else url
+
         const val KEEP_SCREEN_ON_KEY = "keep_screen_on"
         /** When true, analog stick / hat axes from generic motion events are not translated to DPAD keys. */
         const val DISABLE_MOTION_AXES_DPAD_NAVIGATION_KEY = "disable_motion_axes_dpad_navigation"
